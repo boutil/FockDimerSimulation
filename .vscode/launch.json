@@ -1,0 +1,70 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Launch SymmetricTest",
+            "request": "launch",
+            "mainClass": "de.jtem.riemann.surface.homologie.SymmetricTest",
+            "projectName": "riemann_9c483ff8"
+        },
+        {
+            "type": "java",
+            "name": "Launch Test",
+            "request": "launch",
+            "mainClass": "de.jtem.riemann.surface.homologie.Test",
+            "projectName": "riemann_9c483ff8"
+        },
+        {
+            "type": "java",
+            "name": "Launch Test(1)",
+            "request": "launch",
+            "mainClass": "de.jtem.riemann.surface.hyperElliptic.Test",
+            "projectName": "riemann_9c483ff8"
+        },
+        {
+            "type": "java",
+            "name": "Launch AbelianFunction",
+            "request": "launch",
+            "mainClass": "de.jtem.riemann.theta.AbelianFunction",
+            "projectName": "riemann_9c483ff8"
+        },
+        {
+            "type": "java",
+            "name": "Launch ExampleSlice",
+            "request": "launch",
+            "mainClass": "de.jtem.riemann.theta.ExampleSlice",
+            "projectName": "riemann_9c483ff8"
+        },
+        {
+            "type": "java",
+            "name": "Launch LatticePointsForUniformApproximation",
+            "request": "launch",
+            "mainClass": "de.jtem.riemann.theta.LatticePointsForUniformApproximation",
+            "projectName": "riemann_9c483ff8"
+        },
+        {
+            "type": "java",
+            "name": "Launch LatticePointsInEllipsoid",
+            "request": "launch",
+            "mainClass": "de.jtem.riemann.theta.LatticePointsInEllipsoid",
+            "projectName": "riemann_9c483ff8"
+        },
+        {
+            "type": "java",
+            "name": "Launch LatticePointsInEllipsoidIterator",
+            "request": "launch",
+            "mainClass": "de.jtem.riemann.theta.LatticePointsInEllipsoidIterator",
+            "projectName": "riemann_9c483ff8"
+        }
+    ]
+}

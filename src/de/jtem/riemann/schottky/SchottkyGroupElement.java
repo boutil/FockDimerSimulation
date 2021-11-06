@@ -472,6 +472,7 @@ class SchottkyGroupElement
     for( int i=0; i<wordLength; i++ ) {
 
       word[i] = e.firstLetter();
+      e = e.parent;
     }
 
     return new String( word);

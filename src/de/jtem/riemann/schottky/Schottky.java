@@ -45,7 +45,7 @@ public class Schottky
 
   private static final long serialVersionUID = 1L;
 
-  private static double DEFAULT_ACCURACY;
+  private static double DEFAULT_ACCURACY = 1E-7;
   
   private static int initCapacity = 1000;
 
@@ -347,7 +347,7 @@ public class Schottky
     return numOfElementsOfCosetWithWordLength[length];
   }
 
-  long[] numOfElementsWithWordLength;
+  public long[] numOfElementsWithWordLength;
 
   final void computeNumOfElementsWithWordLength() {
     final int length;

@@ -6,6 +6,34 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Launch DataExport",
+            "request": "launch",
+            "mainClass": "de.jtem.riemann.dimerTests.DataExport",
+            "projectName": "schottky-dimers"
+        },
+        {
+            "type": "java",
+            "name": "Launch DataExport",
+            "request": "launch",
+            "mainClass": "de.jtem.riemann.dimerTests.DataExport",
+            "projectName": "riemann_9c483ff8"
+        },
+        {
+            "type": "java",
+            "name": "Launch SchottkyDimers",
+            "request": "launch",
+            "mainClass": "de.jtem.riemann.schottky.SchottkyDimers",
+            "projectName": "riemann_9c483ff8"
+        },
+        {
+            "type": "java",
+            "name": "Launch SchottkyDimers",
+            "request": "launch",
+            "mainClass": "de.jtem.riemann.dimerTests.SchottkyDimers",
+            "projectName": "riemann_9c483ff8"
+        },
+        {
+            "type": "java",
             "name": "Launch Current File",
             "request": "launch",
             "mainClass": "${file}"

@@ -4,79 +4,56 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.jzy3d.plot3d.pipelines.NotImplementedException;
+
 import de.jtem.mfc.field.Complex;
 
 public class SchottkyDimers extends Schottky{
 
-    // We want to assume uniformization of type U2 (i.e. B_n = A_n.conj(), mu_n real)
 
-    // Choice of special points on real line. These are the train track angles on the hexagonal grid.
-    private double alpha, beta, gamma;
     public double[] angles;
     // uniformization is either 1,2, or 0. Stands for U1, U2 or other.
     public int uniformization;
 
-    // Object that computes the amoebaMap having access to SchottkyDimers object.
-    AmoebaMap amoebaMap;
-
-    // angles for now are angles alpha, beta, gamma in R.
-    public SchottkyDimers(SchottkyData schottkyData, double[] angles) {
-        super(schottkyData);
+    public SchottkyDimers(SchottkyData data, double[] angles) {
+        super(data);
         this.angles = angles;
-        alpha = angles[0];
-        beta = angles[1];
-        gamma = angles[2];
-        Complex P0 = new Complex(0, 1);
         uniformization = getUniformization();
-
-        amoebaMap = new AmoebaMap(this, P0);
     }
 
-    // check the conditions to figure out which uniformization we are in.
-    private int getUniformization() {
-        boolean U1 = true;
-        boolean U2 = true;
-        for (int i = 0; i < numGenerators; i++) {
-            if(!(fixpoint[i][0].im == 0 && fixpoint[i][1].im == 0)) {
-                U1 = false;
-            }
-            if(!fixpoint[i][0].equals(fixpoint[i][1].conjugate())){
-                U2 = false;
-            }
-        }
-        if(U1) return 1;
-        if(U2) return 2;
-        return 0;
-    }
-
-
-    public Complex amoebaMapHexGrid(Complex P) throws Exception {
-        // P needs to be in fundamental domain.
+    public Complex amoebaMap(Complex P) throws Exception {
         if (!isInFundamentalDomain(P)) {
             throw new Exception("P needs to be in fundamental domain");
         }
-        Complex r = new Complex();
-        amoebaMap.hexGrid(r, P, new Complex(alpha, 0), new Complex(beta, 0), new Complex(gamma, 0), acc);
-        return r;
+        throw new NotImplementedException();
     }
 
     public Complex[][] parametrizeRealOvals(int numPointsPerSegment) {
-        Complex[][] points = new Complex[3 + numGenerators][];
+        int numAngles = angles.length;
+        Complex[][] points = new Complex[numAngles + numGenerators][];
         // exclusion interval only supports genus 1 for now
         double[] ABinterval = {getCenterOfCircle(0, false).re - getRadius(0), getCenterOfCircle(0, true).re + getRadius(0)};
-        points[0] = getPointArrayOnRealLine(angles[0], angles[1], numPointsPerSegment, ABinterval);
-        points[1] = getPointArrayOnRealLine(angles[1], angles[2], numPointsPerSegment, ABinterval);
-        points[2] = getPointArrayOnRealLine(angles[2], angles[0], numPointsPerSegment, ABinterval);
+        for (int i = 0; i < numAngles; i++) {
+            points[i] = getPointArrayOnRealLine(angles[i], angles[(i+1) % numAngles], numPointsPerSegment, ABinterval);
+        }
         for(int i = 0; i < numGenerators; i++){
             if (uniformization == 1) {
-                points[i + 3] = getPointArrayOnRealLineExponential(getCenterOfCircle(i, false).re + getRadius(i), getCenterOfCircle(i, true).re - getRadius(i), numPointsPerSegment, new double[]{0., 0.});
+                points[i + numAngles] = getPointArrayOnRealLineExponential(getCenterOfCircle(i, false).re + getRadius(i), getCenterOfCircle(i, true).re - getRadius(i), numPointsPerSegment, new double[]{0., 0.});
             }
             else {
-                points[i + 3] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i), numPointsPerSegment);
+                points[i + numAngles] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i), numPointsPerSegment);
             }
         }
 
         return points;
+    }
+
+    public Complex[] getAngles() {
+        Complex[] complexAngles = new Complex[angles.length];
+        for (int i = 0; i < complexAngles.length; i++) {
+            complexAngles[i] = new Complex(angles[i], 0);
+        }
+        return complexAngles;
     }
 
     public Complex[] getPointArrayOnRealLine(double a, double b, int numPoints, double[] excludingInterval){
@@ -112,7 +89,8 @@ public class SchottkyDimers extends Schottky{
                 if(point.re >= excludingInterval[1] || point.re <= excludingInterval[0]) {
                     if(isInFundamentalDomain(point)) {
                         res.add(point);
-                    }                }
+                    }                
+                }
             }
         }
         return res.toArray(Complex[]::new);
@@ -126,7 +104,8 @@ public class SchottkyDimers extends Schottky{
             if(point.re >= excludingInterval[1] || point.re <= excludingInterval[0]) {
                 if(isInFundamentalDomain(point)) {
                     res.add(point);
-                }            }
+                }            
+            }
         }
         Collections.reverse(res);
         // add right side of interval
@@ -135,7 +114,8 @@ public class SchottkyDimers extends Schottky{
             if(point.re >= excludingInterval[1] || point.re <= excludingInterval[0]) {
                 if(isInFundamentalDomain(point)) {
                     res.add(point);
-                }            }
+                }            
+            }
         }
         return res.toArray(Complex[]::new);
     }
@@ -150,4 +130,23 @@ public class SchottkyDimers extends Schottky{
         }
         return res;
     }
+
+    // check the conditions to figure out which uniformization we are in.
+    private int getUniformization() {
+        boolean U1 = true;
+        boolean U2 = true;
+        for (int i = 0; i < numGenerators; i++) {
+            if(!(fixpoint[i][0].im == 0 && fixpoint[i][1].im == 0)) {
+                U1 = false;
+            }
+            if(!fixpoint[i][0].equals(fixpoint[i][1].conjugate())){
+                U2 = false;
+            }
+        }
+        if(U1) return 1;
+        if(U2) return 2;
+        return 0;
+    }
+
+
 }

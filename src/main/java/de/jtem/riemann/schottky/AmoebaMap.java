@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public class AmoebaMap {
 
-    final SchottkyDimers schottky;
+    final SchottkyDimersHex schottky;
 
     final int numGenerators;
 
@@ -22,7 +22,7 @@ public class AmoebaMap {
     Complex gamma;
 
 
-    AmoebaMap(SchottkyDimers schottky, Complex P0) {
+    AmoebaMap(SchottkyDimersHex schottky, Complex P0) {
         this.schottky = schottky;
         numGenerators = schottky.numGenerators;
         updateID = schottky.updateID;

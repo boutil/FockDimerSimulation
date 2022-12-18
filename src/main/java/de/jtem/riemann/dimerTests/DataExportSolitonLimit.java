@@ -14,30 +14,28 @@ import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimersHex;
 
-public class DataExport {
+public class DataExportSolitonLimit {
     public static void main(String[] args) {
-        int schottkyGenus = 1;
-        double[] mus = {0.00000000001};
+        int schottkyGenus = 2;
+        double[][] mus = {{0.000000000000001, 0.01}, {0.01}};
         // double[][] ABs = {{-0.51, -0.49}, {-0.75, -0.25}, {-0.99, -0.01}, {-3, -2}, {-3, -1.1}};
         // double[][] ABs = {{-0.009999, -0.00001}, {-0.009999999, -0.000000001} };
-        double[][] ABs = {{-0.99, -0.01}};
+        double[][][] ABs = {{{-0.9, -0.1}, {0.3, 0.7}}, {{0.3, 0.7}}};
 
         // double[][] ABs = {{0.2, 0.8}, {0.1, 0.9}, {0.01, 0.99}, {0.001, 0.999}, {0.0001, 0.9999}, {-0.8, -0.2}, {-0.9, -0.1}, {-0.99, -0.01}, {-0.999, -0.001}, {-0.9999, -0.0001}, {-0.99999, -0.00001}, {-0.999999, -0.000001}, {-0.9999999, -0.0000001}};
         // double[][] angles = {{-1, 0, 1}, {-1, -0.5, 0}, {-1, -0.90, -0.8}, {-1, -0.99, -0.98}, {-1.9, -1.8, -1.7}};
         // double[][] angles = {{-5, 5, 100}};
-        double[][] angles = {{-1, 0, 1}};
-        SchottkyDimersData[] params = generateSchottkyParams(mus, ABs, angles);
+        double[][] angles = {{-1, 0, 1}, {-1, 0, 1}};
+        SchottkyDimersData[] schottkyDimerDatas = generateSchottkyDimerDatas(ABs, mus, angles);
         
         int numPointsPerSegment = 500;      
         List<Map<String, Object>> allAmoebas = new LinkedList<Map<String, Object>>();
-        for (int i = 0; i < params.length; i++) {
+        for (int i = 0; i < schottkyDimerDatas.length; i++) {
             // SchottkyData schottkyData = new SchottkyData( schottkyGenus );
-            double[] schottkyParams = new double[]{params[i].A.re, params[i].A.im, params[i].B.re, params[i].B.im, params[i].mu.re, params[i].mu.im};
-            SchottkyData schottkyData = new SchottkyData( schottkyParams );
             // schottkyData.setA( 0, params[i].A );
             // schottkyData.setB( 0, params[i].B );
             // schottkyData.setMu( 0, params[i].mu );
-            SchottkyDimersHex dimers = new SchottkyDimersHex(schottkyData, params[i].angles);
+            SchottkyDimersHex dimers = new SchottkyDimersHex(schottkyDimerDatas[i].schottkyData, schottkyDimerDatas[i].angles);
             Complex[][] points = dimers.parametrizeRealOvals(numPointsPerSegment);
             double[][][] amoebaPoints = extractAmoebaPointsFromSchottky(dimers, points);
             Map<String, Object> info = encodeAmoeba(dimers, amoebaPoints, points);
@@ -58,28 +56,38 @@ public class DataExport {
     }
 
     public static class SchottkyDimersData {
-        public Complex A;
-        public Complex B;
-        public Complex mu;
+        public SchottkyData schottkyData;
         public double[] angles;
-        public SchottkyDimersData(Complex A, Complex B, Complex mu, double[] angles) {
-            this.A = A;
-            this.B = B;
-            this.mu = mu;
+        // Assuming U1 Parametrization
+        public SchottkyDimersData(double[][] ABs, double[] mus, double[] angles) {
+            double[] schottkyParams = new double[mus.length * 6];
+            for (int i = 0, j = 0; i < mus.length; i++){
+                schottkyParams[j++] = ABs[i][0];
+                schottkyParams[j++] = 0;
+                schottkyParams[j++] = ABs[i][1];
+                schottkyParams[j++] = 0;
+                schottkyParams[j++] = mus[i];
+                schottkyParams[j++] = 0;
+            }
+            schottkyData = new SchottkyData(schottkyParams);
             this.angles = angles;
         }
     }
 
-    public static SchottkyDimersData[] generateSchottkyParams(double[] mus, double[][] ABs, double[][] angles) {
+    public static SchottkyDimersData[] generateSchottkyDimerDatas(double[][][] ABs, double[][] mus, double[][] angles) {
+        // Here we assume that all arrays have the same length
         List<SchottkyDimersData> params = new LinkedList<SchottkyDimersData>();
-        for(double mu : mus) {
-            for(double[] AB : ABs) {
-                for(double[] angle : angles){
-                    // Does U1 parametrization
-                    params.add(new SchottkyDimersData(new Complex(AB[0], 0), new Complex(AB[1], 0), new Complex(mu, 0), angle));
-                }
-            }
+        for (int i = 0; i < angles.length; i++){
+            params.add(new SchottkyDimersData(ABs[i], mus[i], angles[i]));
         }
+        // for(double[] mu : mus) {
+        //     for(double[][] AB : ABs) {
+        //         for(double[] angle : angles){
+        //             // Does U1 parametrization
+        //             params.add(new SchottkyDimersData(AB, mu, angle));
+        //         }
+        //     }
+        // }
         return params.toArray(SchottkyDimersData[]::new);
     }
 

@@ -14,11 +14,18 @@ public class SchottkyDimers extends Schottky{
     public double[] angles;
     // uniformization is either 1,2, or 0. Stands for U1, U2 or other.
     public int uniformization;
+    protected AmoebaMap amoebaMap;
 
     public SchottkyDimers(SchottkyData data, double[] angles) {
         super(data);
         this.angles = angles;
         uniformization = getUniformization();
+
+        // TODO: P0 should be chosen such that it's in the fundamental domain.
+        Complex P0 = new Complex(0, 1);
+
+        amoebaMap = new AmoebaMap(this, P0);
+
     }
 
     public Complex amoebaMap(Complex P) throws Exception {
@@ -32,7 +39,11 @@ public class SchottkyDimers extends Schottky{
         int numAngles = angles.length;
         Complex[][] points = new Complex[numAngles + numGenerators][];
         // exclusion interval only supports genus 1 for now
-        double[] ABinterval = {getCenterOfCircle(0, false).re - getRadius(0), getCenterOfCircle(0, true).re + getRadius(0)};
+
+        double[] ABinterval = {0,0};
+        if (uniformization == 1){
+            ABinterval = new double[] {getCenterOfCircle(0, false).re - getRadius(0), getCenterOfCircle(0, true).re + getRadius(0)};
+        }
         for (int i = 0; i < numAngles; i++) {
             points[i] = getPointArrayOnRealLine(angles[i], angles[(i+1) % numAngles], numPointsPerSegment, ABinterval);
         }
@@ -41,7 +52,7 @@ public class SchottkyDimers extends Schottky{
                 points[i + numAngles] = getPointArrayOnRealLineExponential(getCenterOfCircle(i, false).re + getRadius(i), getCenterOfCircle(i, true).re - getRadius(i), numPointsPerSegment, new double[]{0., 0.});
             }
             else {
-                points[i + numAngles] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i), numPointsPerSegment);
+                points[i + numAngles] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i) * 1.01, numPointsPerSegment);
             }
         }
 

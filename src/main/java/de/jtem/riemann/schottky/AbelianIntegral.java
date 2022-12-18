@@ -54,6 +54,9 @@ class AbelianIntegral {
 
   int updateID;
 
+  double maxError = 100000;// Double.MAX_VALUE; // set this dynmically in a sensible way.
+
+
   AbelianIntegral(Schottky schottky) {
     this.schottky = schottky;
     numGenerators = schottky.numGenerators;
@@ -409,9 +412,18 @@ class AbelianIntegral {
       schottky.updateElement(element);
     }
 
+    // element.diff(B, A, d);
+
+    // final double error = (Math.abs(d.re) + Math.abs(d.im)) * rho(element);
+
+
+    // Not sure what to do here instead...
     element.diff(B, A, d);
 
-    final double error = (Math.abs(d.re) + Math.abs(d.im)) * rho(element);
+    double error = maxError - 1;
+    if (element != schottky.id) {
+      error = (Math.abs(d.re) + Math.abs(d.im)) * rho(element);
+    }
 
     if (error * noe[element.wordLength] < acc || error < eps ) {
     	acc += acc / noe[element.wordLength] - error;

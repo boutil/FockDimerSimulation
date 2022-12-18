@@ -12,44 +12,57 @@ import com.google.gson.GsonBuilder;
 
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyData;
+import de.jtem.riemann.schottky.SchottkyDimers;
 import de.jtem.riemann.schottky.SchottkyDimersHex;
+import de.jtem.riemann.schottky.SchottkyDimersQuad;
 
-public class DataExport {
+public class AmoebaExportTest {
     public static void main(String[] args) {
-        int schottkyGenus = 1;
-        double[] mus = {0.00000000001};
-        // double[][] ABs = {{-0.51, -0.49}, {-0.75, -0.25}, {-0.99, -0.01}, {-3, -2}, {-3, -1.1}};
-        // double[][] ABs = {{-0.009999, -0.00001}, {-0.009999999, -0.000000001} };
-        double[][] ABs = {{-0.99, -0.01}};
 
-        // double[][] ABs = {{0.2, 0.8}, {0.1, 0.9}, {0.01, 0.99}, {0.001, 0.999}, {0.0001, 0.9999}, {-0.8, -0.2}, {-0.9, -0.1}, {-0.99, -0.01}, {-0.999, -0.001}, {-0.9999, -0.0001}, {-0.99999, -0.00001}, {-0.999999, -0.000001}, {-0.9999999, -0.0000001}};
-        // double[][] angles = {{-1, 0, 1}, {-1, -0.5, 0}, {-1, -0.90, -0.8}, {-1, -0.99, -0.98}, {-1.9, -1.8, -1.7}};
-        // double[][] angles = {{-5, 5, 100}};
-        double[][] angles = {{-1, 0, 1}};
-        SchottkyDimersData[] params = generateSchottkyParams(mus, ABs, angles);
+        // double[] schottkyParams = new double[]{0, 1, 0, -1, 0.1, 0, 15, 1, 15, -1, 0.01, 0};
+        double a = Math.sqrt(2 / (1.5 + Math.sqrt(2)));
+        double[] schottkyParams = new double[]{-a, 1, -a, -1, 0.3, 0};
+
+        SchottkyData schottkyData = new SchottkyData(schottkyParams);
         
+        // Choose some angles
+        // double[] angles = {-0.7, -0.1, 0.4, 1};
+        // Most symmetric angle setup.
+        // double a = 0.05;
+        double x = a * (1 + Math.sqrt(2));
+        double firstAngle = -x - (a/2);
+        double[] angles = {firstAngle, firstAngle + x, firstAngle + x + a, firstAngle + x + a + x};
+        // Create the corresponding schottkyDimers.
+        SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(schottkyData, angles);
         int numPointsPerSegment = 500;      
+        Complex[][] points = schottkyDimers.parametrizeRealOvals(numPointsPerSegment);
+        double[][][] amoebaPoints = extractAmoebaPointsFromSchottky(schottkyDimers, points);
+        Map<String, Object> info = encodeAmoeba(schottkyDimers, amoebaPoints, points);
+
+        
         List<Map<String, Object>> allAmoebas = new LinkedList<Map<String, Object>>();
-        for (int i = 0; i < params.length; i++) {
-            // SchottkyData schottkyData = new SchottkyData( schottkyGenus );
-            double[] schottkyParams = new double[]{params[i].A.re, params[i].A.im, params[i].B.re, params[i].B.im, params[i].mu.re, params[i].mu.im};
-            SchottkyData schottkyData = new SchottkyData( schottkyParams );
-            // schottkyData.setA( 0, params[i].A );
-            // schottkyData.setB( 0, params[i].B );
-            // schottkyData.setMu( 0, params[i].mu );
-            SchottkyDimersHex dimers = new SchottkyDimersHex(schottkyData, params[i].angles);
-            Complex[][] points = dimers.parametrizeRealOvals(numPointsPerSegment);
-            double[][][] amoebaPoints = extractAmoebaPointsFromSchottky(dimers, points);
-            Map<String, Object> info = encodeAmoeba(dimers, amoebaPoints, points);
-            allAmoebas.add(info);
-        }
+        // for (int i = 0; i < params.length; i++) {
+        //     // SchottkyData schottkyData = new SchottkyData( schottkyGenus );
+        //     double[] schottkyParams = new double[]{params[i].A.re, params[i].A.im, params[i].B.re, params[i].B.im, params[i].mu.re, params[i].mu.im};
+        //     SchottkyData schottkyData = new SchottkyData( schottkyParams );
+        //     // schottkyData.setA( 0, params[i].A );
+        //     // schottkyData.setB( 0, params[i].B );
+        //     // schottkyData.setMu( 0, params[i].mu );
+        //     SchottkyDimersHex dimers = new SchottkyDimersHex(schottkyData, params[i].angles);
+        //     Complex[][] points = dimers.parametrizeRealOvals(numPointsPerSegment);
+        //     double[][][] amoebaPoints = extractAmoebaPointsFromSchottky(dimers, points);
+        //     Map<String, Object> info = encodeAmoeba(dimers, amoebaPoints, points);
+        //     allAmoebas.add(info);
+        // }
+
+        allAmoebas.add(info);
 
 
         Gson gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();
         String allAmoebasJSON = gson.toJson(allAmoebas);
 
         try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter("exportedPoints_soliton_limit.json"));
+            BufferedWriter bw = new BufferedWriter(new FileWriter("exportedPoints_QuadAmoeba.json"));
             bw.write(allAmoebasJSON);
             bw.close();
         } catch (Exception e) {
@@ -83,9 +96,9 @@ public class DataExport {
         return params.toArray(SchottkyDimersData[]::new);
     }
 
-    public static double[][][] extractAmoebaPointsFromSchottky(SchottkyDimersHex dimers, Complex[][] points) {
+    public static double[][][] extractAmoebaPointsFromSchottky(SchottkyDimers dimers, Complex[][] points) {
         // Not a very general form for now.
-        int numSegments = 3 + dimers.getNumGenerators();
+        int numSegments = dimers.angles.length + dimers.getNumGenerators();
         // Complex[][] points = dimers.parametrizeRealOvals(numPointsPerSegment);
         double[] angles = dimers.angles;
         double[][][] pointsAmoebaMapped = new double[numSegments][][];
@@ -119,7 +132,7 @@ public class DataExport {
         return pointsAmoebaMapped;
     }
 
-    public static Map<String, Object> encodeAmoeba(SchottkyDimersHex dimers, double[][][] pointsAmoebaMapped, Complex[][] points) {
+    public static Map<String, Object> encodeAmoeba(SchottkyDimers dimers, double[][][] pointsAmoebaMapped, Complex[][] points) {
         Map<String, Object> info = new HashMap<String, Object>();
         info.put("pointsAmoebaMapped", pointsAmoebaMapped);
         info.put("angles", dimers.angles);
@@ -128,5 +141,3 @@ public class DataExport {
         return info;
     }
 }
-
-

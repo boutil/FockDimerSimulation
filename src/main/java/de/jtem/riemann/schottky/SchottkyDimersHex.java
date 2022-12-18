@@ -20,10 +20,6 @@ public class SchottkyDimersHex extends SchottkyDimers{
         alpha = angles[0];
         beta = angles[1];
         gamma = angles[2];
-        // TODO: P0 should be chosen such that it's in the fundamental domain.
-        Complex P0 = new Complex(0, 1);
-
-        amoebaMap = new AmoebaMap(this, P0);
     }
 
     @Override

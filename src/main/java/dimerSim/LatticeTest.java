@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
 
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyData;
@@ -18,24 +19,30 @@ public class LatticeTest {
         MarkovSimZ2 sim;
 
         SchottkyDimersQuad schottkyDimers = buildSchottkyDimers();
-        Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 100, 100);
+        Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 200, 200);
 
-        // System.out.println(Arrays.deepToString(lattice.faceWeights));
+        // Z2Lattice lattice = new Z2Lattice(200, 200, 0.95);
+
+
+        // // System.out.println(Arrays.deepToString(lattice.faceWeights));
 
         sim = new MarkovSimZ2(lattice);
+        // // sim.initializeAztecDiamond();
         // sim.initializeFlatSquare();
-        // sim.simulate(10000);
+        // sim.simulate(10000, true);
 
-        sim = simAztecDiamond(100, 100000);
+        // sim = simAztecDiamond(100, 10000);
         // sim = loadSim("mySim.ser");
 
         // saveSim(sim, "mySim.ser");
 
+        // System.out.println(Arrays.deepToString(lattice.flipFaceWeights));
+
         VisualizationZ2 vis = new VisualizationZ2(sim);
 
-        vis.visualizeSim();
+        // vis.visualizeSim();
 
-        // vis.visualizeWeights();
+        vis.visualizeWeights();
         
     }
 
@@ -90,15 +97,21 @@ public class LatticeTest {
     public static SchottkyDimersQuad buildSchottkyDimers() {
         // First build a SchottkyData.
         int schottkyGenus = 1;
-        Complex mu = new Complex(0.3, 0);
-        Complex A = new Complex(0.5, 1);
-        // Complex B = new Complex();
-        Complex B = A.conjugate();
-        double[] schottkyParams = new double[]{A.re, A.im, B.re, B.im, mu.re, mu.im};
+        double a = Math.sqrt(2 / (1.5 + Math.sqrt(2)));
+        double[] schottkyParams = new double[]{-a, 1, -a, -1, 0.3, 0};
         SchottkyData schottkyData = new SchottkyData(schottkyParams);
+        
+        // int schottkyGenus = 2;
+        // double[] schottkyParams = new double[]{0, 1, 0, -1, 0.01, 0, 1.5, 1, 1.5, -1, 0.01, 0};
+        // SchottkyData schottkyData = new SchottkyData(schottkyParams);
+        
         // Choose some angles
-        double[] angles = {-5, -3, 1, 2};
+        // double[] angles = {-0.7, -0.1, 0.4, 1};
 
+        // Choose angles in a way such that crossratio is 1:
+        double x = a * (1 + Math.sqrt(2));
+        double firstAngle = -x - (a/2);
+        double[] angles = {firstAngle, firstAngle + x, firstAngle + x + a, firstAngle + x + a + x};
         // Create the corresponding schottkyDimers.
         SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(schottkyData, angles);
         return schottkyDimers;

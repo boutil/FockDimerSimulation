@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public class AmoebaMap {
 
-    final SchottkyDimersHex schottky;
+    final SchottkyDimers schottky;
 
     final int numGenerators;
 
@@ -17,12 +17,17 @@ public class AmoebaMap {
     // measures errors for the elements in some way?
     final double[][] rho;
 
+    // For hex grid:
     Complex alpha;
     Complex beta;
     Complex gamma;
 
+    // For quad lattice assumed to be alpha-, beta-, alpha+, beta+.
+    // TODO For hex grid assumed to be alpha, beta, gamma. 
+    Complex[] angles;
 
-    AmoebaMap(SchottkyDimersHex schottky, Complex P0) {
+
+    AmoebaMap(SchottkyDimers schottky, Complex P0) {
         this.schottky = schottky;
         numGenerators = schottky.numGenerators;
         updateID = schottky.updateID;
@@ -263,5 +268,105 @@ public class AmoebaMap {
       }
 
 
+
+          // calculates the amoebaMap based on a hexGrid setup. Thus there need to be three angles picked.
+    final void quadGrid(final SchottkyGroupElement element) {
+
+      if (element.updateID != updateID) {
+        schottky.updateElement(element);
+      }
+  // Not sure what to do here instead...
+      element.diff(B, A, d);
+      double error = maxError - 1;
+      if (element != schottky.id) {
+        error = (Math.abs(d.re) + Math.abs(d.im)) * rho(element);
+      }
+
+      if (error > maxError || Double.isNaN(error)) {
+        return;
+      }
+  
+      if (element.wordLength > 0) {
+        return;
+      }
+
+      if (error * noe[element.wordLength] < acc || error < eps ) {
+        acc += acc / noe[element.wordLength] - error;
+        return;
+      }
+
+      
+      element.applyTo(P, sP);
+      element.applyTo(P0, sP0);
+      
+      H.assignDivide(sP.minus(angles[2]), sP.minus(angles[0]));
+      H.assignTimes(sP.minus(angles[3]).divide(sP.minus(angles[1])));
+      G.assignDivide(sP.minus(angles[0]), sP.minus(angles[2]));
+      G.assignTimes(sP.minus(angles[3]).divide(sP.minus(angles[1])));
+      H_corr.assignDivide(sP0.minus(angles[2]), sP0.minus(angles[0]));
+      H_corr.assignTimes(sP0.minus(angles[3]).divide(sP0.minus(angles[1])));
+      G_corr.assignDivide(sP0.minus(angles[0]), sP0.minus(angles[2]));
+      G_corr.assignTimes(sP0.minus(angles[3]).divide(sP0.minus(angles[1])));
+
+      product_re += Math.log(H.abs() * H_corr.abs());
+      product_im += Math.log(G.abs() * G_corr.abs());
+
+      if (element.child == null) {
+        schottky.createLeftChilds(element);
+      }
+  
+      final SchottkyGroupElement[] child = element.child;
+  
+      final int numChildren = child.length;
+  
+      String[] childrenWords = new String[numChildren];
+      for (int i = 0; i < numChildren; i++) {
+        childrenWords[i] = child[i].word();
+      }
+      for (int i = 0; i < numChildren; i++) {
+        // String childWord = child[i].word();
+        quadGrid(child[i]);
+      }
+    }
+
+
+      final void quadGrid
+          (final Complex r,
+           final Complex P,
+           final Complex[] angles,
+           final double accuracy) {
+    
+        this.noe = schottky.numOfElementsWithWordLength;
+        
+        this.A.assign(schottky.fixpoint[n][0]);
+        this.B.assign(schottky.fixpoint[n][1]);
+
+        this.P.assign(P);
+        this.angles = angles;
+
+        this.acc = accuracy;
+        this.eps = accuracy / schottky.maxNumOfElements;
+
+        prepareRho(P);
+        // H.assignDivide(P.minus(alpha), P.minus(gamma));
+        // G.assignDivide(P.minus(beta), P.minus(gamma));
+        // product_re = H.abs();
+        // product_im = G.abs();
+        product_re = 0;
+        product_im = 0;
+
+        quadGrid(schottky.id);
+
+        // Correction in the U1 uniformization case.
+        if(schottky.uniformization == 1) {
+          addU1Correction(P);
+        }
+
+        if(this.acc < 0 ) // this test is needed because of the eps crieteria
+          throw new RuntimeException( "could not evaluate series because of numerical instabilities" );
+        
+        // r.assign(new Complex(Math.log(product_re), Math.log(product_im)));
+        r.assign(new Complex(product_re, product_im));
+      }
 
 }

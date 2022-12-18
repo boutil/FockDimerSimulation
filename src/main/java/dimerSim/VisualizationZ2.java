@@ -26,7 +26,8 @@ public class VisualizationZ2 {
     }
 
     public void visualizeWeights() {
-        Func3D func = new Func3D((x, y) -> sim.lattice.getUnflippedFaceWeight(x.intValue(), y.intValue()));
+        // Func3D func = new Func3D((x, y) -> sim.lattice.getUnflippedFaceWeight(x.intValue(), y.intValue()));
+        Func3D func = new Func3D((x, y) -> sim.lattice.flipFaceWeights[x.intValue()][y.intValue()]);
         Range range = new Range(0, sim.lattice.N - 1);
         int steps = sim.lattice.N;
     
@@ -48,8 +49,7 @@ public class VisualizationZ2 {
 
 
     public void visualizeSim() {
-
-        Func3D func = new Func3D((x, y) -> (double) sim.heigthFunction[x.intValue()][y.intValue()]);
+        Func3D func = new Func3D((x, y) -> sim.getHeight(x.intValue(), y.intValue()).doubleValue());
         Range range = new Range(0, sim.lattice.N - 1);
         int steps = sim.lattice.N;
     

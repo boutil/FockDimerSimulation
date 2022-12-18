@@ -5,10 +5,13 @@ import java.util.Random;
 
 public class MarkovSimZ2 implements Serializable{
     public Z2Lattice lattice;
-    public int[][] heigthFunction;
+    private int[][] heigthFunction;
     // Indicates for each face whether it should be updated.
     public boolean[][] insideBoundary;
     private Random rand;
+    
+    // Only makes sense to not set to 1 in case of uniform 1 face weights.
+    private double acceptanceRatioConstant = 0.99;
 
     public MarkovSimZ2(Z2Lattice lattice) {
         this.lattice = lattice;
@@ -35,14 +38,14 @@ public class MarkovSimZ2 implements Serializable{
                 if ((i + j) % 2 == parity) {
                     int faceState = getFaceState(i, j);
                     if (faceState == 5) {
-                        double a = (1/lattice.flipFaceWeights[i][j])/2;
+                        double a = (1/lattice.flipFaceWeights[i][j]) * acceptanceRatioConstant;
                         if (rand.nextDouble() < a){
                             int sign = heigthFunction[i + 1][j] - heigthFunction[i][j]; 
                             heigthFunction[i][j] += sign * 4;
                         }
                     }
                     if (faceState == 10) {
-                        double a = lattice.flipFaceWeights[i][j]/2;
+                        double a = lattice.flipFaceWeights[i][j] * acceptanceRatioConstant;
                         if (rand.nextDouble() < a){
                             int sign = heigthFunction[i][j + 1] - heigthFunction[i][j];
                             heigthFunction[i][j] += sign * 4;
@@ -54,8 +57,25 @@ public class MarkovSimZ2 implements Serializable{
     }
 
     public void simulate(int numSteps) {
+        simulate(numSteps, false);
+    }
+
+    public void simulate(int numSteps, boolean progressReport) {
+        int reportFreq = numSteps/10;
         for (int i = 0; i < numSteps; i++) {
-            markovStep(i % 2);
+            if (progressReport && (i % reportFreq == 0)) {
+                System.out.println("Done with " + i + " steps.");
+            }
+            // Choose parity at random at each step. Can probably just alternate too?
+            markovStep(rand.nextInt(2));
+        }
+    }
+
+    public Integer getHeight(int i, int j) {
+        if (insideBoundary[i][j]) {
+            return heigthFunction[i][j];
+        } else{
+            return 0;
         }
     }
 
@@ -125,4 +145,20 @@ public class MarkovSimZ2 implements Serializable{
             }
         }
     }
+    
+    // TODO need a flexible way of initializing boundary conditions!
+    // Idea: Use aztec diamond like shape:
+    // Main observation: staircase pattern gives +1 or -1 slope. Double staircase pattern gives +0 slope. 
+    // Combining them by alternating with the right frequency gives whichever slope we want. 
+    // Therefore by doing this carefully we get a diamond shape with the right slopes on each side.
+    public void initializeSlopedDiamond(double slopeSW, double slopeSE, double slopeNE) {
+        // Slopes interpreted as slope going counterclockwise along the corresponding diagonal.
+        // All slopes must be within [-1, 1]. SlopeNW is then minus their sum to ensure consistency.
+        // Thus their sum must also be in [-1, 1].
+        double slopeNW = 0 - slopeSW - slopeSE - slopeNE;
+        
+
+    }
+
+
 }

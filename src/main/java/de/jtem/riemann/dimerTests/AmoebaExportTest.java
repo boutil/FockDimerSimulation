@@ -19,9 +19,9 @@ import de.jtem.riemann.schottky.SchottkyDimersQuad;
 public class AmoebaExportTest {
     public static void main(String[] args) {
 
-        // double[] schottkyParams = new double[]{0, 1, 0, -1, 0.1, 0, 15, 1, 15, -1, 0.01, 0};
         double a = Math.sqrt(2 / (1.5 + Math.sqrt(2)));
-        double[] schottkyParams = new double[]{-a, 1, -a, -1, 0.3, 0};
+        // double[] schottkyParams = new double[]{-a, 1, -a, -1, 0.3, 0};
+        double[] schottkyParams = new double[]{-a, 1, -a, -1, 0.15, 0, a, 1, a, -1, 0.01, 0};
 
         SchottkyData schottkyData = new SchottkyData(schottkyParams);
         

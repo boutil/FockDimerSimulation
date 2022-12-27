@@ -1,9 +1,14 @@
 package dimerSim;
 
+import java.util.Arrays;
+
+import de.jtem.blas.ComplexMatrix;
 import de.jtem.blas.ComplexVector;
+import de.jtem.blas.IntegerVector;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
 import de.jtem.riemann.theta.Theta;
+import de.jtem.riemann.theta.ThetaWithChar;
 
 public class Z2LatticeFock extends Z2Lattice{
     
@@ -15,22 +20,54 @@ public class Z2LatticeFock extends Z2Lattice{
     public Theta theta;
     public double[][] faceWeightsBeforeEFactors;
 
+    private ThetaWithChar thetaWithChar;
+
     // For now we assume only 4 angles: alpha-, beta-, alpha+, beta+
     public Complex[] angles;
+    public ComplexVector[] faceAngleAbelMaps = new ComplexVector[4];
 
 
     public Z2LatticeFock(SchottkyDimersQuad dimers, int N, int M) {
         super(N, M, 1);
         schottkyDimers = dimers;
-        theta = new Theta(schottkyDimers.getPeriodMatrix());
+        // theta = new Theta(schottkyDimers.getPeriodMatrix());
+        theta = new Theta(schottkyDimers.getPeriodMatrix(), 1e-7, false);
+        // Create a theta function with odd characteristic (1, 0, 0, ...).
+        thetaWithChar = new ThetaWithChar(schottkyDimers.getPeriodMatrix(), 1e-7, false);
+        int[] oddAlpha = new int[schottkyDimers.getNumGenerators()];
+        oddAlpha[0] = 1;
+        IntegerVector e1 = new IntegerVector(oddAlpha);
+        thetaWithChar.setAlpha(e1);
+        thetaWithChar.setBeta(e1);
+
         angles = schottkyDimers.getAngles();
+        for (int k = 0; k < faceAngleAbelMaps.length; k++) {
+            faceAngleAbelMaps[k] = new ComplexVector(schottkyDimers.getNumGenerators());
+            schottkyDimers.abelMap(faceAngleAbelMaps[k], angles[k]);
+        }
         // TODO initialize this in a sensible way? 0 for now.
-        Z = new ComplexVector(dimers.getNumGenerators());
+        Z = new ComplexVector(dimers.getNumGenerators(), 0, 0);
         discreteAbelMap = new ComplexVector[N+2][M+2];
         flipFaceWeights = new double[N][M];
         faceWeightsBeforeEFactors = new double[N][M];
+
+        for (int i = 0; i < factors.length; i++) {
+            thetaSums[i] = new Complex();
+            factors[i] = new Complex();
+        }
+
         computeDiscreteAbelMap();
         computeFaceWeights();
+        checkDiscreteAbelMapCorrectness();
+    }
+
+    private int getAngleIndex(boolean isAlpha, int k) {
+        if (isAlpha) {
+            // Here we use floormod instead of % to ensure that the number is positive.
+            return 2 * Math.floorMod(k, 2);
+        } else {
+            return 3 - 2 * Math.floorMod(k, 2);
+        }
     }
 
     
@@ -38,12 +75,7 @@ public class Z2LatticeFock extends Z2Lattice{
         // returns the kth alpha or beta angle. Assumes total of 4 angles for now
         // Alpha sequence: [a_0^-, a_0^+, a_1^-, ...]
         // Beta sequence:  [b_0^+, b_1^-, b_1^+, ...]
-        if (isAlpha) {
-            // Here we use floormod instead of % to ensure that the number is positive.
-            return angles[2 * Math.floorMod(k, 2)];
-        } else {
-            return angles[3 - 2 * Math.floorMod(k, 2)];
-        }
+        return angles[getAngleIndex(isAlpha, k)];
     }
 
     private Complex[] getAnglesOfFace(int i, int j) {
@@ -53,6 +85,16 @@ public class Z2LatticeFock extends Z2Lattice{
         faceAngles[1] = getAngle(false, j - i);
         faceAngles[2] = getAngle(true, i + j + 1);
         faceAngles[3] = getAngle(false, j - i + 1);
+        return faceAngles;
+     }
+
+     private ComplexVector[] getAngleAbelMapsOfFace(int i, int j) {
+        // returns list of  angle abel maps [alphaNW, betaSW, alphaSE, betaNE] that are associated to the given quad.
+        ComplexVector[] faceAngles = new ComplexVector[4];
+        faceAngles[0] = faceAngleAbelMaps[getAngleIndex(true, i + j)];
+        faceAngles[1] = faceAngleAbelMaps[getAngleIndex(false, j - i)];
+        faceAngles[2] = faceAngleAbelMaps[getAngleIndex(true, i + j + 1)];
+        faceAngles[3] = faceAngleAbelMaps[getAngleIndex(false , j - i + 1)];
         return faceAngles;
      }
 
@@ -69,7 +111,42 @@ public class Z2LatticeFock extends Z2Lattice{
                  discreteAbelMap[i][j] = discreteAbelMap[i][j-1].plus(discreteMapUpdateStep(i, j, 1));
              }
          }
-     }
+    }
+
+    private void checkDiscreteAbelMapCorrectness() {
+        ComplexVector rightStep = new ComplexVector(schottkyDimers.getNumGenerators());
+        ComplexVector tmp = new ComplexVector(schottkyDimers.getNumGenerators());
+        ComplexVector topStep = new ComplexVector(schottkyDimers.getNumGenerators());
+        schottkyDimers.abelMap(tmp, angles[2]);
+        topStep.assignPlus(tmp);
+        schottkyDimers.abelMap(tmp, angles[1]);
+        topStep.assignPlus(tmp);
+        schottkyDimers.abelMap(tmp, angles[0]);
+        topStep.assignMinus(tmp);
+        schottkyDimers.abelMap(tmp, angles[3]);
+        topStep.assignMinus(tmp);
+
+        schottkyDimers.abelMap(tmp, angles[0]);
+        rightStep.assignPlus(tmp);
+        schottkyDimers.abelMap(tmp, angles[1]);
+        rightStep.assignPlus(tmp);
+        schottkyDimers.abelMap(tmp, angles[2]);
+        rightStep.assignMinus(tmp);
+        schottkyDimers.abelMap(tmp, angles[3]);
+        rightStep.assignMinus(tmp);
+
+        boolean isCorrect = true;
+        for (int i = 2; i < discreteAbelMap.length; i++) {
+            for (int j = 2; j < discreteAbelMap.length; j++) {
+                ComplexVector a = discreteAbelMap[i][j].minus(discreteAbelMap[i-2][j]);
+                isCorrect &= topStep.equals(discreteAbelMap[i][j].minus(discreteAbelMap[i-2][j]), 1e-5);
+                ComplexVector b = discreteAbelMap[i][j].minus(discreteAbelMap[i][j-2]);
+                isCorrect &= rightStep.equals(discreteAbelMap[i][j].minus(discreteAbelMap[i][j-2]), 1e-5);
+            }
+        }
+        System.out.println("DiscreteAbelMap RightStep: " + rightStep.im[0] + ", TopStep: " + topStep.im[0]);
+        System.out.println("Weights are correct: " + isCorrect);
+    }
 
     private ComplexVector discreteMapUpdateStep(int i, int j, int direction) {
         // eta(i, j) - eta(i - 1, j) if direction == 0
@@ -90,19 +167,22 @@ public class Z2LatticeFock extends Z2Lattice{
         schottkyDimers.abelMap(v1, alpha);
         schottkyDimers.abelMap(v2, beta);
         if((i+j)%2 == 0) {
-            return v1.minus(v2).divide(new Complex(0, 2*Math.PI));
+            return v1.minus(v2);
         } else {
-            return v2.minus(v1).divide(new Complex(0, 2*Math.PI));
+            return v2.minus(v1);
         }
     }
+    
+    Complex[] thetaSums = new Complex[4];
+    Complex[] factors = new Complex[4];
 
     public void computeFaceWeights() {
-        Complex[] thetaSums = new Complex[4];
-        Complex[] factors = new Complex[4];
-        for (int i = 0; i < factors.length; i++) {
-            thetaSums[i] = new Complex();
-            factors[i] = new Complex();
-        }
+        // ComplexVector testV1 = new ComplexVector(1, 0, -345); 
+        // ComplexVector testV2 = new ComplexVector(1, 0, -350); 
+        // Complex test1 = theta.theta(testV1);
+        // Complex test2 = theta.theta(testV2);
+        // ComplexVector v1 = new ComplexVector(schottkyDimers.getNumGenerators());
+        // schottkyDimers.abelMap(v1, new Complex(-1 ,0));
         // crossRatio of theta of the surrounding faces (and the E differentials)
         for (int i = 1; i < N + 1; i++) {
             for (int j = 1; j < M + 1; j++) {
@@ -110,22 +190,60 @@ public class Z2LatticeFock extends Z2Lattice{
                 theta.theta(discreteAbelMap[i+1][j], factors[2], thetaSums[2]);
                 theta.theta(discreteAbelMap[i][j-1], factors[1], thetaSums[1]);
                 theta.theta(discreteAbelMap[i][j+1], factors[3], thetaSums[3]);
-                // stable way of computing the crossratio treats exp part and sum part separately like this.
+                // numerically stable way of computing the crossratio treats exp part and sum part separately like this.
                 Complex factorsCrossSum = factors[0].plus(factors[2]).minus(factors[1]).minus(factors[3]);
                 Complex crossRatio = Complex.exp(factorsCrossSum).times(thetaSums[0]).times(thetaSums[2]).divide(thetaSums[1]).divide(thetaSums[3]);
                 // Complex crossRatio = theta.theta(discreteAbelMap[i+1][j]).times(theta.theta(discreteAbelMap[i-1][j])).divide(
                 //     theta.theta(discreteAbelMap[i][j+1]).times(theta.theta(discreteAbelMap[i][j-1]))
                 // );
-                Complex[] faceAngles = getAnglesOfFace(i, j);
-                Complex quotiontOfEs1 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[1], faceAngles[0], faceAngles[2]).exp();
-                Complex quotiontOfEs2 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[3], faceAngles[2], faceAngles[0]).exp();
-                Complex Equotients = quotiontOfEs1.times(quotiontOfEs2);
-                crossRatio = crossRatio.times(quotiontOfEs1).times(quotiontOfEs2);
+                
+                crossRatio.assignTimes(getECrossratio(i, j));
+
+                double maxImagPart = 0.001;
+                if(Math.abs(crossRatio.im) > maxImagPart ) {
+                    System.out.println("crossRatio imaginary part too big.");
+                }
 
                 flipFaceWeights[i-1][j-1] = -crossRatio.re; // Should be like this. Check that these are indeed real first!  
                 flipFaceWeights[i-1][j-1] *= ((i+j)%2 == 0) ? volumeConstraint : 1/volumeConstraint;
             }
         }
+    }
+
+    public Complex getThetaCrossRatio(ComplexVector Z, ComplexVector topStep, ComplexVector rightStep) {
+        // Evaluates the theta of theta(Z - topStep/2) * theta(Z + topStep/2) / (theta(Z - rightStep/2) * theta(Z + rightStep/2)) 
+        // For visualization and sanity check purposes.
+        theta.theta(Z.minus(rightStep.divide(2)), factors[0], thetaSums[0]);
+        theta.theta(Z.plus(rightStep.divide(2)), factors[2], thetaSums[2]);
+        theta.theta(Z.minus(topStep.divide(2)), factors[1], thetaSums[1]);
+        theta.theta(Z.plus(topStep.divide(2)), factors[3], thetaSums[3]);
+        // numerically stable way of computing the crossratio treats exp part and sum part separately like this.
+        Complex factorsCrossSum = factors[0].plus(factors[2]).minus(factors[1]).minus(factors[3]);
+        Complex crossRatio = Complex.exp(factorsCrossSum).times(thetaSums[0]).times(thetaSums[2]).divide(thetaSums[1]).divide(thetaSums[3]);
+        return crossRatio;
+    }
+
+    private Complex getECrossratio(int i, int j) {
+        Complex[] faceAngles = getAnglesOfFace(i, j);
+
+        // Method 1 of computing this:
+        Complex quotiontOfEs1 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[1], faceAngles[0], faceAngles[2]).exp();
+        Complex quotiontOfEs2 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[3], faceAngles[2], faceAngles[0]).exp();
+        Complex eCrossRatio = quotiontOfEs1.times(quotiontOfEs2);
+        // Method 2: through odd theta functions:
+        // TODO: switch to numerically stable version here too!
+        ComplexVector[] faceAngleAbelMaps = getAngleAbelMapsOfFace(i, j);
+        Complex thetaCrossRatio = thetaWithChar.theta(faceAngleAbelMaps[2].minus(faceAngleAbelMaps[1]));
+        thetaCrossRatio.assignTimes(thetaWithChar.theta(faceAngleAbelMaps[0].minus(faceAngleAbelMaps[3])));
+        thetaCrossRatio.assignDivide(thetaWithChar.theta(faceAngleAbelMaps[1].minus(faceAngleAbelMaps[0])));
+        thetaCrossRatio.assignDivide(thetaWithChar.theta(faceAngleAbelMaps[3].minus(faceAngleAbelMaps[2])));
+
+        // Compare the two results for sanity:
+        if (! thetaCrossRatio.equals(eCrossRatio, 1e-5)) {
+            System.out.println("E CrossRatio computation methods do not agree!");
+        }
+
+        return thetaCrossRatio;
     }
 
 }

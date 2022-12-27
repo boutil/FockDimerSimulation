@@ -21,7 +21,7 @@ public class LatticeTest {
         SchottkyDimersQuad schottkyDimers = buildSchottkyDimers();
         Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 200, 200);
 
-        // Z2Lattice lattice = new Z2Lattice(200, 200, 0.95);
+        // Z2Lattice lattice = new Z2Lattice(600, 600, 1.04);
 
 
         // // System.out.println(Arrays.deepToString(lattice.faceWeights));
@@ -42,7 +42,11 @@ public class LatticeTest {
 
         // vis.visualizeSim();
 
-        vis.visualizeWeights();
+        // vis.visualizeWeights();
+
+        // vis.visualizeDiscreteAbelMap();
+
+        vis.visualizeThetaCrossRatio(1, 0);
         
     }
 
@@ -98,23 +102,29 @@ public class LatticeTest {
         // First build a SchottkyData.
         int schottkyGenus = 1;
         double a = Math.sqrt(2 / (1.5 + Math.sqrt(2)));
-        double[] schottkyParams = new double[]{-a, 1, -a, -1, 0.3, 0};
+        // double a = 0.01;
+        double[] schottkyParams = new double[]{0, 1, 0, -1, 0.2, 0};
+        // double[] schottkyParams = new double[]{-1, 1, -1, -1, 0.01, 0, 1, 1, 1, -1, 0.01, 0};
         SchottkyData schottkyData = new SchottkyData(schottkyParams);
-        
-        // int schottkyGenus = 2;
-        // double[] schottkyParams = new double[]{0, 1, 0, -1, 0.01, 0, 1.5, 1, 1.5, -1, 0.01, 0};
-        // SchottkyData schottkyData = new SchottkyData(schottkyParams);
-        
-        // Choose some angles
-        // double[] angles = {-0.7, -0.1, 0.4, 1};
 
         // Choose angles in a way such that crossratio is 1:
         double x = a * (1 + Math.sqrt(2));
         double firstAngle = -x - (a/2);
         double[] angles = {firstAngle, firstAngle + x, firstAngle + x + a, firstAngle + x + a + x};
+        
+        // A nice not axis aligned example:
+        // double[] angles = {0, 0.1, 0.16, 0.61};
+        for (int i = 0; i < angles.length; i++) {
+            angles[i] *= 1;
+        }
+        System.out.println("angles crossRatio is " + crossRatio(angles));
         // Create the corresponding schottkyDimers.
         SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(schottkyData, angles);
         return schottkyDimers;
+    }
+
+    public static double crossRatio(double[] vals){
+        return ((vals[1] - vals[0]) * (vals[3] - vals[2]) / (vals[2] - vals[1])) / (vals[0] - vals[3]);
     }
 
 }

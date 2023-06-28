@@ -20,18 +20,20 @@ public class AmoebaExportTest {
     public static void main(String[] args) {
 
         double a = Math.sqrt(2 / (1.5 + Math.sqrt(2)));
-        // double[] schottkyParams = new double[]{-a, 1, -a, -1, 0.3, 0};
-        double[] schottkyParams = new double[]{-a, 1, -a, -1, 0.15, 0, a, 1, a, -1, 0.01, 0};
+        double[] schottkyParams = new double[]{0, 1, 0, -1, 0.2, 0};
+        // double[] schottkyParams = new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.05, 0};
 
         SchottkyData schottkyData = new SchottkyData(schottkyParams);
         
         // Choose some angles
-        // double[] angles = {-0.7, -0.1, 0.4, 1};
-        // Most symmetric angle setup.
-        // double a = 0.05;
         double x = a * (1 + Math.sqrt(2));
         double firstAngle = -x - (a/2);
         double[] angles = {firstAngle, firstAngle + x, firstAngle + x + a, firstAngle + x + a + x};
+
+        for (int i = 0; i < angles.length; i++) {
+            angles[i] *= 1;
+            angles[i] -= 0;
+        }
         // Create the corresponding schottkyDimers.
         SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(schottkyData, angles);
         int numPointsPerSegment = 500;      
@@ -107,7 +109,7 @@ public class AmoebaExportTest {
             // double[][] mappedP = new double[points[i].length][2];
             for (int j = 0; j < points[i].length; j++){
                 try {
-                    mappedP.add(new Double[]{dimers.amoebaMap(points[i][j]).re,dimers.amoebaMap(points[i][j]).im});
+                    mappedP.add(new Double[]{dimers.amoebaMap(points[i][j]).re, dimers.amoebaMap(points[i][j]).im});
                     // mappedP[j][0] = dimers.amoebaMapHexGrid(points[i][j]).re;
                     // mappedP[j][1] = dimers.amoebaMapHexGrid(points[i][j]).im;
                 } catch (Exception e) {

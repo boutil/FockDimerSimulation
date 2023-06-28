@@ -1,10 +1,12 @@
 package de.jtem.riemann.schottky;
 import de.jtem.mfc.field.Complex;
+
+import java.io.Serializable;
 import java.lang.Math;
 import java.util.Objects;
 
 
-public class AmoebaMap {
+public class AmoebaMap implements Serializable{
 
     final SchottkyDimers schottky;
 
@@ -299,17 +301,25 @@ public class AmoebaMap {
       element.applyTo(P, sP);
       element.applyTo(P0, sP0);
       
-      H.assignDivide(sP.minus(angles[2]), sP.minus(angles[0]));
-      H.assignTimes(sP.minus(angles[3]).divide(sP.minus(angles[1])));
-      G.assignDivide(sP.minus(angles[0]), sP.minus(angles[2]));
-      G.assignTimes(sP.minus(angles[3]).divide(sP.minus(angles[1])));
-      H_corr.assignDivide(sP0.minus(angles[2]), sP0.minus(angles[0]));
-      H_corr.assignTimes(sP0.minus(angles[3]).divide(sP0.minus(angles[1])));
-      G_corr.assignDivide(sP0.minus(angles[0]), sP0.minus(angles[2]));
-      G_corr.assignTimes(sP0.minus(angles[3]).divide(sP0.minus(angles[1])));
+      // H.assignDivide(sP.minus(angles[2]), sP.minus(angles[0]));
+      // H.assignTimes(sP.minus(angles[3]).divide(sP.minus(angles[1])));
+      // G.assignDivide(sP.minus(angles[0]), sP.minus(angles[2]));
+      // G.assignTimes(sP.minus(angles[3]).divide(sP.minus(angles[1])));
+      // H_corr.assignDivide(sP0.minus(angles[2]), sP0.minus(angles[0]));
+      // H_corr.assignTimes(sP0.minus(angles[3]).divide(sP0.minus(angles[1])));
+      // G_corr.assignDivide(sP0.minus(angles[0]), sP0.minus(angles[2]));
+      // G_corr.assignTimes(sP0.minus(angles[3]).divide(sP0.minus(angles[1])));
 
-      product_re += Math.log(H.abs() * H_corr.abs());
-      product_im += Math.log(G.abs() * G_corr.abs());
+      H.assignDivide(sP.minus(angles[2]), sP.minus(angles[0]));
+      G.assignDivide(sP.minus(angles[3]), sP.minus(angles[1]));
+      H_corr.assignDivide(sP0.minus(angles[2]), sP0.minus(angles[0]));
+      G_corr.assignDivide(sP0.minus(angles[3]), sP0.minus(angles[1]));
+
+
+      // product_re += H.arg() - H_corr.arg();
+      // product_im += G.arg() - G_corr.arg();
+      product_re += Math.log(H.abs() / H_corr.abs());
+      product_im += Math.log(G.abs() / G_corr.abs());
 
       if (element.child == null) {
         schottky.createLeftChilds(element);

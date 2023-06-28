@@ -42,7 +42,7 @@ import de.jtem.mfc.field.Complex;
  * @version 1.0
  */
 
-class AbelianIntegral {
+class AbelianIntegral implements Serializable{
 
   final Schottky schottky;
 

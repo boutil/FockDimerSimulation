@@ -13,14 +13,13 @@ import de.jtem.riemann.theta.ThetaWithChar;
 public class Z2LatticeFock extends Z2Lattice{
     
 
-    public SchottkyDimersQuad schottkyDimers;
+    public transient SchottkyDimersQuad schottkyDimers;
     public ComplexVector[][] discreteAbelMap;
     // public int N, M;
     public ComplexVector Z;
-    public Theta theta;
-    public double[][] faceWeightsBeforeEFactors;
+    public transient Theta theta;
 
-    private ThetaWithChar thetaWithChar;
+    private transient ThetaWithChar thetaWithChar;
 
     // For now we assume only 4 angles: alpha-, beta-, alpha+, beta+
     public Complex[] angles;
@@ -49,7 +48,6 @@ public class Z2LatticeFock extends Z2Lattice{
         Z = new ComplexVector(dimers.getNumGenerators(), 0, 0);
         discreteAbelMap = new ComplexVector[N+2][M+2];
         flipFaceWeights = new double[N][M];
-        faceWeightsBeforeEFactors = new double[N][M];
 
         for (int i = 0; i < factors.length; i++) {
             thetaSums[i] = new Complex();
@@ -148,10 +146,11 @@ public class Z2LatticeFock extends Z2Lattice{
         System.out.println("Weights are correct: " + isCorrect);
     }
 
-    private ComplexVector discreteMapUpdateStep(int i, int j, int direction) {
-        // eta(i, j) - eta(i - 1, j) if direction == 0
-        // eta(i, j) - eta(i, j - 1) if direction == 1
-        // Handles the angles
+    private boolean abelIncrementsComputed = false;
+    // [right to even, right to odd, top to even, top to odd]
+    private ComplexVector[] abelIncrements = new ComplexVector[4];
+
+    private ComplexVector computeDiscreteUpdateStep(int i, int j, int direction) {
         ComplexVector v1 = new ComplexVector(schottkyDimers.getNumGenerators());
         ComplexVector v2 = new ComplexVector(schottkyDimers.getNumGenerators());
         Complex alpha;
@@ -171,6 +170,23 @@ public class Z2LatticeFock extends Z2Lattice{
         } else {
             return v2.minus(v1);
         }
+    }
+
+    private ComplexVector discreteMapUpdateStep(int i, int j, int direction) {
+        // eta(i, j) - eta(i - 1, j) if direction == 0
+        // eta(i, j) - eta(i, j - 1) if direction == 1
+        // Handles the angles
+        if(!abelIncrementsComputed) {
+            // Compute increments if not yet computed
+            abelIncrements[0] = computeDiscreteUpdateStep(1, 1, 0);
+            abelIncrements[1] = computeDiscreteUpdateStep(2, 1, 0);
+            abelIncrements[2] = computeDiscreteUpdateStep(1, 1, 1);
+            abelIncrements[3] = computeDiscreteUpdateStep(1, 2, 1);
+            abelIncrementsComputed = true;
+        }
+        int index = ((i + j) % 2) + 2 * direction;
+        return abelIncrements[index];
+        
     }
     
     Complex[] thetaSums = new Complex[4];
@@ -205,7 +221,7 @@ public class Z2LatticeFock extends Z2Lattice{
                 }
 
                 flipFaceWeights[i-1][j-1] = -crossRatio.re; // Should be like this. Check that these are indeed real first!  
-                flipFaceWeights[i-1][j-1] *= ((i+j)%2 == 0) ? volumeConstraint : 1/volumeConstraint;
+                flipFaceWeights[i-1][j-1] *= ((i+j)%2 == 0) ? faceWeightMultiplier : 1/faceWeightMultiplier;
             }
         }
     }

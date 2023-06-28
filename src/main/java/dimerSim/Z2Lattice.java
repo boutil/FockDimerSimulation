@@ -12,20 +12,20 @@ public class Z2Lattice implements Serializable{
     public double[][] flipFaceWeights;
     public int N, M;
 
-    public double volumeConstraint;
+    public double faceWeightMultiplier;
 
-    public Z2Lattice(int N, int M, double volumeConstraint) {
+    public Z2Lattice(int N, int M, double faceWeightMultiplier) {
         flipFaceWeights = new double[N][M];
         this.N = N;
         this.M = M;
 
-        this.volumeConstraint = volumeConstraint;
+        this.faceWeightMultiplier = faceWeightMultiplier;
         for(double[] row : flipFaceWeights){
             Arrays.fill(row, 1);
         }
         for (int i = 0; i < flipFaceWeights.length; i++) {
             for (int j = 0; j < flipFaceWeights[i].length; j++) {
-                flipFaceWeights[i][j] = ((i+j)%2 == 0) ? volumeConstraint : 1/volumeConstraint;
+                flipFaceWeights[i][j] = ((i+j)%2 == 0) ? faceWeightMultiplier : 1/faceWeightMultiplier;
                 // flipFaceWeights[i][j] = volumeConstraint;
             }
         }

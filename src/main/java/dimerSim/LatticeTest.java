@@ -21,32 +21,31 @@ public class LatticeTest {
         SchottkyDimersQuad schottkyDimers = buildSchottkyDimers();
         Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 200, 200);
 
-        // Z2Lattice lattice = new Z2Lattice(600, 600, 1.04);
+        // Z2Lattice lattice = new Z2Lattice(400, 400);
 
 
         // // System.out.println(Arrays.deepToString(lattice.faceWeights));
 
         sim = new MarkovSimZ2(lattice);
-        // // sim.initializeAztecDiamond();
-        // sim.initializeFlatSquare();
-        // sim.simulate(10000, true);
 
-        // sim = simAztecDiamond(100, 10000);
-        // sim = loadSim("mySim.ser");
+        // sim = loadSim("mySimv2.ser");
 
-        // saveSim(sim, "mySim.ser");
+        // sim.simulate(100000, 0.25);
+
+
+        // saveSim(sim, "mySimCentralCase.ser");
 
         // System.out.println(Arrays.deepToString(lattice.flipFaceWeights));
 
         VisualizationZ2 vis = new VisualizationZ2(sim);
 
-        // vis.visualizeSim();
+        // vis.visualizeSim(5);
 
-        // vis.visualizeWeights();
+        vis.visualizeWeights();
 
         // vis.visualizeDiscreteAbelMap();
 
-        vis.visualizeThetaCrossRatio(1, 0);
+        // vis.visualizeThetaCrossRatio(-3.1691590245331893, 5.071383906313774);
         
     }
 
@@ -87,10 +86,10 @@ public class LatticeTest {
         Z2Lattice lattice = new Z2Lattice(N, M);
 
         MarkovSimZ2 sim = new MarkovSimZ2(lattice);
-        sim.initializeAztecDiamond();
+        // sim.initializeAztecDiamond();
 
         long preSim = System.currentTimeMillis();
-        sim.simulate(numSteps);
+        // sim.simulate(numSteps);
         System.out.println("Simulation took " + (System.currentTimeMillis() - preSim)/1000 + " seconds");
 
         return sim;
@@ -103,19 +102,22 @@ public class LatticeTest {
         int schottkyGenus = 1;
         double a = Math.sqrt(2 / (1.5 + Math.sqrt(2)));
         // double a = 0.01;
-        double[] schottkyParams = new double[]{0, 1, 0, -1, 0.2, 0};
-        // double[] schottkyParams = new double[]{-1, 1, -1, -1, 0.01, 0, 1, 1, 1, -1, 0.01, 0};
-        SchottkyData schottkyData = new SchottkyData(schottkyParams);
-
+        // double[] schottkyParams = new double[]{0, 1, 0, -1, 0.01, 0};
+        
         // Choose angles in a way such that crossratio is 1:
         double x = a * (1 + Math.sqrt(2));
         double firstAngle = -x - (a/2);
         double[] angles = {firstAngle, firstAngle + x, firstAngle + x + a, firstAngle + x + a + x};
         
+        // double[] schottkyParams = new double[]{firstAngle - 0.5, 0, firstAngle + x + a + x + 0.5, 0, 0.00005, 0};
+        double[] schottkyParams = new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.003, 0};
+        SchottkyData schottkyData = new SchottkyData(schottkyParams);
+
         // A nice not axis aligned example:
         // double[] angles = {0, 0.1, 0.16, 0.61};
         for (int i = 0; i < angles.length; i++) {
-            angles[i] *= 1;
+            angles[i] *= 0.1;
+            angles[i] -= 0;
         }
         System.out.println("angles crossRatio is " + crossRatio(angles));
         // Create the corresponding schottkyDimers.

@@ -1,14 +1,32 @@
 package dimerSim;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
+
+import de.jtem.numericalMethods.util.Arrays;
 
 public class MarkovSimZ2 implements Serializable{
     public Z2Lattice lattice;
-    private int[][] heigthFunction;
+    // states of each face. Encodes a dimer configuration. Can compute a height function from this.
+    // 2^0 * W + 2^1 * S + 2^2 * E + 2^3 * N
+    private byte[][] faceStates;
+    private byte ns = 0b1010;
+    private byte we = 0b0101;
+
+    public int currentVolume;
+
+    public int[][] heightFunction;
     // Indicates for each face whether it should be updated.
     public boolean[][] insideBoundary;
+    
     private Random rand;
+
+    List<Index> upFlippableIndices;
+    List<Index> downFlippableIndices;
     
     // Only makes sense to not set to 1 in case of uniform 1 face weights.
     private double acceptanceRatioConstant = 0.99;
@@ -16,149 +34,228 @@ public class MarkovSimZ2 implements Serializable{
     public MarkovSimZ2(Z2Lattice lattice) {
         this.lattice = lattice;
         // initialize height function in a sensible way
-        heigthFunction = new int[lattice.N][lattice.M];
+        faceStates = new byte[lattice.N][lattice.M];
+
+        heightFunction = new int[lattice.N][lattice.M];
         insideBoundary = new boolean[lattice.N][lattice.M];
-        
+
         initializeFlatSquare();
         long seed = 42; // for reproducability
         rand = new Random(seed);
     }
 
-    private void markovStep(int parity) {
-        // update the height function probabilistically at every even or odd face.
-        // recognize if a face is flippable by comparing neighbors. 
-        // If so, flip with correct propability.
-        
-        // For now iterate over the entire lattice. Should probably only consider the flippable faces.
+    private void markovStepUpVol(int parity, int volumeToAchieve) {
+        // Takes a step into the direction of +volume.
+        int flipSign = (volumeToAchieve - currentVolume / 4 > 0) ? 1 : -1;
         for (int i = 0; i < lattice.N; i++) {
             for (int j = 0; j < lattice.M; j++) {
+                if (currentVolume/4 == volumeToAchieve/4) {
+                    return;
+                }
                 if (!insideBoundary[i][j]) {
                     continue;
                 }
                 if ((i + j) % 2 == parity) {
-                    int faceState = getFaceState(i, j);
-                    if (faceState == 5) {
-                        double a = (1/lattice.flipFaceWeights[i][j]) * acceptanceRatioConstant;
-                        if (rand.nextDouble() < a){
-                            int sign = heigthFunction[i + 1][j] - heigthFunction[i][j]; 
-                            heigthFunction[i][j] += sign * 4;
-                        }
-                    }
-                    if (faceState == 10) {
-                        double a = lattice.flipFaceWeights[i][j] * acceptanceRatioConstant;
-                        if (rand.nextDouble() < a){
-                            int sign = heigthFunction[i][j + 1] - heigthFunction[i][j];
-                            heigthFunction[i][j] += sign * 4;
-                        }
+                    if (flippableDirection(i, j) == flipSign) {
+                        flipFace(i, j);
                     }
                 }
             }    
         }
     }
 
-    public void simulate(int numSteps) {
-        simulate(numSteps, false);
+    private void markovStepSameVol() {
+        // create pairs of up and down flppable pairs and flip them all with the right probability.
+        upFlippableIndices = new ArrayList<Index>();
+        downFlippableIndices = new ArrayList<Index>();
+        for (int i = 0; i < faceStates.length; i++) {
+            for (int j = 0; j < faceStates[i].length; j++) {
+                if(flippableDirection(i, j) == 1) {
+                    upFlippableIndices.add(new Index(i, j));
+                } else if (flippableDirection(i, j) == -1) {
+                    downFlippableIndices.add(new Index(i, j));
+                }
+            }
+        }
+        Collections.shuffle(upFlippableIndices);
+        Collections.shuffle(downFlippableIndices);
+        for (int i = 0; i < Math.min(upFlippableIndices.size(), downFlippableIndices.size()); i++) {
+            Index upIndex = upFlippableIndices.get(i);
+            Index downIndex = downFlippableIndices.get(i);
+            if (! upIndex.isNeighbor(downIndex)) {
+                double upProp = lattice.flipFaceWeights[upIndex.x][upIndex.y];
+                double prop = (faceStates[upIndex.x][upIndex.y] == ns) ? upProp : 1/upProp;
+                double downProp = lattice.flipFaceWeights[downIndex.x][downIndex.y];
+                prop *= (faceStates[upIndex.x][upIndex.y] == ns) ? downProp : 1/downProp;
+                prop *= acceptanceRatioConstant;
+                if (rand.nextDouble() < prop) {
+                    if (flippableDirection(upIndex) == 1 && flippableDirection(downIndex) == -1) {
+                        flipFace(upIndex);
+                        flipFace(downIndex);
+                    }
+                }
+            }
+        }
+
     }
 
-    public void simulate(int numSteps, boolean progressReport) {
-        int reportFreq = numSteps/10;
-        for (int i = 0; i < numSteps; i++) {
-            if (progressReport && (i % reportFreq == 0)) {
-                System.out.println("Done with " + i + " steps.");
-            }
-            // Choose parity at random at each step. Can probably just alternate too?
-            markovStep(rand.nextInt(2));
+    private void flipFace(Index ind) {
+        if (faceStates[ind.x][ind.y] == ns || faceStates[ind.x][ind.y] == we) {
+            int direction = flippableDirection(ind.x, ind.y);
+            currentVolume += 4 * direction;
+
+            faceStates[ind.x][ind.y] ^= 0b1111;
+            faceStates[ind.x-1][ind.y] ^= 0b0100;
+            faceStates[ind.x][ind.y-1] ^= 0b1000;
+            faceStates[ind.x+1][ind.y] ^= 0b0001;
+            faceStates[ind.x][ind.y+1] ^= 0b0010;
         }
+    }
+
+    private void flipFace(int i, int j) {
+        flipFace(new Index(i,j));
+    }
+
+    private int flippableDirection(Index ind) {
+        return flippableDirection(ind.x, ind.y);
+    }
+
+    private int flippableDirection(int i, int j) {
+        // returns 1 if flippable in + direction, -1 if in - direction and 0 if not flippable
+        int flipDir = 0;
+        if (faceStates[i][j] == ns) {
+            flipDir = 2 * ((i + j + 1) % 2) - 1;
+        } else if (faceStates[i][j] == we) {
+            flipDir = 2 * ((i + j) % 2) - 1;
+        }
+        return flipDir;
+    }
+
+    private int computeVolume() {
+        // computes volume enclosed by the height function. That's just the integral
+        int vol = 0;
+        for (int i = 0; i < faceStates.length; i++) {
+            for (int j = 0; j < faceStates.length; j++) {
+                vol += heightFunction[i][j];
+            }
+        }
+        return vol;
+    }
+
+    // private int[] chooseRandomFlippableFace() {
+
+    // }
+
+    // public void simulate(int numSteps) {
+    //     simulate(numSteps, false);
+    // }
+
+    // public void simulate(int numSteps, boolean progressReport) {
+    //     int reportFreq = numSteps/10;
+    //     for (int i = 0; i < numSteps; i++) {
+    //         if (progressReport && (i % reportFreq == 0)) {
+    //             System.out.println("Done with " + i + " steps.");
+    //         }
+    //         // Choose parity at random at each step. Can probably just alternate too? 
+    //         // Do we need to take weights into account here?
+    //         // markovStep(rand.nextInt(2));
+    //     }
+    // }
+
+    public void simulate(int numSteps, double averageNormalizedHeight) {
+        // volumeConstraint is per square. So we multiply it by N*M here.
+        averageNormalizedHeight *= lattice.N;
+        int volumeGoal = (int) (averageNormalizedHeight * lattice.N * lattice.M);
+        int maxSteps = 1000;
+        // First get to the desired volume
+        for (int i = 0; i < maxSteps; i++) {
+            markovStepUpVol(rand.nextInt(2), volumeGoal);
+            if (currentVolume == volumeGoal) {
+                computeHeightFunctionFromFaceStates();
+                break;
+            }
+        }
+        System.out.println("volume " + currentVolume + " reached. Starting simulation.");
+        // Now start random updates while maintaining volume.
+        int reportFreq = numSteps/10;
+
+        for (int i = 0; i < numSteps; i++) {
+            if ((i % reportFreq == 0)) {
+                System.out.println("Done with " + i + " steps. Current volume: " + currentVolume);
+            }
+            markovStepSameVol();
+        }
+        computeHeightFunctionFromFaceStates();
     }
 
     public Integer getHeight(int i, int j) {
         if (insideBoundary[i][j]) {
-            return heigthFunction[i][j];
+            return heightFunction[i][j];
         } else{
             return 0;
         }
     }
 
-    private int getFaceState(int i, int j){
-        // Returns a representation of which sides of the face have dimers adjacent to it.
-        // 2^0 * N + 2^1 * W + 2^2 * S + 2^3 * E. Here the letters are 0 or one depending on if there is a dimer crossing in that direction.
-        // i.e. 5 if we have dimers on top+bottom and 10 -> These are the flippable states.
-
-        // all these heightfunction-heightfunction expressions should be either of magnitude 1 or 3. 3 represents a dimer, 1 absence thereof.
-        // Therefore take abs() and divide by 2.
-
-        // Let's check for errors first:
-        int e = heigthFunction[i + 1][j] - heigthFunction[i][j];
-        int w = heigthFunction[i - 1][j] - heigthFunction[i][j];
-        int n = heigthFunction[i][j + 1] - heigthFunction[i][j];
-        int s = heigthFunction[i][j - 1] - heigthFunction[i][j];
-        if ((Math.abs(e) != 1) && (Math.abs(e) != 3)) {
-            System.out.println("not a height function.");
-        }
-        if ((Math.abs(w) != 1) && (Math.abs(w) != 3)) {
-            System.out.println("not a height function.");
-        }
-        if ((Math.abs(n) != 1) && (Math.abs(n) != 3)) {
-            System.out.println("not a height function.");
-        }
-        if ((Math.abs(s) != 1) && (Math.abs(s) != 3)) {
-            System.out.println("not a height function.");
-        }
-
-
-
-        int E = Math.abs(heigthFunction[i + 1][j] - heigthFunction[i][j]) / 2;
-        int W = Math.abs(heigthFunction[i - 1][j] - heigthFunction[i][j]) / 2;
-        int N = Math.abs(heigthFunction[i][j + 1] - heigthFunction[i][j]) / 2;
-        int S = Math.abs(heigthFunction[i][j - 1] - heigthFunction[i][j]) / 2;
-        return N + 2 * W + 4 * S + 8 * E;
-    }
-
     // Can initialize in many different ways. Should have different versions of this function for different boundary conditions.
     public void initializeFlatSquare() {
         // This corresponds to a matching of only horizontal 
+        faceStates = new byte[lattice.N][lattice.M];
         for (int i = 0; i < lattice.N; i++) {
             for (int j = 0; j < lattice.M; j++) {
-                if (j % 2 == 0){
-                    heigthFunction[i][j] = (i%2==0)? 0: -1; 
-                } else {
-                    heigthFunction[i][j] = (i%2==0)? 1: 2;
-                }
                 // Boundary is boundary of the lattice.
                 insideBoundary[i][j] = !((i==0) || (i==lattice.N - 1) || (j==0) || (j==lattice.M - 1));
-            }
-        }
-    }
-
-    public void initializeAztecDiamond() {
-        int diamondCenter = lattice.N/2;
-        for (int i = 0; i < lattice.N; i++) {
-            for (int j = 0; j < lattice.M; j++) {
-                int lineOffSet = 2 * (j - Math.max(0, 2*j - lattice.N));
-                if (j % 2 == 0){
-                    heigthFunction[i][j] = lineOffSet + i%2;
-                } else {
-                    heigthFunction[i][j] = lineOffSet + 1 - i%2;
+                if (i % 2 == 1) {
+                    // Boundary cases
+                    if (j == 0) {
+                        faceStates[i][j] = 0b1000;
+                    } else if (j ==lattice.M - 1) {
+                        faceStates[i][j] = 0b0010;
+                    } else if (insideBoundary[i][j]){
+                        faceStates[i][j] = ns;
+                    }
                 }
-                // Boundary is boundary of the diamond.
-                insideBoundary[i][j] = ((Math.abs(diamondCenter - i) + Math.abs(diamondCenter - j)) < lattice.N/2 - 1);
+            }
+        }
+        computeHeightFunctionFromFaceStates();
+        currentVolume = computeVolume();
+    }
+
+    private void computeHeightFunctionFromFaceStates() {
+        // computes the height function associated to the current face states.
+        // Note that this only produces an actual height function if the face states encode a perfect matching! - (Could check for this - maybe todo)
+        for (int i = 0; i < heightFunction.length; i++) {
+            if(i==0) {
+                heightFunction[0][0] = 0;
+            } else {
+                heightFunction[i][0] = heightFunction[i-1][0] + (2 * (i % 2) - 1);
+            }
+            for (int j = 1; j < heightFunction[i].length; j++) {
+                int heightChange = 1 - 4 * ((faceStates[i][j] >> 1) & 1);
+                int sign = 2 * ((i+j+1) % 2) - 1;
+                heightFunction[i][j] = heightFunction[i][j-1] + sign * heightChange;
             }
         }
     }
-    
-    // TODO need a flexible way of initializing boundary conditions!
-    // Idea: Use aztec diamond like shape:
-    // Main observation: staircase pattern gives +1 or -1 slope. Double staircase pattern gives +0 slope. 
-    // Combining them by alternating with the right frequency gives whichever slope we want. 
-    // Therefore by doing this carefully we get a diamond shape with the right slopes on each side.
-    public void initializeSlopedDiamond(double slopeSW, double slopeSE, double slopeNE) {
-        // Slopes interpreted as slope going counterclockwise along the corresponding diagonal.
-        // All slopes must be within [-1, 1]. SlopeNW is then minus their sum to ensure consistency.
-        // Thus their sum must also be in [-1, 1].
-        double slopeNW = 0 - slopeSW - slopeSE - slopeNE;
-        
+}
 
+class Index implements Serializable{
+    final int x;
+    final int y;
+
+    Index(int x, int y) {this.x=x;this.y=y;}
+
+    public boolean isNeighbor (Index other) {
+        return (Math.abs(x - other.x) + Math.abs(y - other.y)) == 1;
     }
 
-
+    public boolean equals (Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof Index)) {
+            return false;
+        }
+        Index c = (Index) o;
+        return (c.x == x) & (c.y == y);
+}
 }

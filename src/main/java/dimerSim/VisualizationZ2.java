@@ -17,6 +17,7 @@ import org.jzy3d.plot3d.rendering.canvas.Quality;
 
 import de.jtem.blas.ComplexVector;
 import de.jtem.mfc.field.Complex;
+import de.jtem.numericalMethods.util.Arrays;
 
 public class VisualizationZ2 {
 
@@ -96,23 +97,21 @@ public class VisualizationZ2 {
     }
 
 
-    public void visualizeSim() {
+    public void visualizeSim(int smoothingFilterSize) {
         // We can do some subsampling here for better graphics performance (and maybe some smoothing too)
         int maxRes = 200;
 
-        Func3D func = new Func3D((x, y) -> sim.getHeight(x.intValue(), y.intValue()).doubleValue());
+        double[][] smoothedHeightFunction = getSmoothedHeightFunction(smoothingFilterSize);
+
+        Func3D func = new Func3D((x, y) -> smoothedHeightFunction[x.intValue()][y.intValue()]);
         Range range = new Range(0, sim.lattice.N - 1);
         int steps = Math.min(sim.lattice.N, maxRes);
     
         // Create the object to represent the function over the given range.
         final Shape surface = new SurfaceBuilder().orthonormal(new OrthonormalGrid(range, steps), func);
-        visualizeSurface(surface);
+        // visualizeSurface(surface);
 
-    }
-
-
-    private void visualizeSurface(final Shape surface) {
-        surface.setColorMapper(new ColorMapper(new ColorMapRainbow(), surface, new Color(1, 1, 1, .5f)));
+        surface.setColorMapper(new ColorMapNormal(smoothedHeightFunction));
         surface.setFaceDisplayed(true);
         surface.setWireframeDisplayed(true);
         surface.setWireframeColor(Color.BLACK);
@@ -123,6 +122,56 @@ public class VisualizationZ2 {
         chart.getScene().getGraph().add(surface);
         chart.open();
         chart.addMouse();
+
+    }
+
+
+    private void visualizeSurface(final Shape surface) {
+        surface.setColorMapper(new ColorMapper(new ColorMapRainbow(), surface, new Color(1, 1, 1, .5f)));
+        // surface.setColorMapper(new ColorMapNormal());
+        surface.setFaceDisplayed(true);
+        surface.setWireframeDisplayed(true);
+        surface.setWireframeColor(Color.BLACK);
+    
+        // Create a chart
+        IChartFactory f = new AWTChartFactory();
+        Chart chart = f.newChart(Quality.Advanced().setHiDPIEnabled(true));
+        chart.getScene().getGraph().add(surface);
+        chart.open();
+        chart.addMouse();
+    }
+
+
+    public double[][] getSmoothedHeightFunction(int filterSize) {
+        double[][] smoothedHeightFunction = new double[sim.heightFunction.length][sim.heightFunction.length];
+        for (int i = 0; i < smoothedHeightFunction.length; i++) {
+            for (int j = 0; j < smoothedHeightFunction.length; j++) {
+                smoothedHeightFunction[i][j] = sim.heightFunction[i][j];
+            }
+        }
+        double[][] filter = new double[filterSize][filterSize];
+        int n = filterSize / 2;
+        for (int i = 0; i < filter.length; i++) {
+            Arrays.fill(filter[i], 1/Math.pow(filter.length, 2));
+        }
+        for (int i = n; i < smoothedHeightFunction.length - n; i++) {
+            for (int j = n; j < smoothedHeightFunction[i].length - n; j++) {
+                smoothedHeightFunction[i][j] = singlePixelConvolution(sim.heightFunction, filter, i, j);
+            }
+        }
+        return smoothedHeightFunction;
+    }
+
+    private double singlePixelConvolution(int[][] pic, double[][] filter, int i, int j) {
+        // Assumes a square uneven size filter
+        int n = filter.length / 2;
+        double val = 0;
+        for (int k = -n; k <= n; k++) {
+            for (int l = -n; l <= n; l++) {
+                val += pic[i + k][j + l] * filter[k + n][l + n];
+            }
+        }
+        return val;
     }
 
 }

@@ -31,7 +31,7 @@ public class AmoebaExportTest {
         double[] angles = {firstAngle, firstAngle + x, firstAngle + x + a, firstAngle + x + a + x};
 
         for (int i = 0; i < angles.length; i++) {
-            angles[i] *= 1;
+            angles[i] *= 0.3;
             angles[i] -= 0;
         }
         // Create the corresponding schottkyDimers.
@@ -64,7 +64,7 @@ public class AmoebaExportTest {
         String allAmoebasJSON = gson.toJson(allAmoebas);
 
         try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter("exportedPoints_QuadAmoeba.json"));
+            BufferedWriter bw = new BufferedWriter(new FileWriter("exportedPoints_QuadAmoebatimes05.json"));
             bw.write(allAmoebasJSON);
             bw.close();
         } catch (Exception e) {

@@ -31,7 +31,7 @@ public class MarkovSimZ2 implements Serializable{
     // Only makes sense to not set to 1 in case of uniform 1 face weights.
     private double acceptanceRatioConstant = 0.99;
 
-    public MarkovSimZ2(Z2Lattice lattice) {
+    public MarkovSimZ2(Z2Lattice lattice, boolean flat) {
         this.lattice = lattice;
         // initialize height function in a sensible way
         faceStates = new byte[lattice.N][lattice.M];
@@ -39,9 +39,22 @@ public class MarkovSimZ2 implements Serializable{
         heightFunction = new int[lattice.N][lattice.M];
         insideBoundary = new boolean[lattice.N][lattice.M];
 
-        initializeFlatSquare();
+        if (flat){
+            initializeFlatSquare();
+        } else {
+            initializeAztecDiamond();
+        }
         long seed = 42; // for reproducability
         rand = new Random(seed);
+    }
+
+    public void setLattice(Z2Lattice newLattice) {
+        // Used to change weights for a given lattice.
+        if (lattice.N != newLattice.N || lattice.M != newLattice.M) {
+            System.out.println("cannot swap lattices. Dimensions do not match.");
+            return;
+        }
+        lattice = newLattice;
     }
 
     private void markovStepUpVol(int parity, int volumeToAchieve) {
@@ -61,6 +74,23 @@ public class MarkovSimZ2 implements Serializable{
                     }
                 }
             }    
+        }
+    }
+
+    private void markovStep(int parity) {
+        for (int i = 0; i < faceStates.length; i++) {
+            for (int j = 0; j < faceStates[i].length; j++) {
+                if (((i + j) % 2 == parity) && insideBoundary[i][j]) {
+                    // if (flippableDirection(i, j) != 0) {
+                    double upProp = lattice.flipFaceWeights[i][j];
+                    double prop = (faceStates[i][j] == ns) ? upProp : 1/upProp;
+                    prop *= acceptanceRatioConstant;
+                    if (rand.nextDouble() < prop) {
+                        flipFace(i, j);
+                    }
+                    // }
+                }
+            }
         }
     }
 
@@ -96,7 +126,12 @@ public class MarkovSimZ2 implements Serializable{
                 }
             }
         }
+    }
 
+    public boolean isDimer(Index coords, int direction) {
+        // returns true if there is a dimer in the given direction from the coords face.
+        // direction in {0,1,2,3}
+        return ((faceStates[coords.x][coords.y] >> direction) & 1) != 0;
     }
 
     private void flipFace(Index ind) {
@@ -142,25 +177,17 @@ public class MarkovSimZ2 implements Serializable{
         return vol;
     }
 
-    // private int[] chooseRandomFlippableFace() {
-
-    // }
-
-    // public void simulate(int numSteps) {
-    //     simulate(numSteps, false);
-    // }
-
-    // public void simulate(int numSteps, boolean progressReport) {
-    //     int reportFreq = numSteps/10;
-    //     for (int i = 0; i < numSteps; i++) {
-    //         if (progressReport && (i % reportFreq == 0)) {
-    //             System.out.println("Done with " + i + " steps.");
-    //         }
-    //         // Choose parity at random at each step. Can probably just alternate too? 
-    //         // Do we need to take weights into account here?
-    //         // markovStep(rand.nextInt(2));
-    //     }
-    // }
+    public void simulate(int numSteps) {
+        int reportFreq = numSteps/10;
+        for (int i = 0; i < numSteps; i++) {
+            if ((i % reportFreq == 0)) {
+                System.out.println("Done with " + i + " steps.");
+            }
+            // Choose parity at random at each step. Can probably just alternate too? 
+            // Do we need to take weights into account here?
+            markovStep(rand.nextInt(2));
+        }
+    }
 
     public void simulate(int numSteps, double averageNormalizedHeight) {
         // volumeConstraint is per square. So we multiply it by N*M here.
@@ -220,6 +247,40 @@ public class MarkovSimZ2 implements Serializable{
         currentVolume = computeVolume();
     }
 
+    public void initializeAztecDiamond() {
+        // We assume N = M both odd. Then builds an N-2 x N-2 aztec diamond on the inside.
+        faceStates = new byte[lattice.N][lattice.M];
+        Index diamondCenter = new Index(lattice.N / 2, lattice.N / 2);
+        Index bottomIndex = new Index(lattice.N / 2, 1);
+        for (int i = 0; i < lattice.N; i++) {
+            for (int j = 0; j < lattice.M; j++) {
+                // Boundary of the lattice.
+                insideBoundary[i][j] = diamondCenter.l1Dist(i, j) <= lattice.N / 2 - 1;
+                if (j < diamondCenter.y) {
+                    if (bottomIndex.minus(i, j).isEven()) {
+                        faceStates[i][j] = 0b0010;
+                    } else {
+                        faceStates[i][j] = 0b1000;
+                    }
+                } else if (j > diamondCenter.y) {
+                    if (bottomIndex.minus(i, j).isEven()) {
+                        faceStates[i][j] = 0b1000;
+                    } else {
+                        faceStates[i][j] = 0b0010;
+                    }
+                } else {
+                    if (bottomIndex.minus(i, j).isEven()) {
+                        faceStates[i][j] = 0b1010;
+                    }
+                }
+            }
+        }
+        computeHeightFunctionFromFaceStates();
+        currentVolume = computeVolume();
+    }
+
+
+
     private void computeHeightFunctionFromFaceStates() {
         // computes the height function associated to the current face states.
         // Note that this only produces an actual height function if the face states encode a perfect matching! - (Could check for this - maybe todo)
@@ -257,5 +318,17 @@ class Index implements Serializable{
         }
         Index c = (Index) o;
         return (c.x == x) & (c.y == y);
-}
+    }
+
+    public Index minus(int i, int j) {
+        return new Index(x - i, y - j);
+    }
+
+    public int l1Dist(int i, int j) {
+        return Math.abs(i - x) + Math.abs(j - y);
+    }
+
+    public boolean isEven() {
+        return ((x + y) % 2) == 0;
+    }
 }

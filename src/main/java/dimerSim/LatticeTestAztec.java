@@ -13,31 +13,36 @@ import de.jtem.riemann.schottky.SchottkyDimersQuad;
 
 
 
-public class LatticeTest {
+public class LatticeTestAztec {
     
     public static void main(String[] args) {
         MarkovSimZ2 sim;
 
-        // SchottkyDimersQuad schottkyDimers = buildSchottkyDimers();
-        // Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 200, 200);
+        SchottkyDimersQuad schottkyDimers = buildSchottkyDimers();
+        Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 301, 301);
 
-        Z2Lattice lattice = new Z2Lattice(40, 40);
-
-
-        // // System.out.println(Arrays.deepToString(lattice.faceWeights));
-
-        sim = new MarkovSimZ2(lattice, true);
-
-        // sim = loadSim("mySimG2.ser");
-
-        // sim.simulate(100000, 0.22);
+        // Z2Lattice lattice = new Z2Lattice(301, 301);
 
 
-        // saveSim(sim, "mySimG2.ser");
+        // // // System.out.println(Arrays.deepToString(lattice.faceWeights));
+
+        // sim = new MarkovSimZ2(lattice, false);
+
+        sim = loadSim("AztecDiamond301UniformConverged.ser");
+        // sim = loadSim("AztecDiamond301G1symmetric.ser");
+
+        sim.setLattice(lattice);
+
+        // sim.simulate(500000);
+
+
+        // saveSim(sim, "AztecDiamond301G1symmetrictimes03.ser");
 
         // System.out.println(Arrays.deepToString(lattice.flipFaceWeights));
 
         VisualizationZ2 vis = new VisualizationZ2(sim);
+
+        vis.visualizeAmoeba(schottkyDimers);
 
         // vis.visualizeSim(5);
 
@@ -47,7 +52,7 @@ public class LatticeTest {
 
         // vis.visualizeThetaCrossRatio(-3.1691590245331893, 5.071383906313774);
 
-        vis.visualizeDimerConfiguration();
+        // vis.visualizeDimerConfiguration();
         
     }
 
@@ -117,7 +122,7 @@ public class LatticeTest {
         // A nice not axis aligned example:
         // double[] angles = {-2.414, -0.414, 0.414, 2.414};
         for (int i = 0; i < angles.length; i++) {
-            angles[i] *= 1;
+            angles[i] *= 0.3;
             angles[i] -= 0;
         }
         System.out.println("angles crossRatio is " + crossRatio(angles));

@@ -1,7 +1,8 @@
 package dimerSim;
 
-import org.jzy3d.analysis.AWTAbstractAnalysis;
-import org.jzy3d.analysis.AnalysisLauncher;
+import javax.swing.*;
+import java.awt.*;
+
 import org.jzy3d.chart.Chart;
 import org.jzy3d.chart.factories.AWTChartFactory;
 import org.jzy3d.chart.factories.IChartFactory;
@@ -15,9 +16,11 @@ import org.jzy3d.plot3d.builder.concrete.OrthonormalGrid;
 import org.jzy3d.plot3d.primitives.Shape;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
 
+
 import de.jtem.blas.ComplexVector;
 import de.jtem.mfc.field.Complex;
 import de.jtem.numericalMethods.util.Arrays;
+import de.jtem.riemann.schottky.SchottkyDimers;
 
 public class VisualizationZ2 {
 
@@ -139,6 +142,38 @@ public class VisualizationZ2 {
         chart.getScene().getGraph().add(surface);
         chart.open();
         chart.addMouse();
+    }
+
+
+    public void visualizeDimerConfiguration() {
+        // Draw 4 different colored rectangles for the possible different domino types.
+        JFrame f = new JFrame();
+        Container c = f.getContentPane();
+
+        c.setLayout(new BorderLayout()); 
+        GridPanel p = new GridPanel(sim);
+        p.updatePaint();
+        c.add(p); 
+        f.setSize(sim.lattice.N * p.scaling + 100, sim.lattice.M * p.scaling + 100);    
+        // make the JFrame visible
+        f.setVisible(true);    
+        // sets close behavior; EXIT_ON_CLOSE invokes System.exit(0) on closing the JFrame
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);    
+    }
+
+    public void visualizeAmoeba(SchottkyDimers dimers) {
+        JFrame f = new JFrame();
+        Container c = f.getContentPane();
+
+        c.setLayout(new BorderLayout());
+        AmoebaVis p = new AmoebaVis(dimers);
+        p.updatePaint();
+        c.add(p);
+        f.setSize(1050, 1050);
+        // make the JFrame visible
+        f.setVisible(true);    
+        // sets close behavior; EXIT_ON_CLOSE invokes System.exit(0) on closing the JFrame
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);    
     }
 
 

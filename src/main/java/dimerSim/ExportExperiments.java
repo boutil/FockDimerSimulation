@@ -5,51 +5,39 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Arrays;
 
-import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
 
-
-
-public class LatticeTest {
-    
+public class ExportExperiments {
     public static void main(String[] args) {
+        // Create a folder and save all simulation results in that folder for easy readout.
         MarkovSimZ2 sim;
 
-        // SchottkyDimersQuad schottkyDimers = buildSchottkyDimers();
-        // Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 200, 200);
+        SchottkyDimersQuad schottkyDimers = buildSchottkyDimers();
+        Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 301, 301);
 
-        Z2Lattice lattice = new Z2Lattice(40, 40);
+        // sim = new MarkovSimZ2(lattice, false);
 
+        sim = loadSim("AztecDiamond301UniformConverged.ser");
+        // sim = loadSim("AztecDiamond301G1symmetric.ser");
 
-        // // System.out.println(Arrays.deepToString(lattice.faceWeights));
+        sim.setLattice(lattice);
 
-        sim = new MarkovSimZ2(lattice, true);
+        // sim.simulate(500000);
 
-        // sim = loadSim("mySimG2.ser");
-
-        // sim.simulate(100000, 0.22);
-
-
-        // saveSim(sim, "mySimG2.ser");
-
-        // System.out.println(Arrays.deepToString(lattice.flipFaceWeights));
-
-        VisualizationZ2 vis = new VisualizationZ2(sim);
-
-        // vis.visualizeSim(5);
-
-        // vis.visualizeWeights();
-
-        // vis.visualizeDiscreteAbelMap();
-
-        // vis.visualizeThetaCrossRatio(-3.1691590245331893, 5.071383906313774);
-
-        vis.visualizeDimerConfiguration();
         
     }
+
+
+
+
+
+
+
+
+
+
 
     public static void saveSim(MarkovSimZ2 sim, String fileName) {
         try {
@@ -81,23 +69,10 @@ public class LatticeTest {
         return sim;
     }
 
-    public static MarkovSimZ2 simAztecDiamond(int size, int numSteps) {
-        
-        // We can do this to construct a simple Lattice and test simulation on it.
-        int N = size, M = size;
-        Z2Lattice lattice = new Z2Lattice(N, M);
 
-        MarkovSimZ2 sim = new MarkovSimZ2(lattice, false);
-        // sim.initializeAztecDiamond();
 
-        long preSim = System.currentTimeMillis();
-        // sim.simulate(numSteps);
-        System.out.println("Simulation took " + (System.currentTimeMillis() - preSim)/1000 + " seconds");
 
-        return sim;
-    }
 
-    // public static MarkovSim2 simFockLattice()
 
     public static SchottkyDimersQuad buildSchottkyDimers() {
         // First build a SchottkyData.
@@ -117,7 +92,7 @@ public class LatticeTest {
         // A nice not axis aligned example:
         // double[] angles = {-2.414, -0.414, 0.414, 2.414};
         for (int i = 0; i < angles.length; i++) {
-            angles[i] *= 1;
+            angles[i] *= 0.3;
             angles[i] -= 0;
         }
         System.out.println("angles crossRatio is " + crossRatio(angles));
@@ -129,5 +104,5 @@ public class LatticeTest {
     public static double crossRatio(double[] vals){
         return ((vals[1] - vals[0]) * (vals[3] - vals[2]) / (vals[2] - vals[1])) / (vals[0] - vals[3]);
     }
-
 }
+

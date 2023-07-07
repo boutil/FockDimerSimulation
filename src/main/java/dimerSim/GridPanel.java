@@ -9,6 +9,7 @@ import java.io.IOException;
 // MyPanel extends JPanel, which will eventually be placed in a JFrame
 public class GridPanel extends JPanel { 
     private BufferedImage paintImage;
+    private BufferedImage weightsImage;
 
     private MarkovSimZ2 sim;
 
@@ -19,6 +20,7 @@ public class GridPanel extends JPanel {
         super();
         this.sim = sim;
         paintImage = new BufferedImage(sim.lattice.N * scaling, sim.lattice.M * scaling, BufferedImage.TYPE_3BYTE_BGR);
+        weightsImage = new BufferedImage(sim.lattice.N * scaling, sim.lattice.M * scaling, BufferedImage.TYPE_3BYTE_BGR);
     }
     // custom painting is performed by the paintComponent method
     @Override
@@ -31,10 +33,22 @@ public class GridPanel extends JPanel {
 
     public void updatePaint() {
         Graphics2D g2 = paintImage.createGraphics();
+        Graphics2D gWeights = weightsImage.createGraphics();
+
+        double maxWeight = 0;
+        for (int i = 0; i < sim.lattice.N; i++) {
+            for (int j = 0; j < sim.lattice.M; j++) {
+                maxWeight = Math.max(maxWeight, sim.lattice.flipFaceWeights[i][j]);
+            }
+        }
+        gWeights.setColor(Color.WHITE);
+        gWeights.drawString("maxWeight: " + maxWeight, 30, 30);
 
         for (int i = 0; i < sim.lattice.N; i++) {
             for (int j = 0; j < sim.lattice.M; j++) {
                 if (sim.insideBoundary[i][j]) {
+                    gWeights.setColor(new Color((float) (sim.lattice.flipFaceWeights[i][j]/maxWeight), 0f, 0f));
+                    gWeights.fillRect(i * scaling, j * scaling, 1 * scaling, 1 * scaling);
                     for (int dir = 0; dir < dimerColors.length; dir++) {
                         int dimerType = getDimerType(new Index(i, j), dir);
                         if (dimerType != 4) {
@@ -54,6 +68,10 @@ public class GridPanel extends JPanel {
     
     public void save(String filePath) throws IOException{
         ImageIO.write(paintImage, "PNG", new File(filePath));
+    }
+
+    public void saveWeightsPic(String filePath) throws IOException {
+        ImageIO.write(weightsImage, "PNG", new File(filePath));
     }
 
     private Rectangle getDominoRect(int i, int j, int dir) {

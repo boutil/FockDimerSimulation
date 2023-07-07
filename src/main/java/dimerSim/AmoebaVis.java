@@ -4,9 +4,12 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 import de.jtem.mfc.field.Complex;
@@ -68,6 +71,11 @@ public class AmoebaVis extends JPanel{
         g2.dispose();
         repaint();
     }
+
+    public void save(String filePath) throws IOException{
+        ImageIO.write(paintImage, "PNG", new File(filePath));
+    }
+
 
     private Complex[][] extractOvalPoints() {
         int numPointsPerSegment = 500;

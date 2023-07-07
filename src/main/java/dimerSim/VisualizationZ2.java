@@ -2,6 +2,7 @@ package dimerSim;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 
 import org.jzy3d.chart.Chart;
 import org.jzy3d.chart.factories.AWTChartFactory;
@@ -159,6 +160,24 @@ public class VisualizationZ2 {
         f.setVisible(true);    
         // sets close behavior; EXIT_ON_CLOSE invokes System.exit(0) on closing the JFrame
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);    
+    }
+
+    public void saveDimerConfPic(String filepPath) throws IOException {
+        GridPanel p = new GridPanel(sim);
+        p.updatePaint();
+        p.save(filepPath);
+    }
+
+    public void saveAmoebaPic(SchottkyDimers dimers, String filePath) throws IOException {
+        AmoebaVis p = new AmoebaVis(dimers);
+        p.updatePaint();
+        p.save(filePath);
+    }
+
+    public void saveWeightsPic(String filepPath) throws IOException {
+        GridPanel p = new GridPanel(sim);
+        p.updatePaint();
+        p.saveWeightsPic(filepPath);
     }
 
     public void visualizeAmoeba(SchottkyDimers dimers) {

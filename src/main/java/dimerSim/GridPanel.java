@@ -48,6 +48,7 @@ public class GridPanel extends JPanel {
             for (int j = 0; j < sim.lattice.M; j++) {
                 if (sim.insideBoundary[i][j]) {
                     gWeights.setColor(new Color((float) (sim.lattice.flipFaceWeights[i][j]/maxWeight), 0f, 0f));
+                    // sim.lattice.getUnflippedFaceWeight(i, j)
                     gWeights.fillRect(i * scaling, j * scaling, 1 * scaling, 1 * scaling);
                     for (int dir = 0; dir < dimerColors.length; dir++) {
                         int dimerType = getDimerType(new Index(i, j), dir);

@@ -8,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 
 import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
@@ -17,15 +18,22 @@ public class ExportExperiments {
         // Create a folder and save all simulation results in that folder for easy readout.
         MarkovSimZ2 sim;
 
-        new File("asd").mkdirs();
+        // double[][] schottkyParamsCol = {new double[]{0, 1, 0, -1, 0.05, 0}, new double[]{0, 1, 0, -1, 0.2, 0}, new double[]{0.9, 1, 0.9, -1, 0.2, 0}, new double[]{0.9, 1, 0.9, -1, 0.05, 0}};
+        // double[][] angles = {new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}};
+        
+        // G2
+        double[][] schottkyParamsCol = {new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.05, 0}, new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.005, 0}, new double[]{-1.3, 1, -1.3, -1, 0.05, 0, 1.3, 1, 1.3, -1, 0.05, 0}, new double[]{-1.3, 1, -1.3, -1, 0.02, 0, 1.3, 1, 1.3, -1, 0.02, 0}};
+        double[][] angles = {new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}};
 
-        double[][] schottkyParamsCol = {new double[]{0, 1, 0, -1, 0.05, 0}, new double[]{0, 1, 0, -1, 0.2, 0}, new double[]{0.9, 1, 0.9, -1, 0.2, 0}};
-        double[][] angles = {new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}};
+
+
+        int defaultNumSteps = 100000;
+        int[] numSteps = new int[schottkyParamsCol.length];
+        Arrays.fill(numSteps, defaultNumSteps);
         // int[] numSteps = {100000, 100000, 100000};
-        int[] numSteps = {1000, 1000, 1000};
 
         String baseFolder = "experimentExport/";
-        String simToStartFrom = "experimentExport/AztecDiamond301UniformConverged.ser";
+        String simToStartFrom = "experimentExport/AztecDiamond501UniformConverged.ser";
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
         LocalDateTime now = LocalDateTime.now();
@@ -36,11 +44,12 @@ public class ExportExperiments {
         for (int i = 0; i < schottkyParamsCol.length; i++) {
 
             SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(new SchottkyData(schottkyParamsCol[i]), angles[i]);
-            Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 301, 301);
-    
+            
             // sim = new MarkovSimZ2(lattice, false);
-    
             sim = loadSim(simToStartFrom);
+            
+            Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, sim.lattice.N, sim.lattice.M);
+
             sim.setLattice(lattice);
             sim.simulate(numSteps[i]);
     
@@ -62,18 +71,13 @@ public class ExportExperiments {
 
 
 
-
-
-
-
-
-
-
     public static void saveSim(MarkovSimZ2 sim, String fileName) {
         try {
             ObjectOutputStream out;
             out = new ObjectOutputStream(new FileOutputStream(fileName));
-            out.writeObject(sim);
+            out.writeObject(sim.lattice);
+            out.writeObject(sim.faceStates);
+            out.writeObject(sim.insideBoundary);
             out.flush();
             out.close();
         } catch (IOException e) {
@@ -87,7 +91,10 @@ public class ExportExperiments {
         try {
             ObjectInputStream in;
             in = new ObjectInputStream(new FileInputStream(fileName));
-            sim = (MarkovSimZ2) in.readObject();
+            Z2Lattice lattice = (Z2Lattice) in.readObject();
+            byte[][] faceStates = (byte[][]) in.readObject();
+            boolean[][] insideBoundary = (boolean[][]) in.readObject();
+            sim = new MarkovSimZ2(lattice, faceStates, insideBoundary);
             in.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block

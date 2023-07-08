@@ -18,31 +18,33 @@ public class LatticeTestAztec {
     public static void main(String[] args) {
         MarkovSimZ2 sim;
 
-        SchottkyDimersQuad schottkyDimers = buildSchottkyDimers();
-        Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 301, 301);
+        // SchottkyDimersQuad schottkyDimers = buildSchottkyDimers();
+        // Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 301, 301);
 
-        // Z2Lattice lattice = new Z2Lattice(301, 301);
+        Z2Lattice lattice = new Z2Lattice(1001, 1001);
 
 
         // // // System.out.println(Arrays.deepToString(lattice.faceWeights));
 
-        // sim = new MarkovSimZ2(lattice, false);
+        sim = new MarkovSimZ2(lattice, false);
 
-        sim = loadSim("AztecDiamond301UniformConverged.ser");
+        // sim = loadSim("experimentExport/AztecDiamond1001UniformConverged.ser");
         // sim = loadSim("AztecDiamond301G1symmetric.ser");
 
-        sim.setLattice(lattice);
+        // sim.setLattice(lattice);
 
-        // sim.simulate(500000);
+        // sim.simulate((int)5e6);
+        sim.simulate(1000000);
 
 
         // saveSim(sim, "AztecDiamond301G1symmetrictimes03.ser");
+        saveSim(sim, "experimentExport/AztecDiamond1001UniformConverged.ser");
 
         // System.out.println(Arrays.deepToString(lattice.flipFaceWeights));
 
         VisualizationZ2 vis = new VisualizationZ2(sim);
 
-        vis.visualizeAmoeba(schottkyDimers);
+        // vis.visualizeAmoeba(schottkyDimers);
 
         // vis.visualizeSim(5);
 
@@ -53,6 +55,13 @@ public class LatticeTestAztec {
         // vis.visualizeThetaCrossRatio(-3.1691590245331893, 5.071383906313774);
 
         // vis.visualizeDimerConfiguration();
+
+        try {
+            vis.saveDimerConfPic("experimentExport/AzteDiamond1001UniformConverged.png");
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         
     }
 
@@ -60,7 +69,9 @@ public class LatticeTestAztec {
         try {
             ObjectOutputStream out;
             out = new ObjectOutputStream(new FileOutputStream(fileName));
-            out.writeObject(sim);
+            out.writeObject(sim.lattice);
+            out.writeObject(sim.faceStates);
+            out.writeObject(sim.insideBoundary);
             out.flush();
             out.close();
         } catch (IOException e) {
@@ -74,7 +85,10 @@ public class LatticeTestAztec {
         try {
             ObjectInputStream in;
             in = new ObjectInputStream(new FileInputStream(fileName));
-            sim = (MarkovSimZ2) in.readObject();
+            Z2Lattice lattice = (Z2Lattice) in.readObject();
+            byte[][] faceStates = (byte[][]) in.readObject();
+            boolean[][] insideBoundary = (boolean[][]) in.readObject();
+            sim = new MarkovSimZ2(lattice, faceStates, insideBoundary);
             in.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block

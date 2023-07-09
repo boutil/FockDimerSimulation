@@ -29,9 +29,15 @@ public class SchottkyDimersQuad extends SchottkyDimers {
         if (!isInFundamentalDomain(P)) {
             throw new Exception("P needs to be in fundamental domain");
         }
-        Complex r = new Complex();
-        amoebaMap.quadGrid(r, P, angles, acc);
-        return r;
+        return amoebaMap.amoebaMapQuadGrid(P, angles, acc);
+    }
+
+    public Complex aztecMap(Complex P) throws Exception {
+        // P needs to be in fundamental domain.
+        if (!isInFundamentalDomain(P)) {
+            throw new Exception("P needs to be in fundamental domain");
+        }
+        return amoebaMap.aztecMap(P, angles, acc);
     }
 
 

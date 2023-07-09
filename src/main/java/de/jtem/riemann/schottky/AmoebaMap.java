@@ -49,12 +49,27 @@ public class AmoebaMap implements Serializable{
     double product_im = 1.0;
     final Complex H = new Complex();
     final Complex G = new Complex();
+    final Complex K = new Complex();
+
+    final Complex dH = new Complex();
+    final Complex dG = new Complex();
+    final Complex dK = new Complex();
 
     final Complex H_corr = new Complex();
     final Complex G_corr = new Complex();
+    final Complex K_corr = new Complex();
   
     final Complex sP = new Complex();
     final Complex sP0 = new Complex();
+    final Complex dsP = new Complex();
+
+    final Complex xi1 = new Complex();
+    final Complex xi2 = new Complex();
+    final Complex xiAztec = new Complex();
+
+    final Complex dXi1 = new Complex();
+    final Complex dXi2 = new Complex();
+    final Complex dXiAztec = new Complex();
   
     // final Complex a = new Complex();
     // final Complex b = new Complex();
@@ -271,13 +286,13 @@ public class AmoebaMap implements Serializable{
 
 
 
-          // calculates the amoebaMap based on a hexGrid setup. Thus there need to be three angles picked.
+    // calculates the amoebaMap based on a quadGrid setup. Thus there need to be four angles picked.
     final void quadGrid(final SchottkyGroupElement element) {
 
       if (element.updateID != updateID) {
         schottky.updateElement(element);
       }
-  // Not sure what to do here instead...
+    // Not sure what to do here instead...
       element.diff(B, A, d);
       double error = maxError - 1;
       if (element != schottky.id) {
@@ -300,26 +315,46 @@ public class AmoebaMap implements Serializable{
       
       element.applyTo(P, sP);
       element.applyTo(P0, sP0);
-      
-      // H.assignDivide(sP.minus(angles[2]), sP.minus(angles[0]));
-      // H.assignTimes(sP.minus(angles[3]).divide(sP.minus(angles[1])));
-      // G.assignDivide(sP.minus(angles[0]), sP.minus(angles[2]));
-      // G.assignTimes(sP.minus(angles[3]).divide(sP.minus(angles[1])));
-      // H_corr.assignDivide(sP0.minus(angles[2]), sP0.minus(angles[0]));
-      // H_corr.assignTimes(sP0.minus(angles[3]).divide(sP0.minus(angles[1])));
-      // G_corr.assignDivide(sP0.minus(angles[0]), sP0.minus(angles[2]));
-      // G_corr.assignTimes(sP0.minus(angles[3]).divide(sP0.minus(angles[1])));
+
+      element.applyDifferentialTo(P, dsP);
+
+
+      dH.assign(sP.minus(angles[2]).invert().minus(sP.minus(angles[0]).invert()).times(dsP));
+      dG.assign(sP.minus(angles[3]).invert().minus(sP.minus(angles[1]).invert()).times(dsP));
+      dK.assign(sP.minus(angles[1]).invert().plus(sP.minus(angles[3]).invert()).minus(sP.minus(angles[2]).invert()).minus(sP.minus(angles[0]).invert()).times(dsP));
+
+
 
       H.assignDivide(sP.minus(angles[2]), sP.minus(angles[0]));
       G.assignDivide(sP.minus(angles[3]), sP.minus(angles[1]));
+      K.assignDivide(sP.minus(angles[1]).times(sP.minus(angles[3])), sP.minus(angles[0]).times(sP.minus(angles[2])));
+      // K.assignDivide(sP.minus(angles[2]).times(sP.minus(angles[0])), sP.minus(angles[1]).times(sP.minus(angles[3])));
       H_corr.assignDivide(sP0.minus(angles[2]), sP0.minus(angles[0]));
       G_corr.assignDivide(sP0.minus(angles[3]), sP0.minus(angles[1]));
+      K_corr.assignDivide(sP0.minus(angles[1]).times(sP0.minus(angles[3])), sP0.minus(angles[2]).times(sP0.minus(angles[0])));
+      // K_corr.assignDivide(sP0.minus(angles[2]).times(sP0.minus(angles[0])), sP0.minus(angles[1]).times(sP0.minus(angles[3])));
 
+      if(!dH.isNaN()){
+        dXi1.assignPlus(dH);
+      }
+      if(!dG.isNaN()){
+        dXi2.assignPlus(dG);
+      }
+      if(!dK.isNaN()){
+        dXiAztec.assignPlus(dK);
+      }
+      if(!H.divide(H_corr).log().isNaN()){
+        xi1.assignPlus(H.divide(H_corr).log());
+      }
+      if(!G.divide(G_corr).log().isNaN()){
+        xi2.assignPlus(G.divide(G_corr).log());
+      }
+      if(!K.divide(K_corr).log().isNaN()){
+        xiAztec.assignPlus(K.divide(K_corr).log());
+      }
 
-      // product_re += H.arg() - H_corr.arg();
-      // product_im += G.arg() - G_corr.arg();
-      product_re += Math.log(H.abs() / H_corr.abs());
-      product_im += Math.log(G.abs() / G_corr.abs());
+      // add boundary data correction
+      // K.assignDivide(sP.minus(angles[]))
 
       if (element.child == null) {
         schottky.createLeftChilds(element);
@@ -339,13 +374,13 @@ public class AmoebaMap implements Serializable{
       }
     }
 
-
-      final void quadGrid
-          (final Complex r,
-           final Complex P,
+      final Complex[] getDifferentials
+          (final Complex P,
            final Complex[] angles,
            final double accuracy) {
     
+        // calculates and returns xi1, xi2 and xiTilde.
+        // (xi1.re, xi2.re) is then Amoeba Map.
         this.noe = schottky.numOfElementsWithWordLength;
         
         this.A.assign(schottky.fixpoint[n][0]);
@@ -354,16 +389,18 @@ public class AmoebaMap implements Serializable{
         this.P.assign(P);
         this.angles = angles;
 
+        xi1.assign(0, 0);
+        xi2.assign(0, 0);
+        xiAztec.assign(0, 0);
+
+        dXi1.assign(0, 0);
+        dXi2.assign(0, 0);
+        dXiAztec.assign(0, 0);
+
         this.acc = accuracy;
         this.eps = accuracy / schottky.maxNumOfElements;
 
         prepareRho(P);
-        // H.assignDivide(P.minus(alpha), P.minus(gamma));
-        // G.assignDivide(P.minus(beta), P.minus(gamma));
-        // product_re = H.abs();
-        // product_im = G.abs();
-        product_re = 0;
-        product_im = 0;
 
         quadGrid(schottky.id);
 
@@ -376,7 +413,25 @@ public class AmoebaMap implements Serializable{
           throw new RuntimeException( "could not evaluate series because of numerical instabilities" );
         
         // r.assign(new Complex(Math.log(product_re), Math.log(product_im)));
-        r.assign(new Complex(product_re, product_im));
+        return new Complex[]{dXi1.copy(), dXi2.copy(), dXiAztec.copy(), xi1.copy(), xi2.copy(), xiAztec.copy()};
+      }
+
+      public Complex amoebaMapQuadGrid(final Complex P, final Complex angles[], final double accuracy) {
+        Complex[] diffs = getDifferentials(P, angles, accuracy);
+        return new Complex(diffs[3].re, diffs[4].re);
+      }
+      
+      public Complex aztecMap(final Complex P, final Complex angles[], final double accuracy) {
+        Complex[] diffs = getDifferentials(P, angles, accuracy);
+        Complex R1 = diffs[0].divide(diffs[2]);
+        Complex R2 = diffs[1].divide(diffs[2]);
+        // psi, eta are the aztec diamond coordinates.
+        // if ((Math.abs(R1.im/R2.im) > 50 || Math.abs(R2.im/R1.im) > 50) && P.im > 0.01) {
+        //   System.out.println(R1.im/R2.im);
+        // }
+        double psi = - R2.re + R1.re * (R2.im/R1.im);
+        double eta = R1.re - R2.re * (R1.im/R2.im);
+        return new Complex(1/psi, 1/eta);
       }
 
 }

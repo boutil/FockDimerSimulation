@@ -35,6 +35,13 @@ public class SchottkyDimers extends Schottky{
         throw new NotImplementedException();
     }
 
+    public Complex aztecMap(Complex P) throws Exception {
+        if (!isInFundamentalDomain(P)) {
+            throw new Exception("P needs to be in fundamental domain");
+        }
+        throw new NotImplementedException();
+    }
+
     public Complex[][] parametrizeRealOvals(int numPointsPerSegment) {
         int numAngles = angles.length;
         Complex[][] points = new Complex[numAngles + numGenerators][];
@@ -52,7 +59,7 @@ public class SchottkyDimers extends Schottky{
                 points[i + numAngles] = getPointArrayOnRealLineExponential(getCenterOfCircle(i, false).re + getRadius(i), getCenterOfCircle(i, true).re - getRadius(i), numPointsPerSegment, new double[]{0., 0.});
             }
             else {
-                points[i + numAngles] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i) * 1.01, numPointsPerSegment);
+                points[i + numAngles] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i) * 1.00001, numPointsPerSegment);
             }
         }
 
@@ -70,12 +77,13 @@ public class SchottkyDimers extends Schottky{
     public Complex[] getPointArrayOnRealLine(double a, double b, int numPoints, double[] excludingInterval){
         List<Complex> res = new LinkedList<Complex>();
         // take values from equidistant sampling on circle C(0, 1) and mapping [1, i, -1] via Moebius to [b, infty, a].
+        double imPart = 0.000001;
         if (b < a) {
             double rotationAngle = Math.PI / numPoints;
             double theta = 0.0;
             for (int i = 0; i < numPoints; i++) {
                 double phi_theta = Math.signum(theta - Math.PI / 2) * Math.sqrt((1 + Math.sin(theta)) / (1 - Math.sin(theta)));
-                Complex point = new Complex((a-b) / 2 * phi_theta + ((a + b) / 2), 0);
+                Complex point = new Complex((a-b) / 2 * phi_theta + ((a + b) / 2), imPart);
                 if(point.re >= excludingInterval[1] || point.re <= excludingInterval[0]) {
                     if(isInFundamentalDomain(point)) {
                         res.add(point);
@@ -88,13 +96,13 @@ public class SchottkyDimers extends Schottky{
             // }
         } else {
             for (int i = 0; i < numPoints; i++) {
-                Complex point = new Complex(a + ((b - a) / numPoints * i), 0);
+                Complex point = new Complex(a + ((b - a) / numPoints * i), imPart);
                 if (a < excludingInterval[0] && b > excludingInterval[1]) {
                     if (i < numPoints / 2) {
-                        point = new Complex(a + ((excludingInterval[0] - a) / numPoints * 2 * i), 0);
+                        point = new Complex(a + ((excludingInterval[0] - a) / numPoints * 2 * i), imPart);
                     }
                     else {
-                        point = new Complex(excludingInterval[1] + ((b - excludingInterval[1]) / numPoints * 2 * (i - numPoints / 2)), 0);
+                        point = new Complex(excludingInterval[1] + ((b - excludingInterval[1]) / numPoints * 2 * (i - numPoints / 2)), imPart);
                     }
                 }
                 if(point.re >= excludingInterval[1] || point.re <= excludingInterval[0]) {

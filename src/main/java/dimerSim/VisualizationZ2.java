@@ -171,7 +171,13 @@ public class VisualizationZ2 {
     public void saveAmoebaPic(SchottkyDimers dimers, String filePath) throws IOException {
         AmoebaVis p = new AmoebaVis(dimers);
         p.updatePaint();
-        p.save(filePath);
+        p.saveAmoeba(filePath);
+    }
+
+    public void saveAztecPic(SchottkyDimers dimers, String filePath) throws IOException {
+        AmoebaVis p = new AmoebaVis(dimers);
+        p.updatePaint();
+        p.saveAztec(filePath);
     }
 
     public void saveWeightsPic(String filepPath) throws IOException {

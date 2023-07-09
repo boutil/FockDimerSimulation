@@ -6,8 +6,10 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
@@ -19,14 +21,16 @@ public class AmoebaVis extends JPanel{
     
     SchottkyDimers schottkyDimers;
 
-    private BufferedImage paintImage;
+    private BufferedImage amoebaImage;
+    private BufferedImage aztecImage;
     Color[] ovalColors = {Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.RED, Color.GREEN, Color.BLUE};
 
     private int imageWidth = 1000, imageHeight = 1000;
 
     public AmoebaVis(SchottkyDimers dimers) {
         schottkyDimers = dimers;
-        paintImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
+        amoebaImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
+        aztecImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
     }
 
     @Override
@@ -34,50 +38,71 @@ public class AmoebaVis extends JPanel{
         // clear the previous painting
         super.paintComponent(g);
         // cast Graphics to Graphics2D
-        g.drawImage(paintImage, 0, 0, null);
+        g.drawImage(amoebaImage, 0, 0, null);
     }
 
     public void updatePaint() {
-        Graphics2D g2 = paintImage.createGraphics();
-        g2.setColor(Color.WHITE);;
-        g2.fillRect( 0, 0, imageWidth, imageHeight);
+        Graphics2D gAmoeba = amoebaImage.createGraphics();
+        Graphics2D gAztec = aztecImage.createGraphics();
+        gAmoeba.setColor(Color.WHITE);;
+        gAmoeba.fillRect( 0, 0, imageWidth, imageHeight);
+        gAztec.setColor(Color.WHITE);;
+        gAztec.fillRect( 0, 0, imageWidth, imageHeight);
 
-        Complex[][] ovalPoints = extractOvalPoints();
+        ComplexFn amoebaMap = x -> schottkyDimers.amoebaMap(x);
+        Complex[][] amoebaPoints = extractOvalPoints(amoebaMap);
+        ComplexFn aztecMap = x -> schottkyDimers.aztecMap(x);
+        Complex[][] aztecPoints = extractOvalPoints(aztecMap);
 
-        double minRe = Double.MAX_VALUE, maxRe = Double.MIN_VALUE, minIm = Double.MAX_VALUE, maxIm = Double.MIN_VALUE;
-        for (int i = 0; i < ovalPoints.length; i++) {
-            for (int j = 0; j < ovalPoints[i].length; j++) {
-                if(Double.isNaN(ovalPoints[i][j].re) || Double.isNaN(ovalPoints[i][j].im) || Double.isInfinite(ovalPoints[i][j].re) || Double.isInfinite(ovalPoints[i][j].im)) {
-                    continue;
-                }
-                minRe = Math.min(minRe, ovalPoints[i][j].re);
-                maxRe = Math.max(maxRe, ovalPoints[i][j].re);
-                minIm = Math.min(minIm, ovalPoints[i][j].im);
-                maxIm = Math.max(maxIm, ovalPoints[i][j].im);
-            }
-        }
+        drawPoints(amoebaPoints, gAmoeba);
+        drawPoints(aztecPoints, gAztec);
 
-        for (int i = 0; i < ovalPoints.length; i++) {
-            g2.setColor(ovalColors[i]);
-            int[] xCoords = new int[ovalPoints[i].length];
-            int[] yCoords = new int[ovalPoints[i].length];
-            for (int j = 0; j < ovalPoints[i].length; j++) {
-                xCoords[j] = (int) (((ovalPoints[i][j].re - minRe) / (maxRe - minRe)) * imageWidth);
-                yCoords[j] = (int) (((ovalPoints[i][j].im - minIm) / (maxIm - minIm)) * imageHeight);
-            }
-            g2.drawPolyline(xCoords, yCoords, ovalPoints[i].length);
-        }
 
-        g2.dispose();
+        gAmoeba.dispose();
+        gAztec.dispose();
         repaint();
     }
 
-    public void save(String filePath) throws IOException{
-        ImageIO.write(paintImage, "PNG", new File(filePath));
+    interface ComplexFn{
+        Complex apply(Complex point) throws Exception;
+    }
+
+    private void drawPoints(Complex[][] points, Graphics2D g) {
+        double minRe = Double.MAX_VALUE, maxRe = Double.MIN_VALUE, minIm = Double.MAX_VALUE, maxIm = Double.MIN_VALUE;
+        for (int i = 0; i < points.length; i++) {
+            for (int j = 0; j < points[i].length; j++) {
+                if(Double.isNaN(points[i][j].re) || Double.isNaN(points[i][j].im) || Double.isInfinite(points[i][j].re) || Double.isInfinite(points[i][j].im)) {
+                    continue;
+                }
+                minRe = Math.min(minRe, points[i][j].re);
+                maxRe = Math.max(maxRe, points[i][j].re);
+                minIm = Math.min(minIm, points[i][j].im);
+                maxIm = Math.max(maxIm, points[i][j].im);
+            }
+        }
+
+        for (int i = 0; i < points.length; i++) {
+            g.setColor(ovalColors[i]);
+            int[] xCoords = new int[points[i].length];
+            int[] yCoords = new int[points[i].length];
+            for (int j = 0; j < points[i].length; j++) {
+                xCoords[j] = (int) (((points[i][j].re - minRe) / (maxRe - minRe)) * imageWidth);
+                yCoords[j] = (int) (((points[i][j].im - minIm) / (maxIm - minIm)) * imageHeight);
+            }
+            g.drawPolyline(xCoords, yCoords, points[i].length);
+        }
+    }
+
+    public void saveAmoeba(String filePath) throws IOException{
+        ImageIO.write(amoebaImage, "PNG", new File(filePath));
+    }
+
+    public void saveAztec(String filePath) throws IOException{
+        ImageIO.write(aztecImage, "PNG", new File(filePath));
     }
 
 
-    private Complex[][] extractOvalPoints() {
+    private Complex[][] extractOvalPoints(ComplexFn f) {
         int numPointsPerSegment = 500;
         Complex[][] points = schottkyDimers.parametrizeRealOvals(numPointsPerSegment);
         int numSegments = schottkyDimers.angles.length + schottkyDimers.getNumGenerators();
@@ -86,16 +111,14 @@ public class AmoebaVis extends JPanel{
             List<Complex> mappedP = new LinkedList<Complex>();
             for (int j = 0; j < points[i].length; j++){
                 try {
-                    Complex amoebaPoint = schottkyDimers.amoebaMap(points[i][j]);
+                    Complex amoebaPoint = f.apply(points[i][j]);
                     if (amoebaPoint.isNaN() || amoebaPoint.isInfinite()) {
                         continue;
                     }
-                    mappedP.add(schottkyDimers.amoebaMap(points[i][j]));
+                    mappedP.add(amoebaPoint);
                 } catch (Exception e) {
-                    // System.out.println("While calculating pointsAmoebaMapped: " + e.getMessage() + "P: " + points[i][j]);
-                    // if (j != 0) { 
-                        //     mappedP[j] = mappedP[j-1];
-                    // }
+                    System.out.println("While calculating pointsAmoebaMapped: " + e.getMessage() + "P: " + points[i][j]);
+
                 }
             }
             Complex[] mappedArray = new Complex[mappedP.size()];

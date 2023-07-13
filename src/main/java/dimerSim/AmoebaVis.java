@@ -1,5 +1,6 @@
 package dimerSim;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -51,7 +52,7 @@ public class AmoebaVis extends JPanel{
 
         ComplexFn amoebaMap = x -> schottkyDimers.amoebaMap(x);
         Complex[][] amoebaPoints = extractOvalPoints(amoebaMap);
-        ComplexFn aztecMap = x -> schottkyDimers.aztecMap(x);
+        ComplexFn aztecMap = x -> schottkyDimers.aztecArcticCurve(x);
         Complex[][] aztecPoints = extractOvalPoints(aztecMap);
 
         drawPoints(amoebaPoints, gAmoeba);
@@ -67,7 +68,35 @@ public class AmoebaVis extends JPanel{
         Complex apply(Complex point) throws Exception;
     }
 
+    private Complex getAztecInTiltedCoords(Complex point) throws Exception{
+        // Apply aztec map from paper and shrink and rotate it.
+        Complex aztecMap = schottkyDimers.aztecArcticCurve(point);
+        if (Math.abs(aztecMap.re) > 1 || Math.abs(aztecMap.im) > 1 ) {
+            System.out.println(aztecMap);
+        }
+        aztecMap.assignTimes(new Complex(Math.cos(Math.PI/4), Math.sin(Math.PI/4)));
+        // aztecMap.assignTimes(new Complex(Math.cos(-Math.PI/4), Math.sin(-Math.PI/4)));
+        aztecMap.assignDivide(Math.sqrt(2) * 2);
+        aztecMap.assignPlus(new Complex(0.5, 0.5));
+        aztecMap.assignTimes(imageWidth);
+        return aztecMap;
+    }
+
+    public void drawAztecCurves(Graphics2D g, int imageWidth, int imageHeight) {
+        this.imageWidth = imageWidth;
+        this.imageHeight = imageHeight;
+        ComplexFn aztecMap = x -> getAztecInTiltedCoords(x);
+        Complex[][] aztecPoints = extractOvalPoints(aztecMap);
+        Color[] whiteColors = {Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE};
+        g.setStroke(new BasicStroke(6));
+        drawPoints(aztecPoints, g, whiteColors, false);
+    }
+
     private void drawPoints(Complex[][] points, Graphics2D g) {
+        drawPoints(points, g, ovalColors, true);
+    }
+
+    private void drawPoints(Complex[][] points, Graphics2D g, Color[] ovalColors, boolean normalize) {
         double minRe = Double.MAX_VALUE, maxRe = Double.MIN_VALUE, minIm = Double.MAX_VALUE, maxIm = Double.MIN_VALUE;
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
@@ -86,8 +115,13 @@ public class AmoebaVis extends JPanel{
             int[] xCoords = new int[points[i].length];
             int[] yCoords = new int[points[i].length];
             for (int j = 0; j < points[i].length; j++) {
-                xCoords[j] = (int) (((points[i][j].re - minRe) / (maxRe - minRe)) * imageWidth);
-                yCoords[j] = (int) (((points[i][j].im - minIm) / (maxIm - minIm)) * imageHeight);
+                if (normalize) {
+                    xCoords[j] = (int) (((points[i][j].re - minRe) / (maxRe - minRe)) * imageWidth);
+                    yCoords[j] = (int) (((points[i][j].im - minIm) / (maxIm - minIm)) * imageHeight);
+                } else {
+                    xCoords[j] = (int) points[i][j].re;
+                    yCoords[j] = (int) points[i][j].im;
+                }
             }
             g.drawPolyline(xCoords, yCoords, points[i].length);
         }

@@ -70,6 +70,10 @@ public class AmoebaMap implements Serializable{
     final Complex dXi1 = new Complex();
     final Complex dXi2 = new Complex();
     final Complex dXiAztec = new Complex();
+
+    final Complex dXi1Der = new Complex();
+    final Complex dXi2Der = new Complex();
+    final Complex dXiAztecDer = new Complex();
   
     // final Complex a = new Complex();
     // final Complex b = new Complex();
@@ -303,9 +307,9 @@ public class AmoebaMap implements Serializable{
         return;
       }
   
-      if (element.wordLength > 0) {
-        return;
-      }
+      // if (element.wordLength > 0) {
+      //   return;
+      // }
 
       if (error * noe[element.wordLength] < acc || error < eps ) {
         acc += acc / noe[element.wordLength] - error;
@@ -374,6 +378,63 @@ public class AmoebaMap implements Serializable{
       }
     }
 
+    final void quadGridCircleDers(final SchottkyGroupElement element, Complex circleCenter) {
+
+      if (element.updateID != updateID) {
+        schottky.updateElement(element);
+      }
+    // Not sure what to do here instead...
+      element.diff(B, A, d);
+      double error = maxError - 1;
+      if (element != schottky.id) {
+        error = (Math.abs(d.re) + Math.abs(d.im)) * rho(element);
+      }
+
+      if (error > maxError || Double.isNaN(error)) {
+        return;
+      }
+  
+      // if (element.wordLength > 0) {
+      //   return;
+      // }
+
+      if (error * noe[element.wordLength] < acc || error < eps ) {
+        acc += acc / noe[element.wordLength] - error;
+        return;
+      }
+
+      dH.assign(P.minus(element.applyTo(angles[2])).pow(2).invert().minus(P.minus(element.applyTo(angles[0])).pow(2).invert()));
+      dG.assign(P.minus(element.applyTo(angles[3])).pow(2).invert().minus(P.minus(element.applyTo(angles[1])).pow(2).invert()));
+      dK.assign(P.minus(element.applyTo(angles[1])).pow(2).invert().plus(sP.minus(element.applyTo(angles[3])).pow(2).invert()).minus(sP.minus(element.applyTo(angles[2])).pow(2).invert()).minus(sP.minus(element.applyTo(angles[0])).pow(2).invert()));
+
+      if(!dH.isNaN()){
+        dXi1Der.assignPlus(dH);
+      }
+      if(!dG.isNaN()){
+        dXi2Der.assignPlus(dG);
+      }
+      if(!dK.isNaN()){
+        dXiAztecDer.assignPlus(dK);
+      }
+
+      if (element.child == null) {
+        schottky.createLeftChilds(element);
+      }
+  
+      final SchottkyGroupElement[] child = element.child;
+  
+      final int numChildren = child.length;
+  
+      String[] childrenWords = new String[numChildren];
+      for (int i = 0; i < numChildren; i++) {
+        childrenWords[i] = child[i].word();
+      }
+      for (int i = 0; i < numChildren; i++) {
+        // String childWord = child[i].word();
+        quadGridCircleDers(child[i], circleCenter);
+      }
+    }
+
       final Complex[] getDifferentials
           (final Complex P,
            final Complex[] angles,
@@ -416,6 +477,38 @@ public class AmoebaMap implements Serializable{
         return new Complex[]{dXi1.copy(), dXi2.copy(), dXiAztec.copy(), xi1.copy(), xi2.copy(), xiAztec.copy()};
       }
 
+      public Complex[] getDifferentialDers(final Complex P, final Complex angles[], Complex circleCenter, final double accuracy) {
+        this.noe = schottky.numOfElementsWithWordLength;
+        
+        this.A.assign(schottky.fixpoint[n][0]);
+        this.B.assign(schottky.fixpoint[n][1]);
+
+        this.P.assign(P);
+        this.angles = angles;
+
+        dXi1Der.assign(0, 0);
+        dXi2Der.assign(0, 0);
+        dXiAztecDer.assign(0, 0);
+
+        
+        this.acc = accuracy;
+        this.eps = accuracy / schottky.maxNumOfElements;
+        
+        prepareRho(P);
+        
+        quadGridCircleDers(schottky.id, circleCenter);
+
+        dXi1Der.assignTimes(P.minus(circleCenter).timesI().neg());
+        dXi2Der.assignTimes(P.minus(circleCenter).timesI().neg());
+        dXiAztecDer.assignTimes(P.minus(circleCenter).timesI().neg());
+
+        if(this.acc < 0 ) // this test is needed because of the eps crieteria
+          throw new RuntimeException( "could not evaluate series because of numerical instabilities" );
+        
+        // r.assign(new Complex(Math.log(product_re), Math.log(product_im)));
+        return new Complex[]{dXi1Der.copy(), dXi2Der.copy(), dXiAztecDer.copy()};
+      }
+
       public Complex amoebaMapQuadGrid(final Complex P, final Complex angles[], final double accuracy) {
         Complex[] diffs = getDifferentials(P, angles, accuracy);
         return new Complex(diffs[3].re, diffs[4].re);
@@ -423,15 +516,53 @@ public class AmoebaMap implements Serializable{
       
       public Complex aztecMap(final Complex P, final Complex angles[], final double accuracy) {
         Complex[] diffs = getDifferentials(P, angles, accuracy);
-        Complex R1 = diffs[0].divide(diffs[2]);
-        Complex R2 = diffs[1].divide(diffs[2]);
+        // Complex R1 = diffs[0].divide(diffs[2]);
+        // Complex R2 = diffs[1].divide(diffs[2]);
         // psi, eta are the aztec diamond coordinates.
         // if ((Math.abs(R1.im/R2.im) > 50 || Math.abs(R2.im/R1.im) > 50) && P.im > 0.01) {
         //   System.out.println(R1.im/R2.im);
         // }
-        double psi = - R2.re + R1.re * (R2.im/R1.im);
-        double eta = R1.re - R2.re * (R1.im/R2.im);
-        return new Complex(1/psi, 1/eta);
+        // double psi = - R2.re + R1.re * (R2.im/R1.im);
+        // double eta = R1.re - R2.re * (R1.im/R2.im);
+        // return new Complex(1/psi, 1/eta);
+        // double psi = -R2.invert().im / R1.divide(R2).im;
+        // double eta = R1.invert().im / R2.divide(R1).im;
+          double factor = diffs[0].times(diffs[1].conjugate()).im;
+          double psi = diffs[0].times(diffs[2].conjugate()).im;
+          double eta = diffs[1].times(diffs[2].conjugate()).im;
+        return new Complex(psi/factor, -eta/factor);
+      }
+
+      public Complex aztecArcticCurve(final Complex P, final Complex[] angles, Complex circleCenter, final double accuracy) {
+        Complex[] diffsP = getDifferentials(P, angles, accuracy);
+        Complex[] diffsPDer = getDifferentialDers(P, angles, circleCenter, accuracy);
+        Complex R1 = diffsP[0].divide(diffsP[2]);
+        Complex R2 = diffsP[1].divide(diffsP[2]);
+        Complex R3 = diffsP[0].divide(diffsP[1]);
+        Complex eta = diffsPDer[2].times(diffsP[1]).minus(diffsPDer[1].times(diffsP[2]));
+        eta.assignDivide(diffsPDer[0].times(diffsP[1]).minus(diffsPDer[1].times(diffsP[0])));
+        Complex psi = diffsPDer[2].times(diffsP[0]).minus(diffsPDer[0].times(diffsP[2]));
+        psi.assignDivide(diffsPDer[1].times(diffsP[0]).minus(diffsPDer[0].times(diffsP[1])));
+        // if (Math.abs(psi.im) > 0.1 | Math.abs(eta.im) > 0.1) {
+        //   System.out.println("non-real");
+        // }
+        return new Complex(psi.re, eta.re);
+      }
+
+      public Complex aztecArcticCurveReal(final Complex P, final Complex[] angles, final double accuracy) {
+        Complex[] diffsP = getDifferentials(P, angles, accuracy);
+        double epsilon = 0.0001;
+        Complex PDelta = P.plus(new Complex(epsilon, 0));
+        Complex[] diffsPDelta = getDifferentials(PDelta, angles, accuracy);
+        Complex R1Inv = diffsP[2].divide(diffsP[0]);
+        Complex R2Inv = diffsP[2].divide(diffsP[1]);
+        Complex xi = diffsP[0].divide(diffsP[1]);
+        Complex R1InvDelta = diffsPDelta[2].divide(diffsPDelta[0]);
+        Complex R2InvDelta = diffsPDelta[2].divide(diffsPDelta[1]);
+        Complex xiDelta = diffsPDelta[0].divide(diffsPDelta[1]);
+        double eta = (R2Inv.re - R2InvDelta.re) / (xi.re - xiDelta.re);
+        double psi = (R1Inv.re - R1InvDelta.re) / (xi.invert().re - xiDelta.invert().re);
+        return new Complex(psi, eta);
       }
 
 }

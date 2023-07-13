@@ -11,6 +11,11 @@ public class GridPanel extends JPanel {
     private BufferedImage paintImage;
     private BufferedImage weightsImage;
 
+    private int imageWidth, imageHeight;
+
+    private boolean drawAztecCurves = false;
+    private AmoebaVis amoebaVis;
+
     private MarkovSimZ2 sim;
 
     private Color[] dimerColors = {Color.BLUE, Color.RED, Color.GREEN, Color.YELLOW};
@@ -19,10 +24,18 @@ public class GridPanel extends JPanel {
     public GridPanel(MarkovSimZ2 sim) {
         super();
         this.sim = sim;
-        paintImage = new BufferedImage(sim.lattice.N * scaling, sim.lattice.M * scaling, BufferedImage.TYPE_3BYTE_BGR);
-        weightsImage = new BufferedImage(sim.lattice.N * scaling, sim.lattice.M * scaling, BufferedImage.TYPE_3BYTE_BGR);
+        imageWidth = sim.lattice.N * scaling;
+        imageHeight = sim.lattice.M * scaling;
+        paintImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
+        weightsImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
     }
-    // custom painting is performed by the paintComponent method
+
+    public GridPanel(MarkovSimZ2 sim, AmoebaVis amoebaVis) {
+        this(sim);
+        drawAztecCurves = true;
+        this.amoebaVis = amoebaVis;
+    }
+
     @Override
     public void paintComponent(Graphics g){
         // clear the previous painting
@@ -61,6 +74,9 @@ public class GridPanel extends JPanel {
                     }
                 }
             }
+        }
+        if (drawAztecCurves) {
+            amoebaVis.drawAztecCurves(g2, imageWidth, imageHeight);
         }
 
         g2.dispose();

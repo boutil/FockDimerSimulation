@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
+import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
 
@@ -18,22 +19,28 @@ public class ExportExperiments {
         // Create a folder and save all simulation results in that folder for easy readout.
         MarkovSimZ2 sim;
 
+        // double[][] schottkyParamsCol = {new double[]{0.4, 1, 0.4, -1, 0.05, 0}};
+        // double[][] angles = {new double[]{-2.4, -0.6, 0.6, 1.4}};
+        double[][] schottkyParamsCol = {new double[]{0.9, 1, 0.9, -1, 0.2, 0}};
+        double[][] angles = {new double[]{-2.4, -0.4, 0.4, 2.4}};
+        
         // double[][] schottkyParamsCol = {new double[]{0, 1, 0, -1, 0.05, 0}, new double[]{0, 1, 0, -1, 0.2, 0}, new double[]{0.9, 1, 0.9, -1, 0.2, 0}, new double[]{0.9, 1, 0.9, -1, 0.05, 0}};
         // double[][] angles = {new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}};
         
         // G2
-        double[][] schottkyParamsCol = {new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.05, 0}, new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.005, 0}, new double[]{-1.3, 1, -1.3, -1, 0.05, 0, 1.3, 1, 1.3, -1, 0.05, 0}, new double[]{-1.3, 1, -1.3, -1, 0.02, 0, 1.3, 1, 1.3, -1, 0.02, 0}};
-        double[][] angles = {new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}};
+        // double[][] schottkyParamsCol = {new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.05, 0}, new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.005, 0}, new double[]{-1.3, 1, -1.3, -1, 0.05, 0, 1.3, 1, 1.3, -1, 0.05, 0}, new double[]{-1.3, 1, -1.3, -1, 0.02, 0, 1.3, 1, 1.3, -1, 0.02, 0}};
+        // double[][] angles = {new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}};
 
+        
 
-
-        int defaultNumSteps = 100000;
+        int defaultNumSteps = 10;
         int[] numSteps = new int[schottkyParamsCol.length];
         Arrays.fill(numSteps, defaultNumSteps);
         // int[] numSteps = {100000, 100000, 100000};
 
         String baseFolder = "experimentExport/";
-        String simToStartFrom = "experimentExport/AztecDiamond501UniformConverged.ser";
+        // String simToStartFrom = "experimentExport/AztecDiamond501UniformConverged.ser";
+        String simToStartFrom = "experimentExport/2023-07-08-22-06-00/sim0[1001x1001].ser";
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
         LocalDateTime now = LocalDateTime.now();
@@ -57,9 +64,12 @@ public class ExportExperiments {
 
             try {
                 String info = i + "[" + lattice.N + "x" + lattice.M + "]";
+                // String info = i + "[" + 501 + "x" + 501 + "]";
                 saveSim(sim, baseFolder + "/sim" + info + ".ser");
+                saveSchottky(schottkyDimers, baseFolder + "/schottky" + info + ".ser");
                 vis.saveAmoebaPic(schottkyDimers, baseFolder + "/amoebaPic" + info + ".png");
-                vis.saveDimerConfPic(baseFolder + "/dimerConf" + info + ".png");
+                vis.saveAztecPic(schottkyDimers, baseFolder + "/aztecPic" + info + ".png");
+                vis.saveDimerConfPic(schottkyDimers, baseFolder + "/dimerConf" + info + ".png");
                 vis.saveWeightsPic(baseFolder + "/weights" + info + ".png");
             } catch (IOException e) {
                 // TODO: handle exception
@@ -68,8 +78,19 @@ public class ExportExperiments {
         }
     }
 
-
-
+    public static void saveSchottky(SchottkyDimersQuad schottkyDimers, String fileName) {
+        try {
+            ObjectOutputStream out;
+            out = new ObjectOutputStream(new FileOutputStream(fileName));
+            out.writeObject(schottkyDimers.getUniformizationData());
+            out.writeObject(schottkyDimers.angles);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 
     public static void saveSim(MarkovSimZ2 sim, String fileName) {
         try {
@@ -84,6 +105,25 @@ public class ExportExperiments {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    public static SchottkyDimersQuad loadSchottky(String fileName) {
+        SchottkyDimersQuad schottkyDimers = null;
+        try {
+            ObjectInputStream in;
+            in = new ObjectInputStream(new FileInputStream(fileName));
+            double[] uniformizationData = (double[]) in.readObject();
+            double[] angles = (double[]) in.readObject();
+            schottkyDimers = new SchottkyDimersQuad(new SchottkyData(uniformizationData), angles);
+            in.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return schottkyDimers;
     }
 
     public static MarkovSimZ2 loadSim(String fileName) {
@@ -105,10 +145,6 @@ public class ExportExperiments {
         }
         return sim;
     }
-
-
-
-
 
 
     public static SchottkyDimersQuad buildSchottkyDimers(double[] schottkyParams, double[] angles) {

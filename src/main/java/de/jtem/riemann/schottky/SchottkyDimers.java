@@ -42,6 +42,13 @@ public class SchottkyDimers extends Schottky{
         throw new NotImplementedException();
     }
 
+    public Complex aztecArcticCurve(Complex P) throws Exception {
+        if (!isInFundamentalDomain(P)) {
+            throw new Exception("P needs to be in fundamental domain");
+        }
+        throw new NotImplementedException();
+    }
+
     public Complex[][] parametrizeRealOvals(int numPointsPerSegment) {
         int numAngles = angles.length;
         Complex[][] points = new Complex[numAngles + numGenerators][];
@@ -59,7 +66,7 @@ public class SchottkyDimers extends Schottky{
                 points[i + numAngles] = getPointArrayOnRealLineExponential(getCenterOfCircle(i, false).re + getRadius(i), getCenterOfCircle(i, true).re - getRadius(i), numPointsPerSegment, new double[]{0., 0.});
             }
             else {
-                points[i + numAngles] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i) * 1.00001, numPointsPerSegment);
+                points[i + numAngles] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i) * 1.000001, numPointsPerSegment);
             }
         }
 

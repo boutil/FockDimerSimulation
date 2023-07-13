@@ -168,6 +168,13 @@ public class VisualizationZ2 {
         p.save(filepPath);
     }
 
+    public void saveDimerConfPic(SchottkyDimers dimers, String filepPath) throws IOException {
+        AmoebaVis vis = new AmoebaVis(dimers);
+        GridPanel p = new GridPanel(sim, vis);
+        p.updatePaint();
+        p.save(filepPath);
+    }
+
     public void saveAmoebaPic(SchottkyDimers dimers, String filePath) throws IOException {
         AmoebaVis p = new AmoebaVis(dimers);
         p.updatePaint();

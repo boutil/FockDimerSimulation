@@ -59,7 +59,7 @@ public class MarkovSimZ2 implements Serializable{
         long seed = 42; // for reproducability
         rand = new Random(seed);
         // for clunky parallelization purposes:
-        int chunkSize = 51;
+        int chunkSize = 101;
         markovWorkers = new MarkovSimZ2Worker[lattice.N / chunkSize + 1];
         for (int i = 0; i < markovWorkers.length; i++) {
             markovWorkers[i] = new MarkovSimZ2Worker(this, IntStream.range(i * chunkSize, Math.min(lattice.N, (i+1) * chunkSize)).toArray());
@@ -250,8 +250,8 @@ public class MarkovSimZ2 implements Serializable{
         long time = System.currentTimeMillis();
         for (int i = 0; i < numSteps; i++) {
             if ((i % reportFreq == 0)) {
-
-                System.out.println("Done with " + i + " steps." + " Average time per 1000 markovSteps: " + (System.currentTimeMillis() - time) * 1000 / reportFreq);
+                long timeForAvg1000Steps = Math.max((System.currentTimeMillis() - time) * 1000 / reportFreq, 1000);
+                System.out.println("Done with " + i + " steps." + " Average time per 1000 markovSteps: " + timeForAvg1000Steps + ". Time left: " + (numSteps - i) * timeForAvg1000Steps / 1000000 + " seconds.");
                 time = System.currentTimeMillis();
             }
             // Choose parity at random at each step. Can probably just alternate too? 

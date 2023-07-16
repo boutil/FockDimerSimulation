@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
-import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
 
@@ -21,26 +20,39 @@ public class ExportExperiments {
 
         // double[][] schottkyParamsCol = {new double[]{0.4, 1, 0.4, -1, 0.05, 0}};
         // double[][] angles = {new double[]{-2.4, -0.6, 0.6, 1.4}};
-        double[][] schottkyParamsCol = {new double[]{0.9, 1, 0.9, -1, 0.2, 0}};
-        double[][] angles = {new double[]{-2.4, -0.4, 0.4, 2.4}};
+
+        // G1LargeHole
+        // double[][] schottkyParamsCol = {{0.9, 1, 0.9, -1, 0.15, 0}};
+        // double[][][] angles = {{{-2.4}, {-0.4}, {0.4}, {2.4}}};
+
+        // double[][] schottkyParamsCol = {{0.4, 1, 0.4, -1, 0.01, 0}};
+        // double[][][] angles = {{{-2.4}, {-0.6}, {0.6}, {1.4}}};
         
+        // G1ShrinkingHole
+        // double[][] schottkyParamsCol = {{0.9, 1, 0.9, -1, 0.05, 0}, {0.9, 1, 0.9, -1, 0.02, 0}, {0.9, 1, 0.9, -1, 0.008, 0}, {0.9, 1, 0.9, -1, 0.001, 0}};
+        // double[][][] angles = {{{-2.4}, {-0.4}, {0.4}, {2.4}}, {{-2.4}, {-0.4}, {0.4}, {2.4}}, {{-2.4}, {-0.4}, {0.4}, {2.4}}, {{-2.4}, {-0.4}, {0.4}, {2.4}}};
         // double[][] schottkyParamsCol = {new double[]{0, 1, 0, -1, 0.05, 0}, new double[]{0, 1, 0, -1, 0.2, 0}, new double[]{0.9, 1, 0.9, -1, 0.2, 0}, new double[]{0.9, 1, 0.9, -1, 0.05, 0}};
         // double[][] angles = {new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}};
+
+        // double[][] schottkyParamsCol = {{0.9, 1, 0.9, -1, 0.02, 0}};
+        // double[][][] angles = {{{-2.4, -2.4}, {-1, -0.2}, {0.2, 1}, {2.4, 2.4}}};
         
         // G2
         // double[][] schottkyParamsCol = {new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.05, 0}, new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.005, 0}, new double[]{-1.3, 1, -1.3, -1, 0.05, 0, 1.3, 1, 1.3, -1, 0.05, 0}, new double[]{-1.3, 1, -1.3, -1, 0.02, 0, 1.3, 1, 1.3, -1, 0.02, 0}};
         // double[][] angles = {new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}, new double[]{-2.4, -0.4, 0.4, 2.4}};
 
-        
+        // G2LargeHole
+        double[][] schottkyParamsCol = {{-1, 1, -1, -1, 0.03, 0, 1, 1, 1, -1, 0.001, 0}};
+        double[][][] angles = {{{-2.4}, {-0.4}, {0.4}, {2.4}}};
 
-        int defaultNumSteps = 10;
+        int defaultNumSteps = 1000000;
         int[] numSteps = new int[schottkyParamsCol.length];
         Arrays.fill(numSteps, defaultNumSteps);
         // int[] numSteps = {100000, 100000, 100000};
 
         String baseFolder = "experimentExport/";
+        String simToStartFrom = "experimentExport/2023-07-15-21-26-29/sim0[501x501].ser";
         // String simToStartFrom = "experimentExport/AztecDiamond501UniformConverged.ser";
-        String simToStartFrom = "experimentExport/2023-07-08-22-06-00/sim0[1001x1001].ser";
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
         LocalDateTime now = LocalDateTime.now();
@@ -53,6 +65,11 @@ public class ExportExperiments {
             SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(new SchottkyData(schottkyParamsCol[i]), angles[i]);
             
             // sim = new MarkovSimZ2(lattice, false);
+
+            // Continue from previously simulated step.
+            // if (i > 0) {
+            //     simToStartFrom = baseFolder + "/sim" + (i - 1) + "[1001x1001].ser";
+            // }
             sim = loadSim(simToStartFrom);
             
             Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, sim.lattice.N, sim.lattice.M);
@@ -63,8 +80,7 @@ public class ExportExperiments {
             VisualizationZ2 vis = new VisualizationZ2(sim);
 
             try {
-                String info = i + "[" + lattice.N + "x" + lattice.M + "]";
-                // String info = i + "[" + 501 + "x" + 501 + "]";
+                String info = i + "[" + sim.lattice.N + "x" + sim.lattice.M + "]";
                 saveSim(sim, baseFolder + "/sim" + info + ".ser");
                 saveSchottky(schottkyDimers, baseFolder + "/schottky" + info + ".ser");
                 vis.saveAmoebaPic(schottkyDimers, baseFolder + "/amoebaPic" + info + ".png");
@@ -113,7 +129,7 @@ public class ExportExperiments {
             ObjectInputStream in;
             in = new ObjectInputStream(new FileInputStream(fileName));
             double[] uniformizationData = (double[]) in.readObject();
-            double[] angles = (double[]) in.readObject();
+            double[][] angles = (double[][]) in.readObject();
             schottkyDimers = new SchottkyDimersQuad(new SchottkyData(uniformizationData), angles);
             in.close();
         } catch (IOException e) {
@@ -147,35 +163,35 @@ public class ExportExperiments {
     }
 
 
-    public static SchottkyDimersQuad buildSchottkyDimers(double[] schottkyParams, double[] angles) {
-        // First build a SchottkyData.
-        double a = Math.sqrt(2 / (1.5 + Math.sqrt(2)));
-        // double a = 0.01;
-        // double[] schottkyParams = new double[]{0, 1, 0, -1, 0.2, 0};
+    // public static SchottkyDimersQuad buildSchottkyDimers(double[] schottkyParams, double[][] angles) {
+    //     // First build a SchottkyData.
+    //     double a = Math.sqrt(2 / (1.5 + Math.sqrt(2)));
+    //     // double a = 0.01;
+    //     // double[] schottkyParams = new double[]{0, 1, 0, -1, 0.2, 0};
         
-        // Choose angles in a way such that crossratio is 1:
-        double x = a * (1 + Math.sqrt(2));
-        double firstAngle = -x - (a/2);
-        // double[] angles = {firstAngle, firstAngle + x, firstAngle + x + a, firstAngle + x + a + x};
+    //     // Choose angles in a way such that crossratio is 1:
+    //     double x = a * (1 + Math.sqrt(2));
+    //     double firstAngle = -x - (a/2);
+    //     // double[] angles = {firstAngle, firstAngle + x, firstAngle + x + a, firstAngle + x + a + x};
         
-        // double[] schottkyParams = new double[]{firstAngle - 0.5, 0, firstAngle + x + a + x + 0.5, 0, 0.00005, 0};
-        // double[] schottkyParams = new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.05, 0};
-        SchottkyData schottkyData = new SchottkyData(schottkyParams);
+    //     // double[] schottkyParams = new double[]{firstAngle - 0.5, 0, firstAngle + x + a + x + 0.5, 0, 0.00005, 0};
+    //     // double[] schottkyParams = new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.05, 0};
+    //     SchottkyData schottkyData = new SchottkyData(schottkyParams);
 
-        // A nice not axis aligned example:
-        // double[] angles = {-2.414, -0.414, 0.414, 2.414};
-        for (int i = 0; i < angles.length; i++) {
-            angles[i] *= 0.3;
-            angles[i] -= 0;
-        }
-        System.out.println("angles crossRatio is " + crossRatio(angles));
-        // Create the corresponding schottkyDimers.
-        SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(schottkyData, angles);
-        return schottkyDimers;
-    }
+    //     // A nice not axis aligned example:
+    //     // double[] angles = {-2.414, -0.414, 0.414, 2.414};
+    //     for (int i = 0; i < angles.length; i++) {
+    //         angles[i] *= 0.3;
+    //         angles[i] -= 0;
+    //     }
+    //     System.out.println("angles crossRatio is " + crossRatio(angles));
+    //     // Create the corresponding schottkyDimers.
+    //     SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(schottkyData, angles);
+    //     return schottkyDimers;
+    // }
 
-    public static double crossRatio(double[] vals){
-        return ((vals[1] - vals[0]) * (vals[3] - vals[2]) / (vals[2] - vals[1])) / (vals[0] - vals[3]);
-    }
+    // public static double crossRatio(double[] vals){
+    //     return ((vals[1] - vals[0]) * (vals[3] - vals[2]) / (vals[2] - vals[1])) / (vals[0] - vals[3]);
+    // }
 }
 

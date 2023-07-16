@@ -14,12 +14,9 @@ public class SchottkyDimersHex extends SchottkyDimers{
     AmoebaMap amoebaMap;
 
     // angles for now are angles alpha, beta, gamma in R.
-    public SchottkyDimersHex(SchottkyData schottkyData, double[] angles) {
+    public SchottkyDimersHex(SchottkyData schottkyData, double[][] angles) {
         super(schottkyData, angles);
         this.angles = angles;
-        alpha = angles[0];
-        beta = angles[1];
-        gamma = angles[2];
     }
 
     @Override

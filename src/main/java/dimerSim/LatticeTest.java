@@ -108,7 +108,7 @@ public class LatticeTest {
         // Choose angles in a way such that crossratio is 1:
         double x = a * (1 + Math.sqrt(2));
         double firstAngle = -x - (a/2);
-        double[] angles = {firstAngle, firstAngle + x, firstAngle + x + a, firstAngle + x + a + x};
+        double[][] angles = {{firstAngle}, {firstAngle + x}, {firstAngle + x + a}, {firstAngle + x + a + x}};
         
         // double[] schottkyParams = new double[]{firstAngle - 0.5, 0, firstAngle + x + a + x + 0.5, 0, 0.00005, 0};
         // double[] schottkyParams = new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.05, 0};
@@ -117,17 +117,11 @@ public class LatticeTest {
         // A nice not axis aligned example:
         // double[] angles = {-2.414, -0.414, 0.414, 2.414};
         for (int i = 0; i < angles.length; i++) {
-            angles[i] *= 1;
-            angles[i] -= 0;
+            angles[i][0] *= 1;
+            angles[i][0] -= 0;
         }
-        System.out.println("angles crossRatio is " + crossRatio(angles));
         // Create the corresponding schottkyDimers.
         SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(schottkyData, angles);
         return schottkyDimers;
     }
-
-    public static double crossRatio(double[] vals){
-        return ((vals[1] - vals[0]) * (vals[3] - vals[2]) / (vals[2] - vals[1])) / (vals[0] - vals[3]);
-    }
-
 }

@@ -1,5 +1,6 @@
 package de.jtem.riemann.schottky;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,14 +12,18 @@ import de.jtem.mfc.field.Complex;
 public class SchottkyDimers extends Schottky{
 
 
-    public double[] angles;
+    public double[][] angles;
+    public int numAngles;
     // uniformization is either 1,2, or 0. Stands for U1, U2 or other.
     public int uniformization;
     protected AmoebaMap amoebaMap;
 
-    public SchottkyDimers(SchottkyData data, double[] angles) {
+    public SchottkyDimers(SchottkyData data, double[][] angles) {
         super(data);
         this.angles = angles;
+        for (double[] angleArray : angles) {
+            numAngles += angleArray.length;
+        }
         uniformization = getUniformization();
 
         // TODO: P0 should be chosen such that it's in the fundamental domain.
@@ -50,33 +55,48 @@ public class SchottkyDimers extends Schottky{
     }
 
     public Complex[][] parametrizeRealOvals(int numPointsPerSegment) {
-        int numAngles = angles.length;
         Complex[][] points = new Complex[numAngles + numGenerators][];
+        int currentIndex = 0;
+        
         // exclusion interval only supports genus 1 for now
-
         double[] ABinterval = {0,0};
         if (uniformization == 1){
             ABinterval = new double[] {getCenterOfCircle(0, false).re - getRadius(0), getCenterOfCircle(0, true).re + getRadius(0)};
         }
-        for (int i = 0; i < numAngles; i++) {
-            points[i] = getPointArrayOnRealLine(angles[i], angles[(i+1) % numAngles], numPointsPerSegment, ABinterval);
+        double[] orderedAngles = getAnglesInOrder();
+        for (int j = 0; j < orderedAngles.length; j++) {
+            points[currentIndex++] = getPointArrayOnRealLine(orderedAngles[j], orderedAngles[(j+1) % orderedAngles.length], numPointsPerSegment, ABinterval);
         }
         for(int i = 0; i < numGenerators; i++){
             if (uniformization == 1) {
-                points[i + numAngles] = getPointArrayOnRealLineExponential(getCenterOfCircle(i, false).re + getRadius(i), getCenterOfCircle(i, true).re - getRadius(i), numPointsPerSegment, new double[]{0., 0.});
+                points[currentIndex++] = getPointArrayOnRealLineExponential(getCenterOfCircle(i, false).re + getRadius(i), getCenterOfCircle(i, true).re - getRadius(i), numPointsPerSegment, new double[]{0., 0.});
             }
             else {
-                points[i + numAngles] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i) * 1.000001, numPointsPerSegment);
+                points[currentIndex++] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i) * 1.001, numPointsPerSegment);
             }
         }
 
         return points;
     }
 
-    public Complex[] getAngles() {
-        Complex[] complexAngles = new Complex[angles.length];
-        for (int i = 0; i < complexAngles.length; i++) {
-            complexAngles[i] = new Complex(angles[i], 0);
+    private double[] getAnglesInOrder() {
+        double[] orderedAngles = new double[numAngles];
+        for (int i = 0; i < angles.length; i++) {
+            for (int j = 0; j < angles[i].length; j++) {
+                orderedAngles[i + j] = angles[i][j];
+            }
+        }
+        return orderedAngles;
+    }
+
+    public Complex[][] getAngles() {
+        Complex[][] complexAngles = new Complex[angles.length][];
+        for (int i = 0; i < angles.length; i++) {
+            Complex[] iAngles = new Complex[angles[i].length];
+            for (int j = 0; j < angles[i].length; j++) {
+                iAngles[j] = new Complex(angles[i][j], 0);
+            }
+            complexAngles[i] = iAngles;   
         }
         return complexAngles;
     }
@@ -84,7 +104,9 @@ public class SchottkyDimers extends Schottky{
     public Complex[] getPointArrayOnRealLine(double a, double b, int numPoints, double[] excludingInterval){
         List<Complex> res = new LinkedList<Complex>();
         // take values from equidistant sampling on circle C(0, 1) and mapping [1, i, -1] via Moebius to [b, infty, a].
-        double imPart = 0.000001;
+        double imPart = 0.00001;
+        double maxRePart = 5;
+        double minRePart = -5;
         if (b < a) {
             double rotationAngle = Math.PI / numPoints;
             double theta = 0.0;
@@ -92,7 +114,7 @@ public class SchottkyDimers extends Schottky{
                 double phi_theta = Math.signum(theta - Math.PI / 2) * Math.sqrt((1 + Math.sin(theta)) / (1 - Math.sin(theta)));
                 Complex point = new Complex((a-b) / 2 * phi_theta + ((a + b) / 2), imPart);
                 if(point.re >= excludingInterval[1] || point.re <= excludingInterval[0]) {
-                    if(isInFundamentalDomain(point)) {
+                    if(isInFundamentalDomain(point) && point.re < maxRePart && point.re > minRePart) {
                         res.add(point);
                     }
                 }

@@ -1,20 +1,13 @@
 package de.jtem.riemann.schottky;
 
+import java.util.List;
+
 import de.jtem.mfc.field.Complex;
 
 public class SchottkyDimersQuad extends SchottkyDimers {
-    public double alphaMinus;
-    public double betaMinus;
-    public double alphaPlus;
-    public double betaPlus;
 
-    public SchottkyDimersQuad(SchottkyData data, double[] angles) {
+    public SchottkyDimersQuad(SchottkyData data, double[][] angles) {
         super(data, angles);
-        alphaMinus = angles[0]; 
-        betaMinus = angles[1];
-        alphaPlus = angles[2];
-        betaPlus = angles[3];
-        this.angles = angles;
 
         Complex P0 = new Complex(0, 1);
 
@@ -27,15 +20,15 @@ public class SchottkyDimersQuad extends SchottkyDimers {
         // if (!isInFundamentalDomain(P)) {
         //     throw new Exception("P needs to be in fundamental domain");
         // }
-        return amoebaMap.amoebaMapQuadGrid(P, getAngles(), acc);
+        return amoebaMap.amoebaMapQuadGrid(P, acc);
     }
 
     public Complex aztecMap(Complex P) throws Exception {
-        return amoebaMap.aztecMap(P, getAngles(), acc);
+        return amoebaMap.aztecMap(P, acc);
     }
 
     public Complex aztecArcticCurve(Complex P) throws Exception {
-        return amoebaMap.aztecMap(P, getAngles(), acc);
+        return amoebaMap.aztecMap(P, acc);
         // Complex curvePoint = null;
         // if (Math.abs(P.im) < 0.001) {
         //     curvePoint = amoebaMap.aztecArcticCurveReal(P, getAngles(), acc);

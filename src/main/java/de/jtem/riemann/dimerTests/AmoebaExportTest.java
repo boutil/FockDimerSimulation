@@ -28,11 +28,11 @@ public class AmoebaExportTest {
         // Choose some angles
         double x = a * (1 + Math.sqrt(2));
         double firstAngle = -x - (a/2);
-        double[] angles = {firstAngle, firstAngle + x, firstAngle + x + a, firstAngle + x + a + x};
+        double[][] angles = {{firstAngle}, {firstAngle + x}, {firstAngle + x + a}, {firstAngle + x + a + x}};
 
         for (int i = 0; i < angles.length; i++) {
-            angles[i] *= 0.3;
-            angles[i] -= 0;
+            angles[i][0] *= 0.3;
+            angles[i][0] -= 0;
         }
         // Create the corresponding schottkyDimers.
         SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(schottkyData, angles);
@@ -102,7 +102,7 @@ public class AmoebaExportTest {
         // Not a very general form for now.
         int numSegments = dimers.angles.length + dimers.getNumGenerators();
         // Complex[][] points = dimers.parametrizeRealOvals(numPointsPerSegment);
-        double[] angles = dimers.angles;
+        double[][] angles = dimers.angles;
         double[][][] pointsAmoebaMapped = new double[numSegments][][];
         for (int i = 0; i < points.length; i++){
             List<Double[]> mappedP = new LinkedList<Double[]>();

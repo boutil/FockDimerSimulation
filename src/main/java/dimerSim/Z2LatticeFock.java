@@ -1,6 +1,7 @@
 package dimerSim;
 
 import java.util.Arrays;
+import java.util.List;
 
 import de.jtem.blas.ComplexMatrix;
 import de.jtem.blas.ComplexVector;
@@ -21,9 +22,14 @@ public class Z2LatticeFock extends Z2Lattice{
 
     private transient ThetaWithChar thetaWithChar;
 
-    // For now we assume only 4 angles: alpha-, beta-, alpha+, beta+
-    public Complex[] angles;
-    public ComplexVector[] faceAngleAbelMaps = new ComplexVector[4];
+    // angles of the form [[alpha^-_0, alpha^-_1, ...][beta^-_0, beta^-_1, ...][alpha^+_0, alpha^+_1, ...][beta^+_0, beta^+_1, ...]]
+    public Complex[][] angles;
+    public ComplexVector[][] faceAngleAbelMaps = new ComplexVector[4][];
+
+    // We impose that the number of all angle types must be equal for simplicity of periodicity concerns.
+    private int numAlphas;
+    private ComplexVector[][] abelIncrementsRight;
+    private ComplexVector[][] abelIncrementsTop;
 
 
     public Z2LatticeFock(SchottkyDimersQuad dimers, int N, int M) {
@@ -40,9 +46,16 @@ public class Z2LatticeFock extends Z2Lattice{
         thetaWithChar.setBeta(e1);
 
         angles = schottkyDimers.getAngles();
-        for (int k = 0; k < faceAngleAbelMaps.length; k++) {
-            faceAngleAbelMaps[k] = new ComplexVector(schottkyDimers.getNumGenerators());
-            schottkyDimers.abelMap(faceAngleAbelMaps[k], angles[k]);
+        // we assume same amount of all angle types for now.
+        numAlphas = angles[0].length + angles[2].length;
+        abelIncrementsRight = new ComplexVector[numAlphas][numAlphas];
+        abelIncrementsTop = new ComplexVector[numAlphas][numAlphas];
+        for (int i = 0; i < angles.length; i++) {
+            faceAngleAbelMaps[i] = new ComplexVector[angles[i].length];
+            for (int k = 0; k < angles[i].length; k++) {
+                faceAngleAbelMaps[i][k] = new ComplexVector(schottkyDimers.getNumGenerators());
+                schottkyDimers.abelMap(faceAngleAbelMaps[i][k], angles[i][k]);
+            }
         }
         // TODO initialize this in a sensible way? 0 for now.
         Z = new ComplexVector(dimers.getNumGenerators(), 0, 0);
@@ -56,24 +69,24 @@ public class Z2LatticeFock extends Z2Lattice{
 
         computeDiscreteAbelMap();
         computeFaceWeights();
-        checkDiscreteAbelMapCorrectness();
+        // checkDiscreteAbelMapCorrectness();
     }
-
-    private int getAngleIndex(boolean isAlpha, int k) {
-        if (isAlpha) {
-            // Here we use floormod instead of % to ensure that the number is positive.
-            return 2 * Math.floorMod(k, 2);
-        } else {
-            return 3 - 2 * Math.floorMod(k, 2);
-        }
-    }
-
     
     private Complex getAngle(boolean isAlpha, int k) {
+        // Alpha sequence: [a_0^-, a_0^+, a_1^-, ...]
+        // Beta sequence:  [b_0^+, b_1^-, b_1^+, ...]
+        int index = isAlpha ? 2 * Math.floorMod(k, 2) : 3 - 2 * Math.floorMod(k, 2);
+        int length = angles[index].length;
+        return angles[index][Math.floorMod((k/2), length)];
+    }
+
+    private ComplexVector getAngleAbelMap(boolean isAlpha, int k) {
         // returns the kth alpha or beta angle. Assumes total of 4 angles for now
         // Alpha sequence: [a_0^-, a_0^+, a_1^-, ...]
         // Beta sequence:  [b_0^+, b_1^-, b_1^+, ...]
-        return angles[getAngleIndex(isAlpha, k)];
+        int index = isAlpha ? 2 * Math.floorMod(k, 2) : 3 - 2 * Math.floorMod(k, 2);
+        int length = angles[index].length;
+        return faceAngleAbelMaps[index][Math.floorMod((k/2), length)];
     }
 
     private Complex[] getAnglesOfFace(int i, int j) {
@@ -89,66 +102,28 @@ public class Z2LatticeFock extends Z2Lattice{
      private ComplexVector[] getAngleAbelMapsOfFace(int i, int j) {
         // returns list of  angle abel maps [alphaNW, betaSW, alphaSE, betaNE] that are associated to the given quad.
         ComplexVector[] faceAngles = new ComplexVector[4];
-        faceAngles[0] = faceAngleAbelMaps[getAngleIndex(true, i + j)];
-        faceAngles[1] = faceAngleAbelMaps[getAngleIndex(false, j - i)];
-        faceAngles[2] = faceAngleAbelMaps[getAngleIndex(true, i + j + 1)];
-        faceAngles[3] = faceAngleAbelMaps[getAngleIndex(false , j - i + 1)];
+        faceAngles[0] = getAngleAbelMap(true, i + j);
+        faceAngles[1] = getAngleAbelMap(false, j - i);
+        faceAngles[2] = getAngleAbelMap(true, i + j + 1);
+        faceAngles[3] = getAngleAbelMap(false , j - i + 1);
         return faceAngles;
      }
 
      private void computeDiscreteAbelMap() {
          // dynamically compute the discrete Abel maps
+         computeMapUpdateSteps();
          for(int i = 0; i < discreteAbelMap.length; i++) {
              if(i == 0){
                  discreteAbelMap[0][0] = Z;
              }
              else{
-                 discreteAbelMap[i][0] = discreteAbelMap[i - 1][0].plus(discreteMapUpdateStep(i, 0, 0));
+                 discreteAbelMap[i][0] = discreteAbelMap[i - 1][0].plus(abelIncrementsRight[i % numAlphas][0]);
              }
              for (int j = 1; j < discreteAbelMap.length; j++) {
-                 discreteAbelMap[i][j] = discreteAbelMap[i][j-1].plus(discreteMapUpdateStep(i, j, 1));
+                 discreteAbelMap[i][j] = discreteAbelMap[i][j-1].plus(abelIncrementsTop[i % numAlphas][j % numAlphas]);
              }
          }
     }
-
-    private void checkDiscreteAbelMapCorrectness() {
-        ComplexVector rightStep = new ComplexVector(schottkyDimers.getNumGenerators());
-        ComplexVector tmp = new ComplexVector(schottkyDimers.getNumGenerators());
-        ComplexVector topStep = new ComplexVector(schottkyDimers.getNumGenerators());
-        schottkyDimers.abelMap(tmp, angles[2]);
-        topStep.assignPlus(tmp);
-        schottkyDimers.abelMap(tmp, angles[1]);
-        topStep.assignPlus(tmp);
-        schottkyDimers.abelMap(tmp, angles[0]);
-        topStep.assignMinus(tmp);
-        schottkyDimers.abelMap(tmp, angles[3]);
-        topStep.assignMinus(tmp);
-
-        schottkyDimers.abelMap(tmp, angles[0]);
-        rightStep.assignPlus(tmp);
-        schottkyDimers.abelMap(tmp, angles[1]);
-        rightStep.assignPlus(tmp);
-        schottkyDimers.abelMap(tmp, angles[2]);
-        rightStep.assignMinus(tmp);
-        schottkyDimers.abelMap(tmp, angles[3]);
-        rightStep.assignMinus(tmp);
-
-        boolean isCorrect = true;
-        for (int i = 2; i < discreteAbelMap.length; i++) {
-            for (int j = 2; j < discreteAbelMap.length; j++) {
-                ComplexVector a = discreteAbelMap[i][j].minus(discreteAbelMap[i-2][j]);
-                isCorrect &= topStep.equals(discreteAbelMap[i][j].minus(discreteAbelMap[i-2][j]), 1e-5);
-                ComplexVector b = discreteAbelMap[i][j].minus(discreteAbelMap[i][j-2]);
-                isCorrect &= rightStep.equals(discreteAbelMap[i][j].minus(discreteAbelMap[i][j-2]), 1e-5);
-            }
-        }
-        System.out.println("DiscreteAbelMap RightStep: " + rightStep.im[0] + ", TopStep: " + topStep.im[0]);
-        System.out.println("Weights are correct: " + isCorrect);
-    }
-
-    private boolean abelIncrementsComputed = false;
-    // [right to even, right to odd, top to even, top to odd]
-    private ComplexVector[] abelIncrements = new ComplexVector[4];
 
     private ComplexVector computeDiscreteUpdateStep(int i, int j, int direction) {
         ComplexVector v1 = new ComplexVector(schottkyDimers.getNumGenerators());
@@ -171,34 +146,23 @@ public class Z2LatticeFock extends Z2Lattice{
             return v2.minus(v1);
         }
     }
-
-    private ComplexVector discreteMapUpdateStep(int i, int j, int direction) {
+    // This needs to be bigger for not only 4 angles case.
+    private void computeMapUpdateSteps() {
         // eta(i, j) - eta(i - 1, j) if direction == 0
         // eta(i, j) - eta(i, j - 1) if direction == 1
         // Handles the angles
-        if(!abelIncrementsComputed) {
-            // Compute increments if not yet computed
-            abelIncrements[0] = computeDiscreteUpdateStep(1, 1, 0);
-            abelIncrements[1] = computeDiscreteUpdateStep(2, 1, 0);
-            abelIncrements[2] = computeDiscreteUpdateStep(1, 1, 1);
-            abelIncrements[3] = computeDiscreteUpdateStep(1, 2, 1);
-            abelIncrementsComputed = true;
+        for (int i = 0; i < numAlphas; i++) {
+            for (int j = 0; j < numAlphas; j++) {
+                abelIncrementsRight[i][j] = computeDiscreteUpdateStep(i, j, 0);
+                abelIncrementsTop[i][j] = computeDiscreteUpdateStep(i, j, 1);
+            }
         }
-        int index = ((i + j) % 2) + 2 * direction;
-        return abelIncrements[index];
-        
     }
     
     Complex[] thetaSums = new Complex[4];
     Complex[] factors = new Complex[4];
 
     public void computeFaceWeights() {
-        // ComplexVector testV1 = new ComplexVector(1, 0, -345); 
-        // ComplexVector testV2 = new ComplexVector(1, 0, -350); 
-        // Complex test1 = theta.theta(testV1);
-        // Complex test2 = theta.theta(testV2);
-        // ComplexVector v1 = new ComplexVector(schottkyDimers.getNumGenerators());
-        // schottkyDimers.abelMap(v1, new Complex(-1 ,0));
         // crossRatio of theta of the surrounding faces (and the E differentials)
         for (int i = 1; i < N + 1; i++) {
             for (int j = 1; j < M + 1; j++) {

@@ -24,7 +24,8 @@ public class AmoebaVis extends JPanel{
 
     private BufferedImage amoebaImage;
     private BufferedImage aztecImage;
-    Color[] ovalColors = {Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.RED, Color.GREEN, Color.BLUE};
+    Color[] innerOvalColors = {Color.RED, Color.GREEN, Color.BLUE};
+    Color[] ovalColors;
 
     private int imageWidth = 1000, imageHeight = 1000;
 
@@ -32,6 +33,11 @@ public class AmoebaVis extends JPanel{
         schottkyDimers = dimers;
         amoebaImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
         aztecImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
+        ovalColors = new Color[dimers.numAngles + dimers.getNumGenerators()];
+        Arrays.fill(ovalColors, Color.BLACK);
+        for (int i = 0; i < dimers.getNumGenerators(); i++) {
+            ovalColors[dimers.numAngles + i] = innerOvalColors[i];
+        }
     }
 
     @Override
@@ -87,7 +93,8 @@ public class AmoebaVis extends JPanel{
         this.imageHeight = imageHeight;
         ComplexFn aztecMap = x -> getAztecInTiltedCoords(x);
         Complex[][] aztecPoints = extractOvalPoints(aztecMap);
-        Color[] whiteColors = {Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE};
+        Color[] whiteColors = new Color[schottkyDimers.numAngles + 1 + schottkyDimers.getNumGenerators()];
+        Arrays.fill(whiteColors, Color.WHITE);
         g.setStroke(new BasicStroke(6));
         drawPoints(aztecPoints, g, whiteColors, false);
     }
@@ -139,7 +146,7 @@ public class AmoebaVis extends JPanel{
     private Complex[][] extractOvalPoints(ComplexFn f) {
         int numPointsPerSegment = 500;
         Complex[][] points = schottkyDimers.parametrizeRealOvals(numPointsPerSegment);
-        int numSegments = schottkyDimers.angles.length + schottkyDimers.getNumGenerators();
+        int numSegments = schottkyDimers.numAngles + schottkyDimers.getNumGenerators();
         Complex[][] pointsAmoebaMapped = new Complex[numSegments][];
         for (int i = 0; i < points.length; i++){
             List<Complex> mappedP = new LinkedList<Complex>();

@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
-import lattices.VisualizationZ2;
+import lattices.Visualization;
 import lattices.Z2Lattice;
 import lattices.Z2LatticeFock;
 
@@ -80,7 +80,7 @@ public class ExportExperimentsAztec {
             sim.setLattice(lattice);
             sim.simulate(numSteps[i]);
     
-            VisualizationZ2 vis = new VisualizationZ2(sim);
+            Visualization vis = new Visualization(sim);
 
             try {
                 String info = i + "[" + sim.lattice.N + "x" + sim.lattice.M + "]";

@@ -7,11 +7,6 @@ public class Z2Lattice extends Lattice {
     // The flipFaceWeights here are defined as the crossratio of (N * S)/(E * W). 
     // !!CAREFUL!! Note that this is is not the same thing as the usual faceWeight definition. It is the same for white faces but the inverse for black faces!
     //  However it allows to do the flip easily in the simulation without considering many cases.
-    public double[][] flipFaceWeights;
-    public int N, M;
-
-    public double faceWeightMultiplier;
-
     public Z2Lattice(int N, int M, double faceWeightMultiplier) {
         super(N, M, faceWeightMultiplier);
         for(double[] row : flipFaceWeights){

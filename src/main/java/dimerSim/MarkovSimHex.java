@@ -3,8 +3,6 @@ package dimerSim;
 import java.util.Random;
 import java.util.stream.IntStream;
 
-import org.jzy3d.plot3d.pipelines.NotImplementedException;
-
 import lattices.HexLattice;
 
 public class MarkovSimHex extends MarkovSim{
@@ -13,12 +11,15 @@ public class MarkovSimHex extends MarkovSim{
     private byte flippableW = 0b101010;
     private byte flippableE = 0b010101;
 
+
     public MarkovSimHex(HexLattice lattice) {
         super(lattice);
+
 
         init();
 
         initializeRegularHexagon();
+
     }
 
     public MarkovSimHex(HexLattice lattice, byte[][] faceStates, boolean[][] insideBoundary) {
@@ -30,10 +31,10 @@ public class MarkovSimHex extends MarkovSim{
     protected void init() {
         heightFunction = new int[lattice.N][lattice.M];
         long seed = 42; // for reproducability
-        rand = new Random(seed);
+        rand = new Random();
         maxParity = 3;
         // for clunky parallelization purposes:
-        int numThreads = 20;
+        int numThreads = 10;
         int chunkSize = lattice.N / numThreads;
         markovWorkers = new MarkovSimHexWorker[lattice.N / chunkSize + 1];
         for (int i = 0; i < markovWorkers.length; i++) {
@@ -81,10 +82,10 @@ public class MarkovSimHex extends MarkovSim{
             faceStates[i][j] |= (faceStates[i][j+1] & 0b010000) >> 3;
         }
         if(j-1 >= 0) {
-            faceStates[i][j] |= (faceStates[i][j-1] & 0b00010) << 3;
+            faceStates[i][j] |= (faceStates[i][j-1] & 0b000010) << 3;
         }
         if(i - 1 > 0 && j + 1 < lattice.M) {
-            faceStates[i][j] |= (faceStates[i-1][j+1] & 0b10000) >> 3;
+            faceStates[i][j] |= (faceStates[i-1][j+1] & 0b100000) >> 3;
         }
         if(i + 1 < lattice.N && j - 1 > 0) {
             faceStates[i][j] |= (faceStates[i+1][j-1] & 0b000100) << 3;
@@ -103,6 +104,43 @@ public class MarkovSimHex extends MarkovSim{
     }
 
     private void initializeRegularHexagon() {
-        
+        HexLattice lat = (HexLattice) lattice;
+        int radius = lattice.N / 2 - 2;
+        for (int i = 0; i < lattice.N; i++) {
+            for (int j = 0; j < lattice.M; j++) {
+                int[] qrs = lat.getCubeCoords(i, j);
+                if (Math.max(Math.abs(qrs[0]), Math.max(Math.abs(qrs[1]), Math.abs(qrs[2]))) < radius) {
+                    insideBoundary[i][j] = true;
+                }
+                // Lots of cases to consider. This is a separation into three regions and the resulting faceStates
+                // Right quadrant first
+                // Boundaries:
+                // Eastern segment
+                if ((qrs[0] == 0 && qrs[1] >= 0) || (qrs[2] == 0 && qrs[0] >= 0)) {
+                    faceStates[i][j] |= 0b000001;
+                }
+                // SW segment
+                if ((qrs[2] == 0 && qrs[0] >= 0) || (qrs[1] == 0 && qrs[2] >= 0)) {
+                    faceStates[i][j] |= 0b010000;
+                }
+                // NW segment
+                if ((qrs[1] == 0 && qrs[2] >= 0) || (qrs[0] == 0 && qrs[1] >= 0)) {
+                    faceStates[i][j] |= 0b000100;
+                }
+                // Non-boundaries:
+                // eastern segment
+                if (qrs[0] > 0 && qrs[2] < 0) {
+                    faceStates[i][j] |= 0b001001;
+                }
+                // NW segment
+                if (qrs[0] < 0 && qrs[1] > 0) {
+                    faceStates[i][j] |= 0b100100;
+                }
+                // SW segment
+                if (qrs[1] < 0 && qrs[2] > 0) {
+                    faceStates[i][j] |= 0b010010;
+                }
+            }
+        }
     }
 }

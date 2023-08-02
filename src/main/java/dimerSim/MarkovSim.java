@@ -1,11 +1,8 @@
 package dimerSim;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.IntStream;
 
 import org.jzy3d.plot3d.pipelines.NotImplementedException;
 
@@ -14,7 +11,6 @@ import lattices.Lattice;
 public class MarkovSim implements Serializable{
     public Lattice lattice;
     // states of each face. Encodes a dimer configuration. Can compute a height function from this.
-    // 2^0 * W + 2^1 * S + 2^2 * E + 2^3 * N
     public byte[][] faceStates;
 
     public int currentVolume;
@@ -74,16 +70,18 @@ public class MarkovSim implements Serializable{
                 break;
             }
         }
-        for (MarkovSimWorker worker : markovWorkers) {
-            worker.requestCleanup(parity);
-        }
-        while(true) {
-            boolean working = false;
+        for(int paritySummand = 1; paritySummand < maxParity; paritySummand++){
             for (MarkovSimWorker worker : markovWorkers) {
-                working |= worker.doCleanup;
+                worker.requestCleanup((parity + paritySummand) % maxParity);
             }
-            if(!working) {
-                break;
+            while(true) {
+                boolean working = false;
+                for (MarkovSimWorker worker : markovWorkers) {
+                    working |= worker.doCleanup;
+                }
+                if(!working) {
+                    break;
+                }
             }
         }
     }

@@ -15,7 +15,7 @@ public class MarkovSimZ2Worker extends MarkovSimWorker{
         for (int index = 0; index < rowIndices.length; index++) {
             int i = rowIndices[index];
             for (int j = 0; j < sim.faceStates[i].length; j++) {
-                if (((i + j) % 2 != parity)) {
+                if (((i + j) % 2 == parity)) {
                     sim.consolidateFaceStateFromNeighbors(i, j);
                 }
             }

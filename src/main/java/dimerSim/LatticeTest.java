@@ -10,7 +10,7 @@ import java.util.Arrays;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
-import lattices.VisualizationZ2;
+import lattices.Visualization;
 import lattices.Z2Lattice;
 
 
@@ -23,23 +23,23 @@ public class LatticeTest {
         // SchottkyDimersQuad schottkyDimers = buildSchottkyDimers();
         // Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 200, 200);
 
-        Z2Lattice lattice = new Z2Lattice(40, 40);
+        Z2Lattice lattice = new Z2Lattice(100, 100);
 
 
         // // System.out.println(Arrays.deepToString(lattice.faceWeights));
 
-        sim = new MarkovSimZ2(lattice, true);
+        sim = new MarkovSimZ2(lattice, false);
 
         // sim = loadSim("mySimG2.ser");
 
-        // sim.simulate(100000, 0.22);
+        sim.simulate(100000);
 
 
         // saveSim(sim, "mySimG2.ser");
 
         // System.out.println(Arrays.deepToString(lattice.flipFaceWeights));
 
-        VisualizationZ2 vis = new VisualizationZ2(sim);
+        Visualization vis = new Visualization(sim);
 
         // vis.visualizeSim(5);
 

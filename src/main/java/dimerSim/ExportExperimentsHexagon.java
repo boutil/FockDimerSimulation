@@ -14,30 +14,29 @@ import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimers;
 import de.jtem.riemann.schottky.SchottkyDimersHex;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
+import lattices.HexLattice;
 import lattices.HexLatticeFock;
-import lattices.VisualizationZ2;
-import lattices.Z2Lattice;
+import lattices.Visualization;
 
 public class ExportExperimentsHexagon {
     public static void main(String[] args) {
         // Create a folder and save all simulation results in that folder for easy readout.
-        MarkovSimZ2 sim;
+        MarkovSimHex sim;
 
-        double[][] schottkyParamsCol = {{0.4, 1, 0.4, -1, 0.05, 0}};
-        double[][][] angles = {{{-3}, {-2}, {-1}, {1}, {2}, {3}}};
+        double[][] schottkyParamsCol = {{0.9, 1, 0.9, -1, 0.1, 0}};
+        double[][][] angles = {{{-3}, {0.4}, {3}}};
 
         // G2LargeHole
         // double[][] schottkyParamsCol = {{-1, 1, -1, -1, 0.03, 0, 1, 1, 1, -1, 0.001, 0}};
         // double[][][] angles = {{{-3}, {-2}, {-1}, {1}, {2}, {3}}};
 
-        int defaultNumSteps = 100;
+        int defaultNumSteps = 100000;
         int[] numSteps = new int[schottkyParamsCol.length];
         Arrays.fill(numSteps, defaultNumSteps);
         // int[] numSteps = {100000, 100000, 100000};
 
-        String baseFolder = "experimentExport/";
-        String simToStartFrom = "experimentExport/2023-07-15-21-26-29/sim0[501x501].ser";
-        // String simToStartFrom = "experimentExport/AztecDiamond501UniformConverged.ser";
+        String baseFolder = "experimentExport/Hexagon/";
+        String simToStartFrom = "experimentExport/Hexagon/hexagon500UniformConverged.ser";
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
         LocalDateTime now = LocalDateTime.now();
@@ -55,19 +54,22 @@ public class ExportExperimentsHexagon {
             
             HexLatticeFock lattice = new HexLatticeFock(schottkyDimers, sim.lattice.N, sim.lattice.M);
 
-            // sim.setLattice(lattice);
-            // sim.simulate(numSteps[i]);
+            sim.setLattice(lattice);
+
+            System.out.println("lattice built");
+
+            sim.simulate(numSteps[i]);
     
-            VisualizationZ2 vis = new VisualizationZ2(sim);
+            Visualization vis = new Visualization(sim);
 
             try {
                 String info = i + "[" + sim.lattice.N + "x" + sim.lattice.M + "]";
                 saveSim(sim, baseFolder + "/sim" + info + ".ser");
                 saveSchottky(schottkyDimers, baseFolder + "/schottky" + info + ".ser");
-                vis.saveAmoebaPic(schottkyDimers, baseFolder + "/amoebaPic" + info + ".png");
-                vis.saveAztecPic(schottkyDimers, baseFolder + "/aztecPic" + info + ".png");
+                // vis.saveAmoebaPic(schottkyDimers, baseFolder + "/amoebaPic" + info + ".png");
+                // vis.saveAztecPic(schottkyDimers, baseFolder + "/aztecPic" + info + ".png");
                 vis.saveDimerConfPic(schottkyDimers, baseFolder + "/dimerConf" + info + ".png");
-                vis.saveWeightsPic(baseFolder + "/weights" + info + ".png");
+                // vis.saveWeightsPic(baseFolder + "/weights" + info + ".png");
             } catch (IOException e) {
                 // TODO: handle exception
             }
@@ -89,7 +91,7 @@ public class ExportExperimentsHexagon {
         }
     }
 
-    public static void saveSim(MarkovSimZ2 sim, String fileName) {
+    public static void saveSim(MarkovSimHex sim, String fileName) {
         try {
             ObjectOutputStream out;
             out = new ObjectOutputStream(new FileOutputStream(fileName));
@@ -123,15 +125,15 @@ public class ExportExperimentsHexagon {
         return schottkyDimers;
     }
 
-    public static MarkovSimZ2 loadSim(String fileName) {
-        MarkovSimZ2 sim = null;
+    public static MarkovSimHex loadSim(String fileName) {
+        MarkovSimHex sim = null;
         try {
             ObjectInputStream in;
             in = new ObjectInputStream(new FileInputStream(fileName));
-            Z2Lattice lattice = (Z2Lattice) in.readObject();
+            HexLattice lattice = (HexLattice) in.readObject();
             byte[][] faceStates = (byte[][]) in.readObject();
             boolean[][] insideBoundary = (boolean[][]) in.readObject();
-            sim = new MarkovSimZ2(lattice, faceStates, insideBoundary);
+            sim = new MarkovSimHex(lattice, faceStates, insideBoundary);
             in.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -142,37 +144,5 @@ public class ExportExperimentsHexagon {
         }
         return sim;
     }
-
-
-    // public static SchottkyDimersQuad buildSchottkyDimers(double[] schottkyParams, double[][] angles) {
-    //     // First build a SchottkyData.
-    //     double a = Math.sqrt(2 / (1.5 + Math.sqrt(2)));
-    //     // double a = 0.01;
-    //     // double[] schottkyParams = new double[]{0, 1, 0, -1, 0.2, 0};
-        
-    //     // Choose angles in a way such that crossratio is 1:
-    //     double x = a * (1 + Math.sqrt(2));
-    //     double firstAngle = -x - (a/2);
-    //     // double[] angles = {firstAngle, firstAngle + x, firstAngle + x + a, firstAngle + x + a + x};
-        
-    //     // double[] schottkyParams = new double[]{firstAngle - 0.5, 0, firstAngle + x + a + x + 0.5, 0, 0.00005, 0};
-    //     // double[] schottkyParams = new double[]{-1, 1, -1, -1, 0.05, 0, 1, 1, 1, -1, 0.05, 0};
-    //     SchottkyData schottkyData = new SchottkyData(schottkyParams);
-
-    //     // A nice not axis aligned example:
-    //     // double[] angles = {-2.414, -0.414, 0.414, 2.414};
-    //     for (int i = 0; i < angles.length; i++) {
-    //         angles[i] *= 0.3;
-    //         angles[i] -= 0;
-    //     }
-    //     System.out.println("angles crossRatio is " + crossRatio(angles));
-    //     // Create the corresponding schottkyDimers.
-    //     SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(schottkyData, angles);
-    //     return schottkyDimers;
-    // }
-
-    // public static double crossRatio(double[] vals){
-    //     return ((vals[1] - vals[0]) * (vals[3] - vals[2]) / (vals[2] - vals[1])) / (vals[0] - vals[3]);
-    // }
 }
 

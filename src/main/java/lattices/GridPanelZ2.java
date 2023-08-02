@@ -1,53 +1,31 @@
 package lattices; 
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
-
 import dimerSim.Index;
-import dimerSim.MarkovSimZ2;
+import dimerSim.MarkovSim;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 // MyPanel extends JPanel, which will eventually be placed in a JFrame
-public class GridPanelZ2 extends JPanel { 
-    private BufferedImage paintImage;
-    private BufferedImage weightsImage;
-
-    private int imageWidth, imageHeight;
-
-    private boolean drawAztecCurves = false;
-    private AmoebaVis amoebaVis;
-
-    private MarkovSimZ2 sim;
+public class GridPanelZ2 extends GridPanel {
 
     private Color[] dimerColors = {Color.BLUE, Color.RED, Color.GREEN, Color.YELLOW};
     public int scaling = 4;
 
-    public GridPanelZ2(MarkovSimZ2 sim) {
-        super();
-        this.sim = sim;
+    public GridPanelZ2(MarkovSim sim) {
+        super(sim);
         imageWidth = sim.lattice.N * scaling;
         imageHeight = sim.lattice.M * scaling;
         paintImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
         weightsImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
     }
 
-    public GridPanelZ2(MarkovSimZ2 sim, AmoebaVis amoebaVis) {
+    public GridPanelZ2(MarkovSim sim, AmoebaVis amoebaVis) {
         this(sim);
         drawAztecCurves = true;
         this.amoebaVis = amoebaVis;
     }
 
     @Override
-    public void paintComponent(Graphics g){
-        // clear the previous painting
-        super.paintComponent(g);
-        // cast Graphics to Graphics2D
-        g.drawImage(paintImage, 0, 0, null);
-    }
-
     public void updatePaint() {
         Graphics2D g2 = paintImage.createGraphics();
         Graphics2D gWeights = weightsImage.createGraphics();
@@ -85,14 +63,6 @@ public class GridPanelZ2 extends JPanel {
 
         g2.dispose();
         repaint();
-    }
-    
-    public void save(String filePath) throws IOException{
-        ImageIO.write(paintImage, "PNG", new File(filePath));
-    }
-
-    public void saveWeightsPic(String filePath) throws IOException {
-        ImageIO.write(weightsImage, "PNG", new File(filePath));
     }
 
     private Rectangle getDominoRect(int i, int j, int dir) {

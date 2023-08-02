@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import lattices.VisualizationZ2;
+import lattices.Visualization;
 import lattices.Z2Lattice;
 
 
@@ -40,7 +40,7 @@ public class LatticeTestAztec {
 
         // System.out.println(Arrays.deepToString(lattice.flipFaceWeights));
 
-        VisualizationZ2 vis = new VisualizationZ2(sim);
+        Visualization vis = new Visualization(sim);
 
         // vis.visualizeAmoeba(schottkyDimers);
 

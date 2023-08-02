@@ -6,6 +6,48 @@
     "configurations": [
         {
             "type": "java",
+            "name": "ExportExperimentsHexagon",
+            "request": "launch",
+            "mainClass": "dimerSim.ExportExperimentsHexagon",
+            "projectName": "schottky-dimers"
+        },
+        {
+            "type": "java",
+            "name": "LatticeTest",
+            "request": "launch",
+            "mainClass": "dimerSim.LatticeTest",
+            "projectName": "schottky-dimers"
+        },
+        {
+            "type": "java",
+            "name": "HexLatticeTest",
+            "request": "launch",
+            "mainClass": "inUtil.HexLatticeTest",
+            "projectName": "schottky-dimers"
+        },
+        {
+            "type": "java",
+            "name": "hexagonalCaseCheck",
+            "request": "launch",
+            "mainClass": "inUtil.hexagonalCaseCheck",
+            "projectName": "schottky-dimers"
+        },
+        {
+            "type": "java",
+            "name": "LatticeTestAztec",
+            "request": "launch",
+            "mainClass": "dimerSim.LatticeTestAztec",
+            "projectName": "schottky-dimers"
+        },
+        {
+            "type": "java",
+            "name": "ExportExperiments",
+            "request": "launch",
+            "mainClass": "dimerSim.ExportExperiments",
+            "projectName": "schottky-dimers"
+        },
+        {
+            "type": "java",
             "name": "Launch DataExport",
             "request": "launch",
             "mainClass": "de.jtem.riemann.dimerTests.DataExport",

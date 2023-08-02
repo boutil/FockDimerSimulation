@@ -200,21 +200,24 @@ public class HexLatticeFock extends HexLattice{
         Complex[] faceAngles = getAnglesOfFace(i, j);
 
         // Method 1 of computing this:
-        Complex quotiontOfEs1 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[1], faceAngles[0], faceAngles[2]).exp();
-        Complex quotiontOfEs2 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[3], faceAngles[2], faceAngles[0]).exp();
-        Complex eCrossRatio = quotiontOfEs1.times(quotiontOfEs2);
+        Complex quotientOfEs1 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[1], faceAngles[0], faceAngles[2]).exp();
+        Complex quotientOfEs2 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[3], faceAngles[2], faceAngles[4]).exp();
+        Complex quotientOfEs3 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[5], faceAngles[4], faceAngles[0]).exp();
+        Complex eCrossRatio = quotientOfEs1.times(quotientOfEs2).times(quotientOfEs3);
         // Method 2: through odd theta functions:
         // TODO: switch to numerically stable version here too!
         ComplexVector[] faceAngleAbelMaps = getAngleAbelMapsOfFace(i, j);
         Complex thetaCrossRatio = thetaWithChar.theta(faceAngleAbelMaps[2].minus(faceAngleAbelMaps[1]));
-        thetaCrossRatio.assignTimes(thetaWithChar.theta(faceAngleAbelMaps[0].minus(faceAngleAbelMaps[3])));
+        thetaCrossRatio.assignTimes(thetaWithChar.theta(faceAngleAbelMaps[4].minus(faceAngleAbelMaps[3])));
+        thetaCrossRatio.assignTimes(thetaWithChar.theta(faceAngleAbelMaps[0].minus(faceAngleAbelMaps[5])));
         thetaCrossRatio.assignDivide(thetaWithChar.theta(faceAngleAbelMaps[1].minus(faceAngleAbelMaps[0])));
         thetaCrossRatio.assignDivide(thetaWithChar.theta(faceAngleAbelMaps[3].minus(faceAngleAbelMaps[2])));
+        thetaCrossRatio.assignDivide(thetaWithChar.theta(faceAngleAbelMaps[5].minus(faceAngleAbelMaps[4])));
 
         // Compare the two results for sanity:
-        if (! thetaCrossRatio.equals(eCrossRatio, 1e-5)) {
-            System.out.println("E CrossRatio computation methods do not agree!");
-        }
+        // if (! thetaCrossRatio.equals(eCrossRatio, 1e-5)) {
+        //     System.out.println("E CrossRatio computation methods do not agree!");
+        // }
 
         return thetaCrossRatio;
     }

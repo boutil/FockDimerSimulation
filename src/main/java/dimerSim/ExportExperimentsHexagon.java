@@ -30,7 +30,7 @@ public class ExportExperimentsHexagon {
         // double[][] schottkyParamsCol = {{-1, 1, -1, -1, 0.03, 0, 1, 1, 1, -1, 0.001, 0}};
         // double[][][] angles = {{{-3}, {-2}, {-1}, {1}, {2}, {3}}};
 
-        int defaultNumSteps = 100000;
+        int defaultNumSteps = 100;
         int[] numSteps = new int[schottkyParamsCol.length];
         Arrays.fill(numSteps, defaultNumSteps);
         // int[] numSteps = {100000, 100000, 100000};
@@ -66,7 +66,7 @@ public class ExportExperimentsHexagon {
                 String info = i + "[" + sim.lattice.N + "x" + sim.lattice.M + "]";
                 saveSim(sim, baseFolder + "/sim" + info + ".ser");
                 saveSchottky(schottkyDimers, baseFolder + "/schottky" + info + ".ser");
-                // vis.saveAmoebaPic(schottkyDimers, baseFolder + "/amoebaPic" + info + ".png");
+                vis.saveAmoebaPic(schottkyDimers, baseFolder + "/amoebaPic" + info + ".png");
                 // vis.saveAztecPic(schottkyDimers, baseFolder + "/aztecPic" + info + ".png");
                 vis.saveDimerConfPic(schottkyDimers, baseFolder + "/dimerConf" + info + ".png");
                 // vis.saveWeightsPic(baseFolder + "/weights" + info + ".png");

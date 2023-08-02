@@ -19,11 +19,6 @@ public class AmoebaMap implements Serializable{
     // measures errors for the elements in some way?
     final double[][] rho;
 
-    // For hex grid:
-    Complex alpha;
-    Complex beta;
-    Complex gamma;
-
 
     AmoebaMap(SchottkyDimers schottky, Complex P0) {
         this.schottky = schottky;
@@ -172,121 +167,162 @@ public class AmoebaMap implements Serializable{
       }
     }
   }
+
+  private void cleanIncrements() {
+      dH.assign(0);
+      dG.assign(0);
+      dK.assign(0);
+      dH_Der.assign(0);
+      dG_Der.assign(0);
+      dK_Der.assign(0);
+      H.assign(1);
+      G.assign(1);
+      K.assign(1);
+      H_corr.assign(1);
+      G_corr.assign(1);
+      K_corr.assign(1);
+  }
+
     // calculates the amoebaMap based on a hexGrid setup. Thus there need to be three angles picked.
     final void hexGrid(final SchottkyGroupElement element) {
-
-        if (element.updateID != updateID) {
-          schottky.updateElement(element);
-        }
-    // Not sure what to do here instead...
-        element.diff(B, A, d);
-        double error = maxError - 1;
-        if (element != schottky.id) {
-          error = (Math.abs(d.re) + Math.abs(d.im)) * rho(element);
-        }
-
-        if (error > maxError || Double.isNaN(error)) {
-          return;
-        }
-    
-        if (element.wordLength > 0) {
-          return;
-        }
-
-        if (error * noe[element.wordLength] < acc || error < eps ) {
-          acc += acc / noe[element.wordLength] - error;
-          return;
-        }
-
-        
-        element.applyTo(P, sP);
-        element.applyTo(P0, sP0);
-        
-        H.assignDivide(sP.minus(alpha), sP.minus(gamma));
-        G.assignDivide(sP.minus(beta), sP.minus(gamma));
-        H_corr.assignDivide(sP0.minus(gamma), sP0.minus(alpha));
-        G_corr.assignDivide(sP0.minus(gamma), sP0.minus(beta));
-
-        product_re += Math.log(H.abs() * H_corr.abs());
-        product_im += Math.log(G.abs() * G_corr.abs());
-
-        if (element.child == null) {
-          schottky.createLeftChilds(element);
-        }
-    
-        final SchottkyGroupElement[] child = element.child;
-    
-        final int numChildren = child.length;
-    
-        String[] childrenWords = new String[numChildren];
-        for (int i = 0; i < numChildren; i++) {
-          childrenWords[i] = child[i].word();
-        }
-        for (int i = 0; i < numChildren; i++) {
-          // String childWord = child[i].word();
-          hexGrid(child[i]);
-        }
+      if (element.updateID != updateID) {
+        schottky.updateElement(element);
       }
+      // Not sure what to do here instead...
+      element.diff(B, A, d);
+      double error = maxError - 1;
+      if (element != schottky.id) {
+        error = (Math.abs(d.re) + Math.abs(d.im)) * rho(element);
+      }
+
+      if (error > maxError || Double.isNaN(error)) {
+        return;
+      }
+  
+      // if (element.wordLength > 0) {
+      //   return;
+      // }
+
+      if (error * noe[element.wordLength] < acc || error < eps ) {
+        acc += acc / noe[element.wordLength] - error;
+        return;
+      }
+
+      cleanIncrements();
+
+      
+      element.applyTo(P, sP);
+      element.applyTo(P0, sP0);
+
+      element.applyDifferentialTo(P, dsP);
+
+      for (Complex angle : schottky.getAngles()[0]) {
+        Complex diff = sP.minus(angle);
+        dH.assignTimes(diff.invert().times(dsP));
+        dH_Der.assignMinus(P.minus(element.applyTo(angle)).pow(2).invert());
+        H.assignTimes(diff);
+        H_corr.assignTimes(sP0.minus(angle));
+      }
+      for (Complex angle : schottky.getAngles()[1]) {
+        Complex diff = sP.minus(angle);
+        dG.assignPlus(diff.invert().times(dsP));
+        dG_Der.assignPlus(P.minus(element.applyTo(angle)).pow(2).invert());
+        G.assignTimes(diff);
+        G_corr.assignTimes(sP0.minus(angle));
+      }
+      for (Complex angle : schottky.getAngles()[2]) {
+        Complex diff = sP.minus(angle);
+        dH.assignMinus(diff.invert().times(dsP));
+        dG.assignMinus(diff.invert().times(dsP));
+        dH_Der.assignMinus(P.minus(element.applyTo(angle)).pow(2).invert());
+        dG_Der.assignMinus(P.minus(element.applyTo(angle)).pow(2).invert());
+        H.assignDivide(diff);
+        G.assignDivide(diff);
+        H_corr.assignDivide(sP0.minus(angle));
+        G_corr.assignDivide(sP0.minus(angle));
+      }
+
+      addIncrements();
+
+      if (element.child == null) {
+        schottky.createLeftChilds(element);
+      }
+  
+      final SchottkyGroupElement[] child = element.child;
+  
+      final int numChildren = child.length;
+  
+      String[] childrenWords = new String[numChildren];
+      for (int i = 0; i < numChildren; i++) {
+        childrenWords[i] = child[i].word();
+      }
+      for (int i = 0; i < numChildren; i++) {
+        // String childWord = child[i].word();
+        hexGrid(child[i]);
+      }
+      }
+
+      private void cleanDiffs() {
+        xi1.assign(0, 0);
+        xi2.assign(0, 0);
+        xiAztec.assign(0, 0);
+
+        dXi1.assign(0, 0);
+        dXi2.assign(0, 0);
+        dXiAztec.assign(0, 0);
+
+        dXi1Der.assign(0, 0);
+        dXi2Der.assign(0, 0);
+        dXiAztecDer.assign(0, 0);
+      }
+
+      final Complex[] getDifferentialsHex(final Complex P, final double accuracy) {
     
-      final void hexGrid
-          (final Complex r,
-           final Complex P,
-           final Complex alpha, final Complex beta, final Complex gamma,
-           final double accuracy) {
-    
+        // calculates and returns xi1, xi2 and xiTilde.
+        // (xi1.re, xi2.re) is then Amoeba Map.
         this.noe = schottky.numOfElementsWithWordLength;
         
         this.A.assign(schottky.fixpoint[n][0]);
         this.B.assign(schottky.fixpoint[n][1]);
 
         this.P.assign(P);
-        this.alpha = alpha;
-        this.beta = beta;
-        this.gamma = gamma;
+
+        cleanDiffs();
 
         this.acc = accuracy;
         this.eps = accuracy / schottky.maxNumOfElements;
 
         prepareRho(P);
-        // H.assignDivide(P.minus(alpha), P.minus(gamma));
-        // G.assignDivide(P.minus(beta), P.minus(gamma));
-        // product_re = H.abs();
-        // product_im = G.abs();
-        product_re = 0;
-        product_im = 0;
 
         hexGrid(schottky.id);
 
         // Correction in the U1 uniformization case.
-        if(schottky.uniformization == 1) {
-          addU1Correction(P);
-        }
-        // for (int i = 0; i < numGenerators; i++) {
-        //   hexGrid(schottky.generator[i]);
-        //   hexGrid(schottky.generatorInv[i]);
+        // if(schottky.uniformization == 1) {
+        //   addU1Correction(P);
         // }
 
         if(this.acc < 0 ) // this test is needed because of the eps crieteria
           throw new RuntimeException( "could not evaluate series because of numerical instabilities" );
         
         // r.assign(new Complex(Math.log(product_re), Math.log(product_im)));
-        r.assign(new Complex(product_re, product_im));
+        return new Complex[]{dXi1.copy(), dXi2.copy(), dXiAztec.copy(), xi1.copy(), xi2.copy(), xiAztec.copy(), dXi1Der.copy(), dXi2Der.copy(), dXiAztecDer.copy()};
       }
 
-      // Adds the U1 correction to the Amoeba map. g=1 only for now. Therefore n = 0 only instead of doing some Matrix inversion.
-      final void addU1Correction(Complex P) {
-        // double abelIntegral = schottky.abelianIntegralOf1stKind(P, 0).re;
-        Complex P0 = new Complex(0.5, 0);
-        double abelIntegral = Math.log(Complex.crossRatio(B, P0, A, P).abs());
-        Complex factor1 = new Complex();
-        Complex factor2 = new Complex();
-        factor1.assignCrossRatio(schottky.getA(0), alpha, schottky.getB(0), gamma);
-        double f1 = Math.log(factor1.re) / Math.log(schottky.getMu(0).re) * abelIntegral;
-        factor2.assignCrossRatio(schottky.getA(0), beta, schottky.getB(0), gamma);
-        double f2 = Math.log(factor2.re) / Math.log(schottky.getMu(0).re) * abelIntegral;
-        product_re -= f1;
-        product_im -= f2;
-      }
+      // // Adds the U1 correction to the Amoeba map. g=1 only for now. Therefore n = 0 only instead of doing some Matrix inversion.
+
+      // final void addU1Correction(Complex P) {
+      //   // double abelIntegral = schottky.abelianIntegralOf1stKind(P, 0).re;
+      //   Complex P0 = new Complex(0.5, 0);
+      //   double abelIntegral = Math.log(Complex.crossRatio(B, P0, A, P).abs());
+      //   Complex factor1 = new Complex();
+      //   Complex factor2 = new Complex();
+      //   factor1.assignCrossRatio(schottky.getA(0), alpha, schottky.getB(0), gamma);
+      //   double f1 = Math.log(factor1.re) / Math.log(schottky.getMu(0).re) * abelIntegral;
+      //   factor2.assignCrossRatio(schottky.getA(0), beta, schottky.getB(0), gamma);
+      //   double f2 = Math.log(factor2.re) / Math.log(schottky.getMu(0).re) * abelIntegral;
+      //   product_re -= f1;
+      //   product_im -= f2;
+      // }
 
 
 
@@ -316,18 +352,7 @@ public class AmoebaMap implements Serializable{
         return;
       }
 
-      dH.assign(0);
-      dG.assign(0);
-      dK.assign(0);
-      dH_Der.assign(0);
-      dG_Der.assign(0);
-      dK_Der.assign(0);
-      H.assign(1);
-      G.assign(1);
-      K.assign(1);
-      H_corr.assign(1);
-      G_corr.assign(1);
-      K_corr.assign(1);
+      cleanIncrements();
 
       
       element.applyTo(P, sP);
@@ -379,25 +404,28 @@ public class AmoebaMap implements Serializable{
         G_corr.assignTimes(sP0.minus(angle));
         K_corr.assignTimes(sP0.minus(angle));
       }
-      
-      // dH.assign(sP.minus(angles[2]).invert().minus(sP.minus(angles[0]).invert()).times(dsP));
-      // dG.assign(sP.minus(angles[3]).invert().minus(sP.minus(angles[1]).invert()).times(dsP));
-      // dK.assign(sP.minus(angles[1]).invert().plus(sP.minus(angles[3]).invert()).minus(sP.minus(angles[2]).invert()).minus(sP.minus(angles[0]).invert()).times(dsP));
-      
-      // dH_Der.assign(P.minus(element.applyTo(angles[2])).pow(2).invert().minus(P.minus(element.applyTo(angles[0])).pow(2).invert()));
-      // dG_Der.assign(P.minus(element.applyTo(angles[3])).pow(2).invert().minus(P.minus(element.applyTo(angles[1])).pow(2).invert()));
-      // dK_Der.assign(P.minus(element.applyTo(angles[1])).pow(2).invert().plus(sP.minus(element.applyTo(angles[3])).pow(2).invert()).minus(sP.minus(element.applyTo(angles[2])).pow(2).invert()).minus(sP.minus(element.applyTo(angles[0])).pow(2).invert()));
-      
-      
-      // H.assignDivide(sP.minus(angles[2]), sP.minus(angles[0]));
-      // G.assignDivide(sP.minus(angles[3]), sP.minus(angles[1]));
-      // K.assignDivide(sP.minus(angles[1]).times(sP.minus(angles[3])), sP.minus(angles[0]).times(sP.minus(angles[2])));
-      // // K.assignDivide(sP.minus(angles[2]).times(sP.minus(angles[0])), sP.minus(angles[1]).times(sP.minus(angles[3])));
-      // H_corr.assignDivide(sP0.minus(angles[2]), sP0.minus(angles[0]));
-      // G_corr.assignDivide(sP0.minus(angles[3]), sP0.minus(angles[1]));
-      // K_corr.assignDivide(sP0.minus(angles[1]).times(sP0.minus(angles[3])), sP0.minus(angles[2]).times(sP0.minus(angles[0])));
-      // // K_corr.assignDivide(sP0.minus(angles[2]).times(sP0.minus(angles[0])), sP0.minus(angles[1]).times(sP0.minus(angles[3])));
 
+      addIncrements();
+
+      if (element.child == null) {
+        schottky.createLeftChilds(element);
+      }
+  
+      final SchottkyGroupElement[] child = element.child;
+  
+      final int numChildren = child.length;
+  
+      String[] childrenWords = new String[numChildren];
+      for (int i = 0; i < numChildren; i++) {
+        childrenWords[i] = child[i].word();
+      }
+      for (int i = 0; i < numChildren; i++) {
+        // String childWord = child[i].word();
+        quadGrid(child[i]);
+      }
+    }
+
+    private void addIncrements() {
       if(!dH.isNaN()){
         dXi1.assignPlus(dH);
       }
@@ -425,23 +453,6 @@ public class AmoebaMap implements Serializable{
       if(!dK_Der.isNaN()){
         dXiAztecDer.assignPlus(dK);
       }
-
-      if (element.child == null) {
-        schottky.createLeftChilds(element);
-      }
-  
-      final SchottkyGroupElement[] child = element.child;
-  
-      final int numChildren = child.length;
-  
-      String[] childrenWords = new String[numChildren];
-      for (int i = 0; i < numChildren; i++) {
-        childrenWords[i] = child[i].word();
-      }
-      for (int i = 0; i < numChildren; i++) {
-        // String childWord = child[i].word();
-        quadGrid(child[i]);
-      }
     }
 
       final Complex[] getDifferentialsQuad(final Complex P, final double accuracy) {
@@ -455,17 +466,7 @@ public class AmoebaMap implements Serializable{
 
         this.P.assign(P);
 
-        xi1.assign(0, 0);
-        xi2.assign(0, 0);
-        xiAztec.assign(0, 0);
-
-        dXi1.assign(0, 0);
-        dXi2.assign(0, 0);
-        dXiAztec.assign(0, 0);
-
-        dXi1Der.assign(0, 0);
-        dXi2Der.assign(0, 0);
-        dXiAztecDer.assign(0, 0);
+        cleanDiffs();
 
         this.acc = accuracy;
         this.eps = accuracy / schottky.maxNumOfElements;
@@ -475,9 +476,9 @@ public class AmoebaMap implements Serializable{
         quadGrid(schottky.id);
 
         // Correction in the U1 uniformization case.
-        if(schottky.uniformization == 1) {
-          addU1Correction(P);
-        }
+        // if(schottky.uniformization == 1) {
+        //   addU1Correction(P);
+        // }
 
         if(this.acc < 0 ) // this test is needed because of the eps crieteria
           throw new RuntimeException( "could not evaluate series because of numerical instabilities" );
@@ -492,8 +493,7 @@ public class AmoebaMap implements Serializable{
       }
 
       public Complex amoebaMapHexGrid(final Complex P, final double accuracy) {
-        // TODO Implement
-        Complex[] diffs = getDifferentialsQuad(P, accuracy);
+        Complex[] diffs = getDifferentialsHex(P, accuracy);
         return new Complex(diffs[3].re, diffs[4].re);
       }
       

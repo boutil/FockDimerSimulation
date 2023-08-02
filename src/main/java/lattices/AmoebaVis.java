@@ -58,11 +58,14 @@ public class AmoebaVis extends JPanel{
 
         ComplexFn amoebaMap = x -> schottkyDimers.amoebaMap(x);
         Complex[][] amoebaPoints = extractOvalPoints(amoebaMap);
-        ComplexFn aztecMap = x -> schottkyDimers.aztecArcticCurve(x);
-        Complex[][] aztecPoints = extractOvalPoints(aztecMap);
+
+        // For now disable until I deal with both Hexagonal and Aztec case. Probably separate classes.
+
+        // ComplexFn aztecMap = x -> schottkyDimers.aztecArcticCurve(x);
+        // Complex[][] aztecPoints = extractOvalPoints(aztecMap);
 
         drawPoints(amoebaPoints, gAmoeba);
-        drawPoints(aztecPoints, gAztec);
+        // drawPoints(aztecPoints, gAztec);
 
 
         gAmoeba.dispose();

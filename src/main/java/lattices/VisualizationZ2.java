@@ -1,4 +1,4 @@
-package dimerSim;
+package lattices;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,6 +22,7 @@ import de.jtem.blas.ComplexVector;
 import de.jtem.mfc.field.Complex;
 import de.jtem.numericalMethods.util.Arrays;
 import de.jtem.riemann.schottky.SchottkyDimers;
+import dimerSim.MarkovSimZ2;
 
 public class VisualizationZ2 {
 
@@ -152,7 +153,7 @@ public class VisualizationZ2 {
         Container c = f.getContentPane();
 
         c.setLayout(new BorderLayout()); 
-        GridPanel p = new GridPanel(sim);
+        GridPanelZ2 p = new GridPanelZ2(sim);
         p.updatePaint();
         c.add(p); 
         f.setSize(sim.lattice.N * p.scaling + 100, sim.lattice.M * p.scaling + 100);    
@@ -163,14 +164,14 @@ public class VisualizationZ2 {
     }
 
     public void saveDimerConfPic(String filepPath) throws IOException {
-        GridPanel p = new GridPanel(sim);
+        GridPanelZ2 p = new GridPanelZ2(sim);
         p.updatePaint();
         p.save(filepPath);
     }
 
     public void saveDimerConfPic(SchottkyDimers dimers, String filepPath) throws IOException {
         AmoebaVis vis = new AmoebaVis(dimers);
-        GridPanel p = new GridPanel(sim, vis);
+        GridPanelZ2 p = new GridPanelZ2(sim, vis);
         p.updatePaint();
         p.save(filepPath);
     }
@@ -188,7 +189,7 @@ public class VisualizationZ2 {
     }
 
     public void saveWeightsPic(String filepPath) throws IOException {
-        GridPanel p = new GridPanel(sim);
+        GridPanelZ2 p = new GridPanelZ2(sim);
         p.updatePaint();
         p.saveWeightsPic(filepPath);
     }

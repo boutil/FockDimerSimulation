@@ -1,4 +1,4 @@
-package dimerSim;
+package lattices;
 
 import org.jzy3d.colors.Color;
 import org.jzy3d.colors.ColorMapper;

@@ -1,4 +1,4 @@
-package dimerSim;
+package lattices;
 
 import java.util.Arrays;
 import java.util.List;

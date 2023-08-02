@@ -12,8 +12,11 @@ import java.util.Arrays;
 
 import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
+import lattices.VisualizationZ2;
+import lattices.Z2Lattice;
+import lattices.Z2LatticeFock;
 
-public class ExportExperiments {
+public class ExportExperimentsAztec {
     public static void main(String[] args) {
         // Create a folder and save all simulation results in that folder for easy readout.
         MarkovSimZ2 sim;

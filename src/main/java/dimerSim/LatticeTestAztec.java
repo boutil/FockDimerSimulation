@@ -5,11 +5,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Arrays;
 
-import de.jtem.mfc.field.Complex;
-import de.jtem.riemann.schottky.SchottkyData;
-import de.jtem.riemann.schottky.SchottkyDimersQuad;
+import lattices.VisualizationZ2;
+import lattices.Z2Lattice;
 
 
 

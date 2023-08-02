@@ -1,13 +1,22 @@
-package dimerSim; 
+package lattices;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Polygon;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-// MyPanel extends JPanel, which will eventually be placed in a JFrame
-public class GridPanel extends JPanel { 
+
+import javax.imageio.ImageIO;
+import javax.swing.JPanel;
+
+import de.jtem.mfc.field.Complex;
+import dimerSim.Index;
+import dimerSim.MarkovSimZ2;
+
+public class GridPanelHex extends JPanel{
     private BufferedImage paintImage;
     private BufferedImage weightsImage;
 
@@ -18,10 +27,15 @@ public class GridPanel extends JPanel {
 
     private MarkovSimZ2 sim;
 
-    private Color[] dimerColors = {Color.BLUE, Color.RED, Color.GREEN, Color.YELLOW};
-    public int scaling = 4;
+    private Color[] dimerColors = {Color.BLUE, Color.RED, Color.GREEN};
+    // Hexagon diameter is scaling pixels
+    public int scaling = 10;
 
-    public GridPanel(MarkovSimZ2 sim) {
+    private Complex xDir = new Complex(2,0);
+    private Complex yDir = new Complex(Math.cos(Math.PI / 3), Math.sin(Math.PI / 3));
+
+
+    public GridPanelHex(MarkovSimZ2 sim) {
         super();
         this.sim = sim;
         imageWidth = sim.lattice.N * scaling;
@@ -30,7 +44,7 @@ public class GridPanel extends JPanel {
         weightsImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
     }
 
-    public GridPanel(MarkovSimZ2 sim, AmoebaVis amoebaVis) {
+    public GridPanelHex(MarkovSimZ2 sim, AmoebaVis amoebaVis) {
         this(sim);
         drawAztecCurves = true;
         this.amoebaVis = amoebaVis;
@@ -64,21 +78,16 @@ public class GridPanel extends JPanel {
                     // sim.lattice.getUnflippedFaceWeight(i, j)
                     gWeights.fillRect(i * scaling, j * scaling, 1 * scaling, 1 * scaling);
                     for (int dir = 0; dir < dimerColors.length; dir++) {
-                        int dimerType = getDimerType(new Index(i, j), dir);
-                        if (dimerType != 4) {
-                            g2.setColor(dimerColors[dimerType]);
-                            g2.fill(getDominoRect(i, j, dir));
+                        if (sim.isDimer(new Index(i, j), dir)) {
+                            g2.setColor(dimerColors[dir]);
+                            g2.fill(getKitePol(i, j, dir));
                             g2.setColor(Color.BLACK);
-                            g2.draw(getDominoRect(i, j, dir));
+                            g2.draw(getKitePol(i, j, dir));
                         }
                     }
                 }
             }
         }
-        if (drawAztecCurves) {
-            amoebaVis.drawAztecCurves(g2, imageWidth, imageHeight);
-        }
-
         g2.dispose();
         repaint();
     }
@@ -91,23 +100,17 @@ public class GridPanel extends JPanel {
         ImageIO.write(weightsImage, "PNG", new File(filePath));
     }
 
-    private Rectangle getDominoRect(int i, int j, int dir) {
-        boolean isHorizontal = (dir % 2) == 1;
-        int width = scaling * (isHorizontal ? 2 : 1);
-        int height = scaling * (isHorizontal ? 1 : 2);
-        int x = scaling * (i - (dir != 2 ? 1 : 0));
-        int y = scaling * (j + (dir == 3 ? 1 : 0));
-        return new Rectangle(x, y, width, height);
+    private Complex get2DDir(int dir) {
+        double angle = dir * Math.PI / 3;
+        return new Complex(Math.cos(angle), Math.sin(angle));
     }
 
-    private int getDimerType(Index coords, int dir) {
-        if(sim.isDimer(coords, dir)) {
-            if(coords.isEven()) {
-                return dir;
-            } else {
-                return (dir + 2) % 4;
-            }
-        }
-        return 4;
+
+    private Polygon getKitePol(int i, int j, int dir) {
+        Complex centerHex = xDir.times(i).plus(yDir.times(j)).times(scaling);
+        Complex centerNextHex = centerHex.plus(get2DDir(dir - 1).times(scaling));
+        Complex centerOppositeHex = centerHex.plus(get2DDir(dir).times(scaling));
+        Complex centerPrevHex = centerHex.plus(get2DDir(dir + 1).times(scaling));
+        return new Polygon(new int[]{(int)centerHex.re, (int)centerNextHex.re, (int)centerOppositeHex.re, (int)centerPrevHex.re}, new int[]{(int)centerHex.im, (int)centerNextHex.im, (int)centerOppositeHex.im, (int)centerPrevHex.im}, 4);
     }
 }

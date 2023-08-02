@@ -1,42 +1,21 @@
 package dimerSim;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
-import java.util.Arrays;
 
-public class MarkovSimZ2 implements Serializable{
-    public Z2Lattice lattice;
+import lattices.Z2Lattice;
+
+
+public class MarkovSimZ2 extends MarkovSim{
     // states of each face. Encodes a dimer configuration. Can compute a height function from this.
     // 2^0 * W + 2^1 * S + 2^2 * E + 2^3 * N
-    public byte[][] faceStates;
     private byte ns = 0b1010;
     private byte we = 0b0101;
 
-    public int currentVolume;
-
-    public int[][] heightFunction;
-    // Indicates for each face whether it should be updated.
-    public boolean[][] insideBoundary;
-    
-    private Random rand;
-
-    private MarkovSimZ2Worker[] markovWorkers;
-
-    List<Index> upFlippableIndices;
-    List<Index> downFlippableIndices;
-    
-    // Only makes sense to not set to 1 in case of uniform 1 face weights.
-    public double acceptanceRatioConstant = 0.9999;
-
     public MarkovSimZ2(Z2Lattice lattice, boolean flat) {
-        this.lattice = lattice;
-        // initialize height function in a sensible way
-        faceStates = new byte[lattice.N][lattice.M];
-        insideBoundary = new boolean[lattice.N][lattice.M];
+        super(lattice);
 
         init();
         
@@ -48,16 +27,16 @@ public class MarkovSimZ2 implements Serializable{
     }
 
     public MarkovSimZ2(Z2Lattice lattice, byte[][] faceStates, boolean[][] insideBoundary) {
-        this.lattice = lattice;
-        this.faceStates = faceStates;
-        this.insideBoundary = insideBoundary;
+        super(lattice, faceStates, insideBoundary);
         init();
     }
 
-    private void init() {
+    @Override
+    protected void init() {
         heightFunction = new int[lattice.N][lattice.M];
         long seed = 42; // for reproducability
         rand = new Random(seed);
+        maxParity = 2;
         // for clunky parallelization purposes:
         int numThreads = 20;
         int chunkSize = lattice.N / numThreads;
@@ -66,15 +45,6 @@ public class MarkovSimZ2 implements Serializable{
             markovWorkers[i] = new MarkovSimZ2Worker(this, IntStream.range(i * chunkSize, Math.min(lattice.N, (i+1) * chunkSize)).toArray());
             markovWorkers[i].start();
         }
-    }
-
-    public void setLattice(Z2Lattice newLattice) {
-        // Used to change weights for a given lattice.
-        if (lattice.N != newLattice.N || lattice.M != newLattice.M) {
-            System.out.println("cannot swap lattices. Dimensions do not match.");
-            return;
-        }
-        lattice = newLattice;
     }
 
     private void markovStepUpVol(int parity, int volumeToAchieve) {
@@ -95,47 +65,6 @@ public class MarkovSimZ2 implements Serializable{
                 }
             }    
         }
-    }
-
-    private void markovStep(int parity) {
-        for (MarkovSimZ2Worker worker : markovWorkers) {
-            worker.requestStep(parity);
-        }
-        while(true) {
-            boolean working = false;
-            for (MarkovSimZ2Worker worker : markovWorkers) {
-                working |= worker.doStep;
-            }
-            if(!working) {
-                break;
-            }
-        }
-        for (MarkovSimZ2Worker worker : markovWorkers) {
-            worker.requestCleanup((parity + 1) % 2);
-        }
-        while(true) {
-            boolean working = false;
-            for (MarkovSimZ2Worker worker : markovWorkers) {
-                working |= worker.doCleanup;
-            }
-            if(!working) {
-                break;
-            }
-        }
-        // for (int i = 0; i < faceStates.length; i++) {
-        //     for (int j = 0; j < faceStates[i].length; j++) {
-        //         if (((i + j) % 2 == parity) && insideBoundary[i][j]) {
-        //             // if (flippableDirection(i, j) != 0) {
-        //             double upProp = lattice.flipFaceWeights[i][j];
-        //             double prop = (faceStates[i][j] == ns) ? upProp : 1/upProp;
-        //             prop *= acceptanceRatioConstant;
-        //             if (rand.nextDouble() < prop) {
-        //                 flipFace(i, j);
-        //             }
-        //             // }
-        //         }
-        //     }
-        // }
     }
 
     private void markovStepSameVol() {
@@ -172,12 +101,7 @@ public class MarkovSimZ2 implements Serializable{
         }
     }
 
-    public boolean isDimer(Index coords, int direction) {
-        // returns true if there is a dimer in the given direction from the coords face.
-        // direction in {0,1,2,3}
-        return ((faceStates[coords.x][coords.y] >> direction) & 1) != 0;
-    }
-
+    @Override
     public void flipFace(Index ind) {
         if (faceStates[ind.x][ind.y] == ns || faceStates[ind.x][ind.y] == we) {
             int direction = flippableDirection(ind.x, ind.y);
@@ -191,6 +115,7 @@ public class MarkovSimZ2 implements Serializable{
         }
     }
 
+    @Override
     public void flipFaceExclusive(int i, int j) {
         if (faceStates[i][j] == ns || faceStates[i][j] == we) {
             int direction = flippableDirection(i, j);
@@ -200,6 +125,7 @@ public class MarkovSimZ2 implements Serializable{
         }
     }
 
+    @Override
     public void consolidateFaceStateFromNeighbors(int i, int j) {
         faceStates[i][j] = 0b0000;
         if(i+1 < lattice.N){
@@ -216,15 +142,8 @@ public class MarkovSimZ2 implements Serializable{
         }
     }
 
-    public void flipFace(int i, int j) {
-        flipFace(new Index(i,j));
-    }
-
-    private int flippableDirection(Index ind) {
-        return flippableDirection(ind.x, ind.y);
-    }
-
-    private int flippableDirection(int i, int j) {
+    @Override
+    public int flippableDirection(int i, int j) {
         // returns 1 if flippable in + direction, -1 if in - direction and 0 if not flippable
         int flipDir = 0;
         if (faceStates[i][j] == ns) {
@@ -233,35 +152,6 @@ public class MarkovSimZ2 implements Serializable{
             flipDir = 2 * ((i + j) % 2) - 1;
         }
         return flipDir;
-    }
-
-    private int computeVolume() {
-        // computes volume enclosed by the height function. That's just the integral
-        int vol = 0;
-        for (int i = 0; i < faceStates.length; i++) {
-            for (int j = 0; j < faceStates.length; j++) {
-                vol += heightFunction[i][j];
-            }
-        }
-        return vol;
-    }
-
-    public void simulate(int numSteps) {
-        int reportFreq = numSteps/10;
-        long time = System.currentTimeMillis();
-        for (int i = 0; i < numSteps; i++) {
-            if ((i % reportFreq == 0)) {
-                double timeForAvg1000Steps = Math.max(((double)(System.currentTimeMillis() - time)) * 1000 / reportFreq, 1000);
-                System.out.println("Done with " + i + " steps." + " Average time per 1000 markovSteps: " + (int) timeForAvg1000Steps + ". Time left: " + (int)((numSteps - i) * timeForAvg1000Steps / 1000000) + " seconds.");
-                time = System.currentTimeMillis();
-            }
-            // Choose parity at random at each step. Can probably just alternate too? 
-            // Do we need to take weights into account here?
-            markovStep(rand.nextInt(2));
-        }
-        for (MarkovSimZ2Worker worker : markovWorkers) {
-            worker.stopRunning();
-        }
     }
 
     public void simulate(int numSteps, double averageNormalizedHeight) {
@@ -288,14 +178,6 @@ public class MarkovSimZ2 implements Serializable{
             markovStepSameVol();
         }
         computeHeightFunctionFromFaceStates();
-    }
-
-    public Integer getHeight(int i, int j) {
-        if (insideBoundary[i][j]) {
-            return heightFunction[i][j];
-        } else{
-            return 0;
-        }
     }
 
     // Can initialize in many different ways. Should have different versions of this function for different boundary conditions.
@@ -355,8 +237,8 @@ public class MarkovSimZ2 implements Serializable{
     }
 
 
-
-    private void computeHeightFunctionFromFaceStates() {
+    @Override
+    protected void computeHeightFunctionFromFaceStates() {
         // computes the height function associated to the current face states.
         // Note that this only produces an actual height function if the face states encode a perfect matching! - (Could check for this - maybe todo)
         for (int i = 0; i < heightFunction.length; i++) {
@@ -371,39 +253,5 @@ public class MarkovSimZ2 implements Serializable{
                 heightFunction[i][j] = heightFunction[i][j-1] + sign * heightChange;
             }
         }
-    }
-}
-
-class Index implements Serializable{
-    final int x;
-    final int y;
-
-    Index(int x, int y) {this.x=x;this.y=y;}
-
-    public boolean isNeighbor (Index other) {
-        return (Math.abs(x - other.x) + Math.abs(y - other.y)) == 1;
-    }
-
-    public boolean equals (Object o) {
-        if (o == this) {
-            return true;
-        }
-        if (!(o instanceof Index)) {
-            return false;
-        }
-        Index c = (Index) o;
-        return (c.x == x) & (c.y == y);
-    }
-
-    public Index minus(int i, int j) {
-        return new Index(x - i, y - j);
-    }
-
-    public int l1Dist(int i, int j) {
-        return Math.abs(i - x) + Math.abs(j - y);
-    }
-
-    public boolean isEven() {
-        return ((x + y) % 2) == 0;
     }
 }

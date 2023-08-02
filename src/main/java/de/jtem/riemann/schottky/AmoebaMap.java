@@ -444,7 +444,7 @@ public class AmoebaMap implements Serializable{
       }
     }
 
-      final Complex[] getDifferentials(final Complex P, final double accuracy) {
+      final Complex[] getDifferentialsQuad(final Complex P, final double accuracy) {
     
         // calculates and returns xi1, xi2 and xiTilde.
         // (xi1.re, xi2.re) is then Amoeba Map.
@@ -487,12 +487,19 @@ public class AmoebaMap implements Serializable{
       }
 
       public Complex amoebaMapQuadGrid(final Complex P, final double accuracy) {
-        Complex[] diffs = getDifferentials(P, accuracy);
+        Complex[] diffs = getDifferentialsQuad(P, accuracy);
+        return new Complex(diffs[3].re, diffs[4].re);
+      }
+
+      public Complex amoebaMapHexGrid(final Complex P, final double accuracy) {
+        // TODO Implement
+        Complex[] diffs = getDifferentialsQuad(P, accuracy);
         return new Complex(diffs[3].re, diffs[4].re);
       }
       
+      
       public Complex aztecMap(final Complex P, final double accuracy) {
-        Complex[] diffs = getDifferentials(P, accuracy);
+        Complex[] diffs = getDifferentialsQuad(P, accuracy);
         // Complex R1 = diffs[0].divide(diffs[2]);
         // Complex R2 = diffs[1].divide(diffs[2]);
         // psi, eta are the aztec diamond coordinates.
@@ -511,7 +518,7 @@ public class AmoebaMap implements Serializable{
       }
 
       public Complex aztecArcticCurve(final Complex P, Complex circleCenter, final double accuracy) {
-        Complex[] diffsP = getDifferentials(P, accuracy);
+        Complex[] diffsP = getDifferentialsQuad(P, accuracy);
         Complex[] diffsPDer = {dXi1Der, dXi2Der, dXiAztecDer};
         Complex R1 = diffsP[0].divide(diffsP[2]);
         Complex R2 = diffsP[1].divide(diffsP[2]);
@@ -528,10 +535,10 @@ public class AmoebaMap implements Serializable{
 
       public Complex aztecArcticCurveReal(final Complex P, final double accuracy) {
         // numeric approximation of derivatives approach
-        Complex[] diffsP = getDifferentials(P, accuracy);
+        Complex[] diffsP = getDifferentialsQuad(P, accuracy);
         double epsilon = 0.0001;
         Complex PDelta = P.plus(new Complex(epsilon, 0));
-        Complex[] diffsPDelta = getDifferentials(PDelta, accuracy);
+        Complex[] diffsPDelta = getDifferentialsQuad(PDelta, accuracy);
         Complex R1Inv = diffsP[2].divide(diffsP[0]);
         Complex R2Inv = diffsP[2].divide(diffsP[1]);
         Complex xi = diffsP[0].divide(diffsP[1]);

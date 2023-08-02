@@ -1,4 +1,4 @@
-package dimerSim;
+package lattices;
 
 import java.awt.BasicStroke;
 import java.awt.Color;

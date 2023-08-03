@@ -15,19 +15,6 @@ public class SchottkyDimersHex extends SchottkyDimers{
         super(schottkyData, angles);
         Complex P0 = new Complex(0, 1);
 
-        amoebaMap = new AmoebaMap(this, P0);
+        amoebaMap = new AmoebaMapHex(this, P0);
     }
-
-    @Override
-    public Complex amoebaMap(Complex P) throws Exception {
-        // P needs to be in fundamental domain.
-        if (!isInFundamentalDomain(P)) {
-            throw new Exception("P needs to be in fundamental domain");
-        }
-        return amoebaMap.amoebaMapHexGrid(P, acc);
-    }
-
-
-
-
 }

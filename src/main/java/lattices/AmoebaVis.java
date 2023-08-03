@@ -10,34 +10,45 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyDimers;
+import de.jtem.riemann.schottky.SchottkyDimersQuad;
 
 public class AmoebaVis extends JPanel{
     
     SchottkyDimers schottkyDimers;
 
     private BufferedImage amoebaImage;
-    private BufferedImage aztecImage;
-    Color[] innerOvalColors = {Color.RED, Color.GREEN, Color.BLUE};
+    private BufferedImage boundaryImage;
+    Color[] innerOvalColors = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW};
     Color[] ovalColors;
+
+    boolean isZ2Grid;
+
+    private Complex xCoord = new Complex(1, 0);
+    private Complex yCoord = new Complex(Math.cos(Math.PI/3), Math.sin(Math.PI/3));
 
     private int imageWidth = 1000, imageHeight = 1000;
 
     public AmoebaVis(SchottkyDimers dimers) {
+        Random r = new Random();
         schottkyDimers = dimers;
         amoebaImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
-        aztecImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
+        boundaryImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
         ovalColors = new Color[dimers.numAngles + dimers.getNumGenerators()];
         Arrays.fill(ovalColors, Color.BLACK);
+        for (int i = 0; i < ovalColors.length; i++) {
+            ovalColors[i] = new Color(r.nextInt(255), r.nextInt(255), r.nextInt(255));
+        }
         for (int i = 0; i < dimers.getNumGenerators(); i++) {
             ovalColors[dimers.numAngles + i] = innerOvalColors[i];
         }
+        isZ2Grid = dimers.getClass().isAssignableFrom(SchottkyDimersQuad.class);
     }
 
     @Override
@@ -50,7 +61,7 @@ public class AmoebaVis extends JPanel{
 
     public void updatePaint() {
         Graphics2D gAmoeba = amoebaImage.createGraphics();
-        Graphics2D gAztec = aztecImage.createGraphics();
+        Graphics2D gAztec = boundaryImage.createGraphics();
         gAmoeba.setColor(Color.WHITE);;
         gAmoeba.fillRect( 0, 0, imageWidth, imageHeight);
         gAztec.setColor(Color.WHITE);;
@@ -61,11 +72,11 @@ public class AmoebaVis extends JPanel{
 
         // For now disable until I deal with both Hexagonal and Aztec case. Probably separate classes.
 
-        // ComplexFn aztecMap = x -> schottkyDimers.aztecArcticCurve(x);
-        // Complex[][] aztecPoints = extractOvalPoints(aztecMap);
+        ComplexFn aztecMap = x -> schottkyDimers.boundaryMap(x);
+        Complex[][] aztecPoints = extractOvalPoints(aztecMap);
 
         drawPoints(amoebaPoints, gAmoeba);
-        // drawPoints(aztecPoints, gAztec);
+        drawPoints(aztecPoints, gAztec);
 
 
         gAmoeba.dispose();
@@ -79,7 +90,7 @@ public class AmoebaVis extends JPanel{
 
     private Complex getAztecInTiltedCoords(Complex point) throws Exception{
         // Apply aztec map from paper and shrink and rotate it.
-        Complex aztecMap = schottkyDimers.aztecArcticCurve(point);
+        Complex aztecMap = schottkyDimers.boundaryMap(point);
         if (Math.abs(aztecMap.re) > 1 || Math.abs(aztecMap.im) > 1 ) {
             System.out.println(aztecMap);
         }
@@ -91,15 +102,33 @@ public class AmoebaVis extends JPanel{
         return aztecMap;
     }
 
-    public void drawAztecCurves(Graphics2D g, int imageWidth, int imageHeight) {
+    private Complex getHexagonInTiltedCoordinates(Complex point) throws Exception {
+        // Apply Hexagon map and apply hexagonal coordinates to it. Then shring and rotate it to fit simulation pic.
+        Complex hexMap = schottkyDimers.boundaryMap(point);
+        if (Math.abs(hexMap.re) > 1 || Math.abs(hexMap.im) > 1 ) {
+            System.out.println(hexMap);
+        }
+        hexMap = xCoord.times(hexMap.re).plus(yCoord.times(hexMap.im));
+        hexMap.assignTimes(new Complex(Math.cos(Math.PI/3), Math.sin(Math.PI/3)));
+        hexMap.assignTimes(imageHeight / Math.sqrt(3));
+        hexMap.assignPlus(new Complex(imageWidth/2, imageHeight/2));
+        return hexMap;
+    }
+
+    public void drawBoundaryCurves(Graphics2D g, int imageWidth, int imageHeight) {
         this.imageWidth = imageWidth;
         this.imageHeight = imageHeight;
-        ComplexFn aztecMap = x -> getAztecInTiltedCoords(x);
-        Complex[][] aztecPoints = extractOvalPoints(aztecMap);
+        ComplexFn boundaryMap;
+        if (isZ2Grid) {
+            boundaryMap = x -> getAztecInTiltedCoords(x);
+        } else {
+            boundaryMap = x -> getHexagonInTiltedCoordinates(x);
+        }
+        Complex[][] boundaryPoints = extractOvalPoints(boundaryMap);
         Color[] whiteColors = new Color[schottkyDimers.numAngles + 1 + schottkyDimers.getNumGenerators()];
         Arrays.fill(whiteColors, Color.WHITE);
         g.setStroke(new BasicStroke(6));
-        drawPoints(aztecPoints, g, whiteColors, false);
+        drawPoints(boundaryPoints, g, whiteColors, false);
     }
 
     private void drawPoints(Complex[][] points, Graphics2D g) {
@@ -142,7 +171,7 @@ public class AmoebaVis extends JPanel{
     }
 
     public void saveAztec(String filePath) throws IOException{
-        ImageIO.write(aztecImage, "PNG", new File(filePath));
+        ImageIO.write(boundaryImage, "PNG", new File(filePath));
     }
 
 

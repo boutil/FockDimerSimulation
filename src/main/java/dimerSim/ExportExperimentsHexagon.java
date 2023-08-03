@@ -10,10 +10,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
+import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimers;
 import de.jtem.riemann.schottky.SchottkyDimersHex;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
+import de.jtem.riemann.schottky.SchottkyDimersUnitary;
 import lattices.HexLattice;
 import lattices.HexLatticeFock;
 import lattices.Visualization;
@@ -23,20 +25,27 @@ public class ExportExperimentsHexagon {
         // Create a folder and save all simulation results in that folder for easy readout.
         MarkovSimHex sim;
 
-        double[][] schottkyParamsCol = {{0.9, 1, 0.9, -1, 0.1, 0}};
-        double[][][] angles = {{{-3}, {0.4}, {3}}};
+        // double[][] schottkyParamsCol = {{0.9, 1, 0.9, -1, 0.001, 0}};
+        // double[][][] angles = {{{-3, -2}, {0.4, 0.4}, {2, 3}}};
+        
+        // Unitary case G1
+        Complex A = new Complex(0.5 * Math.cos(0.5), 0.5 * Math.sin(0.5));
+        Complex B = A.invert().conjugate();
+        double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.001, 0}};
+        double[][][] angles = {{{0, Math.PI * 2 / 3 - 0.1}, {Math.PI * 2 / 3, Math.PI * 2 / 3 + 0.5}, {Math.PI * 4 / 3, Math.PI * 4 / 3}}};
 
         // G2LargeHole
         // double[][] schottkyParamsCol = {{-1, 1, -1, -1, 0.03, 0, 1, 1, 1, -1, 0.001, 0}};
         // double[][][] angles = {{{-3}, {-2}, {-1}, {1}, {2}, {3}}};
 
-        int defaultNumSteps = 100;
+        int defaultNumSteps = 100000;
         int[] numSteps = new int[schottkyParamsCol.length];
         Arrays.fill(numSteps, defaultNumSteps);
         // int[] numSteps = {100000, 100000, 100000};
 
         String baseFolder = "experimentExport/Hexagon/";
-        String simToStartFrom = "experimentExport/Hexagon/hexagon500UniformConverged.ser";
+        // String simToStartFrom = "experimentExport/Hexagon/hexagon500UniformConverged.ser";
+        String simToStartFrom = "experimentExport/Hexagon/2023-08-03-16-20-52/sim0[500x500].ser";
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
         LocalDateTime now = LocalDateTime.now();
@@ -46,7 +55,11 @@ public class ExportExperimentsHexagon {
 
         for (int i = 0; i < schottkyParamsCol.length; i++) {
 
-            SchottkyDimersHex schottkyDimers = new SchottkyDimersHex(new SchottkyData(schottkyParamsCol[i]), angles[i]);
+            // SchottkyDimersHex schottkyDimers = new SchottkyDimersHex(new SchottkyData(schottkyParamsCol[i]), angles[i]);
+
+            SchottkyDimersUnitary schottkyDimers = new SchottkyDimersUnitary(new SchottkyData(schottkyParamsCol[i]), angles[i]);
+
+            SchottkyDimersUnitary doubleCover = schottkyDimers.getDoubleCover();
             
             // sim = new MarkovSimZ2(lattice, false);
 
@@ -67,8 +80,8 @@ public class ExportExperimentsHexagon {
                 saveSim(sim, baseFolder + "/sim" + info + ".ser");
                 saveSchottky(schottkyDimers, baseFolder + "/schottky" + info + ".ser");
                 vis.saveAmoebaPic(schottkyDimers, baseFolder + "/amoebaPic" + info + ".png");
-                // vis.saveAztecPic(schottkyDimers, baseFolder + "/aztecPic" + info + ".png");
-                vis.saveDimerConfPic(schottkyDimers, baseFolder + "/dimerConf" + info + ".png");
+                vis.saveAztecPic(doubleCover, baseFolder + "/aztecPic" + info + ".png");
+                vis.saveDimerConfPic(doubleCover, baseFolder + "/dimerConf" + info + ".png");
                 // vis.saveWeightsPic(baseFolder + "/weights" + info + ".png");
             } catch (IOException e) {
                 // TODO: handle exception

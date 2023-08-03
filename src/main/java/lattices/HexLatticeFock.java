@@ -3,6 +3,7 @@ package lattices;
 import de.jtem.blas.ComplexVector;
 import de.jtem.blas.IntegerVector;
 import de.jtem.mfc.field.Complex;
+import de.jtem.riemann.schottky.SchottkyDimers;
 import de.jtem.riemann.schottky.SchottkyDimersHex;
 import de.jtem.riemann.theta.Theta;
 import de.jtem.riemann.theta.ThetaWithChar;
@@ -10,7 +11,7 @@ import de.jtem.riemann.theta.ThetaWithChar;
 public class HexLatticeFock extends HexLattice{
 
 
-    public transient SchottkyDimersHex schottkyDimers;
+    public transient SchottkyDimers schottkyDimers;
     public ComplexVector[][] discreteAbelMap;
     // public int N, M;
     public ComplexVector Z;
@@ -28,7 +29,7 @@ public class HexLatticeFock extends HexLattice{
     private ComplexVector[][] abelIncrementsTop;
 
 
-    public HexLatticeFock(SchottkyDimersHex dimers, int N, int M) {
+    public HexLatticeFock(SchottkyDimers dimers, int N, int M) {
         super(N, M, 1);
         schottkyDimers = dimers;
         // theta = new Theta(schottkyDimers.getPeriodMatrix());

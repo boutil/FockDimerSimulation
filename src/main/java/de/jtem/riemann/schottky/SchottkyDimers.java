@@ -37,14 +37,14 @@ public class SchottkyDimers extends Schottky{
         if (!isInFundamentalDomain(P)) {
             throw new Exception("P needs to be in fundamental domain");
         }
-        throw new NotImplementedException();
+        return amoebaMap.amoebaMap(P, acc);
     }
 
-    public Complex aztecMap(Complex P) throws Exception {
+    public Complex boundaryMap(Complex P) throws Exception {
         if (!isInFundamentalDomain(P)) {
             throw new Exception("P needs to be in fundamental domain");
         }
-        throw new NotImplementedException();
+        return amoebaMap.boundaryMap(P, acc);
     }
 
     public Complex aztecArcticCurve(Complex P) throws Exception {

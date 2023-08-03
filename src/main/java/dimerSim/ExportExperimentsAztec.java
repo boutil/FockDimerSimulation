@@ -48,14 +48,14 @@ public class ExportExperimentsAztec {
         double[][] schottkyParamsCol = {{-1, 1, -1, -1, 0.03, 0, 1, 1, 1, -1, 0.001, 0}};
         double[][][] angles = {{{-2.4}, {-0.4}, {0.4}, {2.4}}};
 
-        int defaultNumSteps = 1000000;
+        int defaultNumSteps = 10;
         int[] numSteps = new int[schottkyParamsCol.length];
         Arrays.fill(numSteps, defaultNumSteps);
         // int[] numSteps = {100000, 100000, 100000};
 
-        String baseFolder = "experimentExport/";
-        String simToStartFrom = "experimentExport/2023-07-15-21-26-29/sim0[501x501].ser";
-        // String simToStartFrom = "experimentExport/AztecDiamond501UniformConverged.ser";
+        String baseFolder = "experimentExport/Aztec/";
+        // String simToStartFrom = "experimentExport/2023-07-15-21-26-29/sim0[501x501].ser";
+        String simToStartFrom = "experimentExport/Aztec/AztecDiamond501UniformConverged.ser";
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
         LocalDateTime now = LocalDateTime.now();
@@ -67,15 +67,18 @@ public class ExportExperimentsAztec {
 
             SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(new SchottkyData(schottkyParamsCol[i]), angles[i]);
             
-            // sim = new MarkovSimZ2(lattice, false);
-
+            
             // Continue from previously simulated step.
             // if (i > 0) {
             //     simToStartFrom = baseFolder + "/sim" + (i - 1) + "[1001x1001].ser";
             // }
-            sim = loadSim(simToStartFrom);
+            // sim = loadSim(simToStartFrom);
             
-            Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, sim.lattice.N, sim.lattice.M);
+            // Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, sim.lattice.N, sim.lattice.M);
+
+            Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 501, 501);
+            
+            sim = new MarkovSimZ2(lattice, false);
 
             sim.setLattice(lattice);
             sim.simulate(numSteps[i]);

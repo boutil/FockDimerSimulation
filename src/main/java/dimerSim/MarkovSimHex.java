@@ -34,7 +34,7 @@ public class MarkovSimHex extends MarkovSim{
         rand = new Random();
         maxParity = 3;
         // for clunky parallelization purposes:
-        int numThreads = 10;
+        int numThreads = 4;
         int chunkSize = lattice.N / numThreads;
         markovWorkers = new MarkovSimHexWorker[lattice.N / chunkSize + 1];
         for (int i = 0; i < markovWorkers.length; i++) {

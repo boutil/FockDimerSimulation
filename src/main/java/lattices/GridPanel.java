@@ -22,7 +22,7 @@ public class GridPanel extends JPanel{
 
     protected int imageWidth, imageHeight;
 
-    protected boolean drawAztecCurves = false;
+    protected boolean drawBoundaryCurves = false;
     protected AmoebaVis amoebaVis;
 
     protected MarkovSim sim;
@@ -39,7 +39,7 @@ public class GridPanel extends JPanel{
 
     public GridPanel(MarkovSim sim, AmoebaVis amoebaVis) {
         this(sim);
-        drawAztecCurves = true;
+        drawBoundaryCurves = true;
         this.amoebaVis = amoebaVis;
     }
 

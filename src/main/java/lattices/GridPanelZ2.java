@@ -21,7 +21,7 @@ public class GridPanelZ2 extends GridPanel {
 
     public GridPanelZ2(MarkovSim sim, AmoebaVis amoebaVis) {
         this(sim);
-        drawAztecCurves = true;
+        drawBoundaryCurves = true;
         this.amoebaVis = amoebaVis;
     }
 
@@ -57,8 +57,8 @@ public class GridPanelZ2 extends GridPanel {
                 }
             }
         }
-        if (drawAztecCurves) {
-            amoebaVis.drawAztecCurves(g2, imageWidth, imageHeight);
+        if (drawBoundaryCurves) {
+            amoebaVis.drawBoundaryCurves(g2, imageWidth, imageHeight);
         }
 
         g2.dispose();

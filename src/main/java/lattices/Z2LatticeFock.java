@@ -1,9 +1,5 @@
 package lattices;
 
-import java.util.Arrays;
-import java.util.List;
-
-import de.jtem.blas.ComplexMatrix;
 import de.jtem.blas.ComplexVector;
 import de.jtem.blas.IntegerVector;
 import de.jtem.mfc.field.Complex;

@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "ExportExperimentsAztec",
+            "request": "launch",
+            "mainClass": "dimerSim.ExportExperimentsAztec",
+            "projectName": "schottky-dimers"
+        },
+        {
+            "type": "java",
             "name": "ExportExperimentsHexagon",
             "request": "launch",
             "mainClass": "dimerSim.ExportExperimentsHexagon",

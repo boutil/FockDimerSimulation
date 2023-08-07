@@ -40,7 +40,7 @@ public class AmoebaVis extends JPanel{
         schottkyDimers = dimers;
         amoebaImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
         boundaryImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
-        ovalColors = new Color[dimers.numAngles + dimers.getNumGenerators()];
+        ovalColors = new Color[dimers.numAngles + dimers.getNumGenerators() * 2];
         Arrays.fill(ovalColors, Color.BLACK);
         for (int i = 0; i < ovalColors.length; i++) {
             ovalColors[i] = new Color(r.nextInt(255), r.nextInt(255), r.nextInt(255));
@@ -110,7 +110,7 @@ public class AmoebaVis extends JPanel{
         }
         hexMap = xCoord.times(hexMap.re).plus(yCoord.times(hexMap.im));
         hexMap.assignTimes(new Complex(Math.cos(Math.PI/3), Math.sin(Math.PI/3)));
-        hexMap.assignTimes(imageHeight / Math.sqrt(3));
+        hexMap.assignTimes((imageHeight - 40) / Math.sqrt(3));
         hexMap.assignPlus(new Complex(imageWidth/2, imageHeight/2));
         return hexMap;
     }
@@ -178,9 +178,9 @@ public class AmoebaVis extends JPanel{
     private Complex[][] extractOvalPoints(ComplexFn f) {
         int numPointsPerSegment = 500;
         Complex[][] points = schottkyDimers.parametrizeRealOvals(numPointsPerSegment);
-        int numSegments = schottkyDimers.numAngles + schottkyDimers.getNumGenerators();
+        int numSegments = points.length;
         Complex[][] pointsAmoebaMapped = new Complex[numSegments][];
-        for (int i = 0; i < points.length; i++){
+        for (int i = 0; i < numSegments; i++){
             List<Complex> mappedP = new LinkedList<Complex>();
             for (int j = 0; j < points[i].length; j++){
                 try {

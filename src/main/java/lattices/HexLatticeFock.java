@@ -4,7 +4,7 @@ import de.jtem.blas.ComplexVector;
 import de.jtem.blas.IntegerVector;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyDimers;
-import de.jtem.riemann.schottky.SchottkyDimersHex;
+import de.jtem.riemann.schottky.SchottkyDimersDoubleCoverUnitary;
 import de.jtem.riemann.theta.Theta;
 import de.jtem.riemann.theta.ThetaWithChar;
 
@@ -21,21 +21,29 @@ public class HexLatticeFock extends HexLattice{
 
     // angles of the form [[alpha_0, alpha_1, ...][beta_0, beta_1, ...][gamma_0, gamma_1, ...]]
     public Complex[][] angles;
-    public ComplexVector[][] faceAngleAbelMaps = new ComplexVector[3][];
+    public ComplexVector[][] faceAngleAbelMaps = new ComplexVector[6][];
 
     // We impose that the number of all angle types must be equal for simplicity of periodicity concerns.
     private int numAlphas;
     private ComplexVector[][] abelIncrementsRight;
     private ComplexVector[][] abelIncrementsTop;
 
+    boolean schottkyIsDoubleCover;
+
 
     public HexLatticeFock(SchottkyDimers dimers, int N, int M) {
         super(N, M, 1);
         schottkyDimers = dimers;
+        schottkyIsDoubleCover = schottkyDimers.getClass().isAssignableFrom(SchottkyDimersDoubleCoverUnitary.class);
         // theta = new Theta(schottkyDimers.getPeriodMatrix());
-        theta = new Theta(schottkyDimers.getPeriodMatrix(), 1e-7, false);
+        if(schottkyIsDoubleCover) {
+            theta = new Theta(((SchottkyDimersDoubleCoverUnitary)schottkyDimers).getBMatrixOfFactor(), 1e-7, false);
+            thetaWithChar = new ThetaWithChar(((SchottkyDimersDoubleCoverUnitary)schottkyDimers).getBMatrixOfFactor(), 1e-7, false);
+        } else {
+            theta = new Theta(schottkyDimers.getPeriodMatrix(), 1e-7, false);
+            thetaWithChar = new ThetaWithChar(schottkyDimers.getPeriodMatrix(), 1e-7, false);
+        }
         // Create a theta function with odd characteristic (1, 0, 0, ...).
-        thetaWithChar = new ThetaWithChar(schottkyDimers.getPeriodMatrix(), 1e-7, false);
         int[] oddAlpha = new int[schottkyDimers.getNumGenerators()];
         oddAlpha[0] = 1;
         IntegerVector e1 = new IntegerVector(oddAlpha);
@@ -47,17 +55,20 @@ public class HexLatticeFock extends HexLattice{
         numAlphas = angles[0].length;
         abelIncrementsRight = new ComplexVector[numAlphas][numAlphas];
         abelIncrementsTop = new ComplexVector[numAlphas][numAlphas];
-        for (int i = 0; i < angles.length; i++) {
+        for (int i = 0; i < 6; i++) {
             faceAngleAbelMaps[i] = new ComplexVector[angles[i].length];
             for (int k = 0; k < angles[i].length; k++) {
                 faceAngleAbelMaps[i][k] = new ComplexVector(schottkyDimers.getNumGenerators());
-                schottkyDimers.abelMap(faceAngleAbelMaps[i][k], angles[i][k]);
+                if (schottkyIsDoubleCover) {
+                    ((SchottkyDimersDoubleCoverUnitary)schottkyDimers).abelMapOfFactor(faceAngleAbelMaps[i][k], angles[i][k]);
+                } else {
+                    schottkyDimers.abelMap(faceAngleAbelMaps[i][k], angles[i][k]);
+                }
             }
         }
         // TODO initialize this in a sensible way? 0 for now.
         Z = new ComplexVector(dimers.getNumGenerators(), 0, 0);
         discreteAbelMap = new ComplexVector[N+2][M+2];
-        flipFaceWeights = new double[N][M];
 
         for (int i = 0; i < factors.length; i++) {
             thetaSums[i] = new Complex();
@@ -135,8 +146,13 @@ public class HexLatticeFock extends HexLattice{
             angle1 = faceAngles[1];
             angle2 = faceAngles[2];
         }
-        schottkyDimers.abelMap(v1, angle1);
-        schottkyDimers.abelMap(v2, angle2);
+        if (schottkyIsDoubleCover) {
+            ((SchottkyDimersDoubleCoverUnitary)schottkyDimers).abelMapOfFactor(v1, angle1);
+            ((SchottkyDimersDoubleCoverUnitary)schottkyDimers).abelMapOfFactor(v2, angle2);
+        } else {
+            schottkyDimers.abelMap(v1, angle1);
+            schottkyDimers.abelMap(v2, angle2);
+        }
         return v1.minus(v2);
     }
 
@@ -178,6 +194,9 @@ public class HexLatticeFock extends HexLattice{
                 if(Math.abs(crossRatio.im) > maxImagPart ) {
                     System.out.println("crossRatio imaginary part too big.");
                 }
+                if (crossRatio.re < 0) {
+                    System.out.println("Kasteleyn condition not fulfilled.");
+                }
 
                 flipFaceWeights[i-1][j-1] = crossRatio.re; // Should be like this. Check that these are indeed real first!  
             }
@@ -201,10 +220,10 @@ public class HexLatticeFock extends HexLattice{
         Complex[] faceAngles = getAnglesOfFace(i, j);
 
         // Method 1 of computing this:
-        Complex quotientOfEs1 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[1], faceAngles[0], faceAngles[2]).exp();
-        Complex quotientOfEs2 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[3], faceAngles[2], faceAngles[4]).exp();
-        Complex quotientOfEs3 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[5], faceAngles[4], faceAngles[0]).exp();
-        Complex eCrossRatio = quotientOfEs1.times(quotientOfEs2).times(quotientOfEs3);
+        // Complex quotientOfEs1 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[1], faceAngles[0], faceAngles[2]).exp();
+        // Complex quotientOfEs2 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[3], faceAngles[2], faceAngles[4]).exp();
+        // Complex quotientOfEs3 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[5], faceAngles[4], faceAngles[0]).exp();
+        // Complex eCrossRatio = quotientOfEs1.times(quotientOfEs2).times(quotientOfEs3);
         // Method 2: through odd theta functions:
         // TODO: switch to numerically stable version here too!
         ComplexVector[] faceAngleAbelMaps = getAngleAbelMapsOfFace(i, j);

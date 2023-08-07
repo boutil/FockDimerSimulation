@@ -6,7 +6,7 @@ import org.jzy3d.plot3d.pipelines.NotImplementedException;
 
 public class MarkovSimWorker extends Thread{
 
-    protected boolean running;
+    protected volatile boolean running;
     public volatile boolean doStep;
     protected volatile int stepParity;
     public volatile boolean doCleanup;

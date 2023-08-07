@@ -3,8 +3,6 @@ package de.jtem.riemann.schottky;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.jzy3d.plot3d.pipelines.NotImplementedException;
-
 import de.jtem.mfc.field.Complex;
 
 public class SchottkyDimersUnitary extends SchottkyDimers{
@@ -31,7 +29,7 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
         }
     }
 
-    private double[] getAnglesInOrder() {
+    protected double[] getAnglesInOrder() {
         double[] orderedAngles = new double[numAngles];
         for (int i = 0; i < angles.length; i++) {
             for (int j = 0; j < angles[i].length; j++) {
@@ -44,7 +42,7 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
     @Override
     public Complex[] getPointArrayOnRealLine(double a, double b, int numPoints, double[] excludingInterval){
         List<Complex> res = new LinkedList<Complex>();
-        double radius = 1.01;
+        double radius = 0.999;
         if (b < a) {
             b = b + 2 * Math.PI;
         }
@@ -70,7 +68,7 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
         return complexAngles;
     }
 
-    public SchottkyDimersUnitary getDoubleCover() {
+    public SchottkyDimersDoubleCoverUnitary getDoubleCover() {
         double[][] newAngles = new double[angles.length * 2][];
         for (int i = 0; i < angles.length; i++) {
             newAngles[i] = new double[angles[i].length];
@@ -91,6 +89,6 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
             data.setB(i + numGenerators, getB(i).divide(rotation).neg());
             data.setMu(i + numGenerators, getMu(i));
         }
-        return new SchottkyDimersUnitary(data, newAngles);
+        return new SchottkyDimersDoubleCoverUnitary(data, newAngles);
     }
 }

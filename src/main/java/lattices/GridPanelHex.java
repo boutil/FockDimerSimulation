@@ -10,7 +10,8 @@ import dimerSim.Index;
 import dimerSim.MarkovSim;
 
 public class GridPanelHex extends GridPanel{
-    private Color[] dimerColors = {Color.BLUE, Color.RED, Color.GREEN};
+    // private Color[] dimerColors = {Color.BLUE, Color.RED, Color.GREEN};
+    private Color[] dimerColors = {new Color(6, 57, 112), new Color(135,62,35), new Color(118,181,197)};
     // Hexagon diameter is scaling pixels
 
     private Complex xDir = new Complex(1,0);

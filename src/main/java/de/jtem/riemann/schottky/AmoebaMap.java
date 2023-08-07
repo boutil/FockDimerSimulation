@@ -236,6 +236,7 @@ public class AmoebaMap implements Serializable{
         return;
       }
   
+      // This way we get genus 0.
       // if (element.wordLength > 0) {
       //   return;
       // }
@@ -299,13 +300,13 @@ public class AmoebaMap implements Serializable{
         xiBoundary.assignPlus(K.divide(K_corr).log());
       }
       if(!dH_Der.isNaN()){
-        dXi1Der.assignPlus(dH);
+        dXi1Der.assignPlus(dH_Der);
       }
       if(!dG_Der.isNaN()){
-        dXi2Der.assignPlus(dG);
+        dXi2Der.assignPlus(dG_Der);
       }
       if(!dK_Der.isNaN()){
-        dXiBoundaryDer.assignPlus(dK);
+        dXiBoundaryDer.assignPlus(dK_Der);
       }
     }
 
@@ -350,9 +351,26 @@ public class AmoebaMap implements Serializable{
       public Complex boundaryMap(final Complex P, final double accuracy) {
         Complex[] diffs = getDifferentials(P, accuracy);
 
+        // Complex R1 = diffs[0].divide(diffs[2]);
+        // Complex R2 = diffs[1].divide(diffs[2]);
+        // psi, eta are the aztec diamond coordinates.
+        // if ((Math.abs(R1.im/R2.im) > 50 || Math.abs(R2.im/R1.im) > 50) && P.im > 0.01) {
+        //   System.out.println(R1.im/R2.im);
+        // }
+        // double psi = - R2.re + R1.re * (R2.im/R1.im);
+        // double eta = R1.re - R2.re * (R1.im/R2.im);
+        // double psi = -R2.invert().im / R1.divide(R2).im;
+        // double eta = R1.invert().im / R2.divide(R1).im;
+        // return new Complex(psi, -eta);
+
+        // probably should switch to a more numerically stable version here. Consider using BigDecimal.
         double factor = diffs[0].times(diffs[1].conjugate()).im;
         double psi = diffs[0].times(diffs[2].conjugate()).im;
         double eta = diffs[1].times(diffs[2].conjugate()).im;
+
+        // if (Math.abs(psi/factor - eta/factor) > 1) {
+        //   System.out.println(psi/factor + ", " + eta/factor);
+        // }
         return new Complex(psi/factor, -eta/factor);
       }
 

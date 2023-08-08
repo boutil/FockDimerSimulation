@@ -42,7 +42,7 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
     @Override
     public Complex[] getPointArrayOnRealLine(double a, double b, int numPoints, double[] excludingInterval){
         List<Complex> res = new LinkedList<Complex>();
-        double radius = 0.999;
+        double radius = 0.99999;
         if (b < a) {
             b = b + 2 * Math.PI;
         }
@@ -69,6 +69,9 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
     }
 
     public SchottkyDimersDoubleCoverUnitary getDoubleCover() {
+        // Here we need to first find the point P0 of winding where slope is 0 center of the Newton triangle. 
+        // Then find transformation h which fixes the unit circle and maps P0 to 0.
+        // Then apply sqrt() to get winding point at 0. This should be half of the new double cover.
         double[][] newAngles = new double[angles.length * 2][];
         for (int i = 0; i < angles.length; i++) {
             newAngles[i] = new double[angles[i].length];

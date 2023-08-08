@@ -1,8 +1,11 @@
 package de.jtem.riemann.schottky;
 import de.jtem.mfc.field.Complex;
+import inUtil.ComplexHighPrecision;
 
 import java.io.Serializable;
 import java.lang.Math;
+import java.math.BigDecimal;
+import java.math.MathContext;
 
 import org.jzy3d.plot3d.pipelines.NotImplementedException;
 
@@ -347,6 +350,11 @@ public class AmoebaMap implements Serializable{
         return new Complex(diffs[3].re, diffs[4].re);
       }
       
+      public Complex getSlope(final Complex P, final double accuracy) {
+        Complex[] diffs = getDifferentials(P, accuracy);
+        return new Complex(diffs[3].im, diffs[4].im);
+      }
+      
       
       public Complex boundaryMap(final Complex P, final double accuracy) {
         Complex[] diffs = getDifferentials(P, accuracy);
@@ -364,14 +372,25 @@ public class AmoebaMap implements Serializable{
         // return new Complex(psi, -eta);
 
         // probably should switch to a more numerically stable version here. Consider using BigDecimal.
-        double factor = diffs[0].times(diffs[1].conjugate()).im;
-        double psi = diffs[0].times(diffs[2].conjugate()).im;
-        double eta = diffs[1].times(diffs[2].conjugate()).im;
+
+        ComplexHighPrecision dX1 = new ComplexHighPrecision(diffs[0]);
+        ComplexHighPrecision dX2 = new ComplexHighPrecision(diffs[1]);
+        ComplexHighPrecision dX = new ComplexHighPrecision(diffs[2]);
+        BigDecimal factor = dX1.times(dX2.conjugate()).im;
+        BigDecimal x = dX1.times(dX.conjugate()).im;
+        BigDecimal y = dX2.times(dX.conjugate()).im;
+        BigDecimal psi = x.divide(factor, MathContext.DECIMAL128);
+        BigDecimal eta = y.divide(factor, MathContext.DECIMAL128);
+        return new Complex(psi.doubleValue(), -eta.doubleValue());
+
+        // double factor = diffs[0].times(diffs[1].conjugate()).im;
+        // double psi = diffs[0].times(diffs[2].conjugate()).im;
+        // double eta = diffs[1].times(diffs[2].conjugate()).im;
 
         // if (Math.abs(psi/factor - eta/factor) > 1) {
         //   System.out.println(psi/factor + ", " + eta/factor);
         // }
-        return new Complex(psi/factor, -eta/factor);
+        // return new Complex(psi/factor, -eta/factor);
       }
 
 }

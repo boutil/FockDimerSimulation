@@ -18,8 +18,7 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
     public SchottkyDimersDoubleCoverUnitary(SchottkyData data, double[][] angles) {
         super(data, angles);
 
-        // TODO: P0 should be chosen such that it's in the fundamental domain.
-        Complex P0 = new Complex(0, 0);
+        Complex P0 = chooseP0();
 
         amoebaMap = new AmoebaMapHex(this, P0);
 
@@ -29,6 +28,7 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
 
         // It is assumed that the points in data and angles are doubled in z -> -z.
         checkMCurveProp();
+        checkSlopeAtWinding();
     }
 
     private void checkMCurveProp() {
@@ -38,6 +38,28 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
                 System.out.println("not a unitary M-curve");
             }
         }
+    }
+
+    public void checkSlopeAtWinding() {
+        Complex[][] anglesC = getAngles();
+        Complex slope0 = amoebaMap.getSlope(new Complex(), acc);
+        Complex slopeP0 = amoebaMap.getSlope(chooseP0(), acc);
+        Complex pointBetweenGammaAlpha = anglesC[0][0].plus(anglesC[anglesC.length - 1][anglesC[anglesC.length - 1].length - 1]);
+        pointBetweenGammaAlpha.assignDivide(pointBetweenGammaAlpha.abs());
+        Complex pointBetweenBetaGamma = anglesC[1][anglesC[1].length - 1].plus(anglesC[2][0]);
+        pointBetweenBetaGamma.assignDivide(pointBetweenBetaGamma.abs());
+        System.out.println("slope at P0 is " + slopeP0);
+        System.out.println("slope at betaGamma is " + amoebaMap.getSlope(pointBetweenBetaGamma, acc));
+        System.out.println("slope at gammaAlpha is " + amoebaMap.getSlope(pointBetweenGammaAlpha, acc));
+        System.out.println("slope at 0 should be: " + slopeP0.plus(amoebaMap.getSlope(pointBetweenGammaAlpha, acc)).plus(amoebaMap.getSlope(pointBetweenBetaGamma, acc)).divide(3));
+        System.out.println("slope at 0 is " + slope0);
+    }
+
+    @Override
+    public Complex chooseP0() {
+        Complex[][] anglesC = getAngles();
+        Complex sum = anglesC[0][anglesC[0].length - 1].plus(anglesC[1][0]);
+        return sum.divide(sum.abs());
     }
     
     // For now we just assume genus 2. i.e. factor has genus 1.
@@ -59,5 +81,10 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
     @Override
     public int getNumGenerators() {
         return numGenerators / 2;
+    }
+
+    Complex compMod(Complex x, double y){
+        // x mod y behaving the same way as Math.floorMod but with doubles
+        return new Complex(x.re - Math.floor(x.re/y) * y, x.im - Math.floor(x.im/y) * y);
     }
 }

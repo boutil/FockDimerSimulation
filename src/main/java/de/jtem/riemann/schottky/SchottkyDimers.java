@@ -27,7 +27,7 @@ public class SchottkyDimers extends Schottky{
         uniformization = getUniformization();
 
         // TODO: P0 should be chosen such that it's in the fundamental domain.
-        Complex P0 = new Complex(0, 1);
+        Complex P0 = chooseP0();
 
         amoebaMap = new AmoebaMap(this, P0);
 
@@ -52,6 +52,10 @@ public class SchottkyDimers extends Schottky{
             throw new Exception("P needs to be in fundamental domain");
         }
         throw new NotImplementedException();
+    }
+
+    protected Complex chooseP0() {
+        return new Complex(-1, 0);
     }
 
     public Complex[][] parametrizeRealOvals(int numPointsPerSegment) {

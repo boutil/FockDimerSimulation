@@ -51,6 +51,7 @@ public class AmoebaMapHex extends AmoebaMap{
     }
 
     private void doubleCoverIncrements(final SchottkyGroupElement element) {
+        // sP0.assign(element.applyTo(P.invert().conjugate()));
         for (Complex angle : schottky.getAngles()[0]) {
             Complex diff = sP.minus(angle);
             dH.assignPlus(diff.invert().times(dsP));

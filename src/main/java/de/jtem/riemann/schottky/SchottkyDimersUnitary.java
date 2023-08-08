@@ -4,18 +4,20 @@ import java.util.LinkedList;
 import java.util.List;
 
 import de.jtem.mfc.field.Complex;
+import de.jtem.mfc.group.Moebius;
+import inUtil.ComplexUtil;
 
 public class SchottkyDimersUnitary extends SchottkyDimers{
 
     // angles here interpreted as the arg of unitary complex angles.
+
+    public Complex slopeTranslation;
     
     public SchottkyDimersUnitary(SchottkyData data, double[][] angles) {
         super(data, angles);
 
         // TODO: P0 should be chosen such that it's in the fundamental domain.
-        Complex P0 = new Complex(0, 0);
-
-        amoebaMap = new AmoebaMapHex(this, P0);
+        amoebaMap = new AmoebaMapHex(this, chooseP0());
 
         checkMCurveProp();
     }
@@ -37,6 +39,11 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
             }
         }
         return orderedAngles;
+    }
+
+    protected void getSlopeTranslation() {
+        // computes a translation to be applied to results from amoebaMap.getSlope() 
+        // to make them all land in the positive triangle.
     }
 
     @Override
@@ -68,30 +75,89 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
         return complexAngles;
     }
 
+    public Complex getPointWithSlope(Complex slope) {
+        // build a lattice of points and compute their slopes. Find the point that has the needed slope.
+        int angleNum = 100;
+        int rNum = 40;
+        Complex[][] slopes = new Complex[angleNum][rNum];
+        Complex closestPoint = new Complex();
+        double minimalSlopeDiff = Double.MAX_VALUE;
+        // calculate slopes on grid
+        for (int i = 0; i < angleNum; i++) {
+            for (int j = 0; j < rNum; j++) {
+                double theta = 2 * Math.PI / angleNum * i;
+                double r = (double)(j+1) / (rNum + 1);
+                Complex p = new Complex(Math.cos(theta), Math.sin(theta)).times(r);
+                if(!isInFundamentalDomain(p)) {
+                    continue;
+                }
+                slopes[i][j] = amoebaMap.getSlope(p, acc);
+                Complex pointSlope = amoebaMap.getSlope(p, acc);
+                // double torusSize = Math.PI;
+                // Complex slopeDiff = ComplexUtil.compMod(pointSlope.minus(slope), torusSize);
+                // double dist = Math.max(Math.min(slopeDiff.re, torusSize - slopeDiff.re), Math.min(slopeDiff.im, torusSize - slopeDiff.im));
+                // dist = Math.max(dist, Math.PI - Math.abs(slopeDiff.re - slopeDiff.im));
+                double dist = pointSlope.minus(slope).abs();
+                if (dist < minimalSlopeDiff) {
+                    closestPoint = p;
+                    minimalSlopeDiff = dist;
+                }
+            }
+        }
+        return closestPoint;
+    }
+
     public SchottkyDimersDoubleCoverUnitary getDoubleCover() {
         // Here we need to first find the point P0 of winding where slope is 0 center of the Newton triangle. 
         // Then find transformation h which fixes the unit circle and maps P0 to 0.
         // Then apply sqrt() to get winding point at 0. This should be half of the new double cover.
+        Complex[][] anglesC = getAngles();
+        Complex slopeP0 = amoebaMap.getSlope(chooseP0(), acc);
+        Complex pointBetweenGammaAlpha = anglesC[0][0].plus(anglesC[anglesC.length - 1][anglesC[anglesC.length - 1].length - 1]);
+        pointBetweenGammaAlpha.assignDivide(pointBetweenGammaAlpha.abs());
+        Complex pointBetweenBetaGamma = anglesC[1][anglesC[1].length - 1].plus(anglesC[2][0]);
+        pointBetweenBetaGamma.assignDivide(pointBetweenBetaGamma.abs());
+        Complex slopeGammaAlpha = amoebaMap.getSlope(pointBetweenGammaAlpha, acc);
+        Complex slopeBetaGamma = amoebaMap.getSlope(pointBetweenBetaGamma, acc);
+        Complex correctSlope = slopeP0.plus(slopeGammaAlpha).plus(slopeBetaGamma).divide(3);
+        Complex correctWindingPoint = getPointWithSlope(correctSlope);
+
+        // h maps P to 0 and unit circle to unit circle.
+        Moebius h = new Moebius(new Complex(1, 0), correctWindingPoint.neg(), correctWindingPoint.neg().conjugate(), new Complex(1,0));
+
+        Complex zero = h.applyTo(correctWindingPoint);
+
         double[][] newAngles = new double[angles.length * 2][];
         for (int i = 0; i < angles.length; i++) {
             newAngles[i] = new double[angles[i].length];
             newAngles[i + angles.length] = new double[angles[i].length];
             for (int j = 0; j < angles[i].length; j++) {
-                newAngles[i][j] = angles[i][j] / 2;
-                newAngles[i + angles.length][j] = angles[i][j] / 2 + Math.PI;
+                newAngles[i][j] = doubleMod(h.applyTo(anglesC[i][j]).arg(), 2 * Math.PI) / 2;
+                newAngles[i + angles.length][j] = newAngles[i][j] + Math.PI;
             }
         }
         SchottkyData data = new SchottkyData(numGenerators * 2);
         for (int i = 0; i < numGenerators; i++) {
-            double theta = getA(i).arg()/2;
-            Complex rotation = new Complex(Math.cos(theta), Math.sin(theta));
-            data.setA(i, getA(i).divide(rotation));
-            data.setB(i, getB(i).divide(rotation));
+            double theta = doubleMod(h.applyTo(getA(i)).arg(), Math.PI * 2) / 2;
+            Complex newA = h.applyTo(getA(i)).divide(new Complex(Math.cos(theta), Math.sin(theta)));
+            data.setA(i, newA);
+            data.setB(i, newA.invert().conjugate());
             data.setMu(i, getMu(i));
-            data.setA(i + numGenerators, getA(i).divide(rotation).neg());
-            data.setB(i + numGenerators, getB(i).divide(rotation).neg());
+            data.setA(i + numGenerators, newA.neg());
+            data.setB(i + numGenerators, newA.invert().conjugate().neg());
             data.setMu(i + numGenerators, getMu(i));
         }
         return new SchottkyDimersDoubleCoverUnitary(data, newAngles);
+    }
+
+    @Override
+    public Complex chooseP0() {
+        Complex[][] anglesC = getAngles();
+        Complex sum = anglesC[0][anglesC[0].length - 1].plus(anglesC[1][0]);
+        return sum.divide(sum.abs());
+    }
+
+    protected double doubleMod(double x, double y) {
+        return x - Math.floor(x/y) * y;
     }
 }

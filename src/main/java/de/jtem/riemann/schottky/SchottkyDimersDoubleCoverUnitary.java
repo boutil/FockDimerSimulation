@@ -54,13 +54,6 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
         System.out.println("slope at 0 should be: " + slopeP0.plus(amoebaMap.getSlope(pointBetweenGammaAlpha, acc)).plus(amoebaMap.getSlope(pointBetweenBetaGamma, acc)).divide(3));
         System.out.println("slope at 0 is " + slope0);
     }
-
-    @Override
-    public Complex chooseP0() {
-        Complex[][] anglesC = getAngles();
-        Complex sum = anglesC[0][anglesC[0].length - 1].plus(anglesC[1][0]);
-        return sum.divide(sum.abs());
-    }
     
     // For now we just assume genus 2. i.e. factor has genus 1.
     public ComplexMatrix getBMatrixOfFactor() {
@@ -81,10 +74,5 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
     @Override
     public int getNumGenerators() {
         return numGenerators / 2;
-    }
-
-    Complex compMod(Complex x, double y){
-        // x mod y behaving the same way as Math.floorMod but with doubles
-        return new Complex(x.re - Math.floor(x.re/y) * y, x.im - Math.floor(x.im/y) * y);
     }
 }

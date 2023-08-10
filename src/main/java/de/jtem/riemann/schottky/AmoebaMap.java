@@ -182,12 +182,12 @@ public class AmoebaMap implements Serializable{
       dH_Der.assign(0);
       dG_Der.assign(0);
       dK_Der.assign(0);
-      H.assign(1);
-      G.assign(1);
-      K.assign(1);
-      H_corr.assign(1);
-      G_corr.assign(1);
-      K_corr.assign(1);
+      H.assign(0);
+      G.assign(0);
+      K.assign(0);
+      H_corr.assign(0);
+      G_corr.assign(0);
+      K_corr.assign(0);
   }
 
   protected void cleanDiffs() {
@@ -293,14 +293,20 @@ public class AmoebaMap implements Serializable{
       if(!dK.isNaN()){
         dXiBoundary.assignPlus(dK);
       }
-      if(!H.divide(H_corr).log().isNaN()){
-        xi1.assignPlus(H.divide(H_corr).log());
+      // if(!H.divide(H_corr).log().isNaN()){
+      //   xi1.assignTimes(H.divide(H_corr));
+      // }
+      // if(!G.divide(G_corr).log().isNaN()){
+      //   xi2.assignTimes(G.divide(G_corr));
+      // }
+      if(!H.minus(H_corr).isNaN()){
+        xi1.assignPlus(H.minus(H_corr));
       }
-      if(!G.divide(G_corr).log().isNaN()){
-        xi2.assignPlus(G.divide(G_corr).log());
+      if(!G.minus(G_corr).isNaN()){
+        xi2.assignPlus(G.minus(G_corr));
       }
       if(!K.divide(K_corr).log().isNaN()){
-        xiBoundary.assignPlus(K.divide(K_corr).log());
+        xiBoundary.assignTimes(K.divide(K_corr));
       }
       if(!dH_Der.isNaN()){
         dXi1Der.assignPlus(dH_Der);
@@ -311,6 +317,10 @@ public class AmoebaMap implements Serializable{
       if(!dK_Der.isNaN()){
         dXiBoundaryDer.assignPlus(dK_Der);
       }
+    }
+
+    protected void addResidues() {
+      throw new NotImplementedException();
     }
 
       final Complex[] getDifferentials(final Complex P, final double accuracy) {
@@ -333,6 +343,11 @@ public class AmoebaMap implements Serializable{
 
         processSchottkyElement(schottky.id);
 
+        // xi1.assignLog();
+        // xi2.assignLog();
+
+        // addResidues();
+
         // Correction in the U1 uniformization case.
         // if(schottky.uniformization == 1) {
         //   addU1Correction(P);
@@ -352,7 +367,9 @@ public class AmoebaMap implements Serializable{
       
       public Complex getSlope(final Complex P, final double accuracy) {
         Complex[] diffs = getDifferentials(P, accuracy);
-        return new Complex(diffs[3].im, diffs[4].im);
+        Complex slope = new Complex(diffs[3].im, diffs[4].im);
+        // slope.assignPlus(Math.PI, Math.PI);
+        return slope;
       }
       
       
@@ -373,24 +390,24 @@ public class AmoebaMap implements Serializable{
 
         // probably should switch to a more numerically stable version here. Consider using BigDecimal.
 
-        ComplexHighPrecision dX1 = new ComplexHighPrecision(diffs[0]);
-        ComplexHighPrecision dX2 = new ComplexHighPrecision(diffs[1]);
-        ComplexHighPrecision dX = new ComplexHighPrecision(diffs[2]);
-        BigDecimal factor = dX1.times(dX2.conjugate()).im;
-        BigDecimal x = dX1.times(dX.conjugate()).im;
-        BigDecimal y = dX2.times(dX.conjugate()).im;
-        BigDecimal psi = x.divide(factor, MathContext.DECIMAL128);
-        BigDecimal eta = y.divide(factor, MathContext.DECIMAL128);
-        return new Complex(psi.doubleValue(), -eta.doubleValue());
+        // ComplexHighPrecision dX1 = new ComplexHighPrecision(diffs[0]);
+        // ComplexHighPrecision dX2 = new ComplexHighPrecision(diffs[1]);
+        // ComplexHighPrecision dX = new ComplexHighPrecision(diffs[2]);
+        // BigDecimal factor = dX1.times(dX2.conjugate()).im;
+        // BigDecimal x = dX1.times(dX.conjugate()).im;
+        // BigDecimal y = dX2.times(dX.conjugate()).im;
+        // BigDecimal psi = x.divide(factor, MathContext.DECIMAL128);
+        // BigDecimal eta = y.divide(factor, MathContext.DECIMAL128);
+        // return new Complex(psi.doubleValue(), -eta.doubleValue());
 
-        // double factor = diffs[0].times(diffs[1].conjugate()).im;
-        // double psi = diffs[0].times(diffs[2].conjugate()).im;
-        // double eta = diffs[1].times(diffs[2].conjugate()).im;
+        double factor = diffs[0].times(diffs[1].conjugate()).im;
+        double psi = diffs[0].times(diffs[2].conjugate()).im;
+        double eta = diffs[1].times(diffs[2].conjugate()).im;
 
-        // if (Math.abs(psi/factor - eta/factor) > 1) {
-        //   System.out.println(psi/factor + ", " + eta/factor);
-        // }
-        // return new Complex(psi/factor, -eta/factor);
+        // // if (Math.abs(psi/factor - eta/factor) > 1) {
+        // //   System.out.println(psi/factor + ", " + eta/factor);
+        // // }
+        return new Complex(psi/factor, -eta/factor);
       }
 
 }

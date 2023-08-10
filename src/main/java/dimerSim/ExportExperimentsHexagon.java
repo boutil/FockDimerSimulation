@@ -13,7 +13,7 @@ import java.util.Arrays;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimers;
-import de.jtem.riemann.schottky.SchottkyDimersHex;
+import de.jtem.riemann.schottky.SchottkyDimersDoubleCoverUnitary;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
 import de.jtem.riemann.schottky.SchottkyDimersUnitary;
 import lattices.HexLattice;
@@ -28,25 +28,56 @@ public class ExportExperimentsHexagon {
         // double[][] schottkyParamsCol = {{0.9, 1, 0.9, -1, 0.001, 0}};
         // double[][][] angles = {{{-3, -2}, {0.4, 0.4}, {2, 3}}};
         
-        // Unitary case G1
-        Complex A = new Complex(0.5 * Math.cos(0.5), 0.5 * Math.sin(0.5));
+        // // Unitary case G1
+        Complex A = new Complex(0.5 * Math.cos(Math.PI * 2 / 6), 0.5 * Math.sin(Math.PI * 2 / 6));
         Complex B = A.invert().conjugate();
-        double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.001, 0}};
-        double[][][] angles = {{{0, Math.PI * 2 / 3 - 0.1}, {Math.PI * 2 / 3, Math.PI * 2 / 3 + 0.5}, {Math.PI * 4 / 3, Math.PI * 4 / 3}}};
+        // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.01, 0}};
+        double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.0000002, 0}};
+        // double[][][] angles = {{{0}, {1}, {4}}};
+        // double[][][] angles = {{{Math.PI * 4 / 3, Math.PI * 4 / 3}, {0, Math.PI * 2 / 3 - 0.3}, {Math.PI * 2 / 3, Math.PI * 2 / 3 + 0.5}}};
+        double[][][] angles = {{{4 * Math.PI / 3}, {1.5}, {2 * Math.PI / 3}}};
+        
+        // Complex A = new Complex(0.3 * Math.cos(0), 0.3 * Math.sin(0));
+        // Complex B = A.invert().conjugate();
+        // // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.01, 0}};
+        // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.00000001, 0}};
+        // double[][][] angles = {{{0, 0.5}, {Math.PI * 2 / 3, Math.PI * 2 / 3}, {Math.PI * 4 / 3, Math.PI * 4 / 3}}};
 
-        // G2LargeHole
-        // double[][] schottkyParamsCol = {{-1, 1, -1, -1, 0.03, 0, 1, 1, 1, -1, 0.001, 0}};
-        // double[][][] angles = {{{-3}, {-2}, {-1}, {1}, {2}, {3}}};
+        // Complex A = new Complex(0.5 * Math.cos(0.5), 0.5 * Math.sin(0.5));
+        // Complex B = A.invert().conjugate();
+        // // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.01, 0}};
+        // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.00000001, 0}};
+        // double[][][] angles = {{{0, Math.PI * 2 / 3 - 0.08}, {Math.PI * 2 / 3, Math.PI * 2 / 3 + 0.5}, {Math.PI * 4 / 3, Math.PI * 4 / 3}}};
+        
+        // Other side
+        // Complex A = new Complex(0.5 * Math.cos(Math.PI/3), 0.5 * Math.sin(Math.PI/3));
+        // Complex B = A.invert().conjugate();
+        // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.00000001, 0}};
+        // double[][][] angles = {{{0.15, Math.PI * 2 / 3}, {Math.PI * 4 / 3, Math.PI * 4 / 3}, {2 * Math.PI - 0.5, 2 * Math.PI}}};
 
-        int defaultNumSteps = 100000;
+
+        // Complex A = new Complex(0.5 * Math.cos(Math.PI/3), 0.5 * Math.sin(Math.PI/3));
+        // Complex B = A.invert().conjugate();
+        // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.00000001, 0}};
+        // double[][][] angles = {{{0, Math.PI * 4 / 3}, {Math.PI * 4 / 3 + 0.5, Math.PI * 4 / 3 + 0.9}, {2 * Math.PI - 0.5, 2 * Math.PI - 0.5}}};
+        
+        // DoubleHorns
+        // Complex A = new Complex(0.5 * Math.cos(Math.PI/3), 0.5 * Math.sin(Math.PI/3));
+        // Complex B = A.invert().conjugate();
+        // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.01, 0}};
+        // double[][][] angles = {{{0, Math.PI * 2 / 3, Math.PI * 4 / 3}, {Math.PI * 4 / 3 + 0.3, Math.PI * 4 / 3 + 0.3, Math.PI * 4 / 3 + 0.3}, {2 * Math.PI - 0.3, 2 * Math.PI - 0.3, 2 * Math.PI - 0.3}}};
+        
+        
+        int defaultNumSteps = 50;
         int[] numSteps = new int[schottkyParamsCol.length];
         Arrays.fill(numSteps, defaultNumSteps);
         // int[] numSteps = {100000, 100000, 100000};
-
+        
         String baseFolder = "experimentExport/Hexagon/";
-        // String simToStartFrom = "experimentExport/Hexagon/hexagon500UniformConverged.ser";
-        String simToStartFrom = "experimentExport/Hexagon/2023-08-03-16-20-52/sim0[500x500].ser";
-
+        String simToStartFrom = "experimentExport/Hexagon/hexagon300UniformConverged.ser";
+        // String simToStartFrom = "experimentExport/Hexagon/2023-08-07-00-45-35/sim0[300x300].ser";
+        // String simToStartFrom = "experimentExport/Hexagon/DoubleHorns/2023-08-06-23-45-54/sim0[300x300].ser";
+        
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
         LocalDateTime now = LocalDateTime.now();
         baseFolder += dtf.format(now);
@@ -59,13 +90,14 @@ public class ExportExperimentsHexagon {
 
             SchottkyDimersUnitary schottkyDimers = new SchottkyDimersUnitary(new SchottkyData(schottkyParamsCol[i]), angles[i]);
 
-            SchottkyDimersUnitary doubleCover = schottkyDimers.getDoubleCover();
+            SchottkyDimersDoubleCoverUnitary doubleCover = schottkyDimers.getDoubleCover();
             
             // sim = new MarkovSimZ2(lattice, false);
 
             sim = loadSim(simToStartFrom);
+
             
-            HexLatticeFock lattice = new HexLatticeFock(schottkyDimers, sim.lattice.N, sim.lattice.M);
+            HexLatticeFock lattice = new HexLatticeFock(doubleCover, sim.lattice.N, sim.lattice.M);
 
             sim.setLattice(lattice);
 
@@ -79,10 +111,10 @@ public class ExportExperimentsHexagon {
                 String info = i + "[" + sim.lattice.N + "x" + sim.lattice.M + "]";
                 saveSim(sim, baseFolder + "/sim" + info + ".ser");
                 saveSchottky(schottkyDimers, baseFolder + "/schottky" + info + ".ser");
-                vis.saveAmoebaPic(schottkyDimers, baseFolder + "/amoebaPic" + info + ".png");
+                vis.saveAmoebaPic(doubleCover, baseFolder + "/amoebaPic" + info + ".png");
                 vis.saveAztecPic(doubleCover, baseFolder + "/aztecPic" + info + ".png");
                 vis.saveDimerConfPic(doubleCover, baseFolder + "/dimerConf" + info + ".png");
-                // vis.saveWeightsPic(baseFolder + "/weights" + info + ".png");
+                vis.saveWeightsPic(baseFolder + "/weights" + info + ".png");
             } catch (IOException e) {
                 // TODO: handle exception
             }

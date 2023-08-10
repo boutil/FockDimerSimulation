@@ -49,7 +49,7 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
     @Override
     public Complex[] getPointArrayOnRealLine(double a, double b, int numPoints, double[] excludingInterval){
         List<Complex> res = new LinkedList<Complex>();
-        double radius = 0.99999;
+        double radius = 0.999;
         if (b < a) {
             b = b + 2 * Math.PI;
         }
@@ -104,6 +104,7 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
                 }
             }
         }
+        System.out.println("winding point: " + closestPoint + ". slopeDiff: " + minimalSlopeDiff);
         return closestPoint;
     }
 
@@ -114,9 +115,9 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
         Complex[][] anglesC = getAngles();
         Complex slopeP0 = amoebaMap.getSlope(chooseP0(), acc);
         Complex pointBetweenGammaAlpha = anglesC[0][0].plus(anglesC[anglesC.length - 1][anglesC[anglesC.length - 1].length - 1]);
-        pointBetweenGammaAlpha.assignDivide(pointBetweenGammaAlpha.abs());
+        pointBetweenGammaAlpha.assignDivide(pointBetweenGammaAlpha.abs() / 0.99999);
         Complex pointBetweenBetaGamma = anglesC[1][anglesC[1].length - 1].plus(anglesC[2][0]);
-        pointBetweenBetaGamma.assignDivide(pointBetweenBetaGamma.abs());
+        pointBetweenBetaGamma.assignDivide(pointBetweenBetaGamma.abs() / 0.99999);
         Complex slopeGammaAlpha = amoebaMap.getSlope(pointBetweenGammaAlpha, acc);
         Complex slopeBetaGamma = amoebaMap.getSlope(pointBetweenBetaGamma, acc);
         Complex correctSlope = slopeP0.plus(slopeGammaAlpha).plus(slopeBetaGamma).divide(3);
@@ -128,20 +129,23 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
         Complex zero = h.applyTo(correctWindingPoint);
 
         double[][] newAngles = new double[angles.length * 2][];
+        double h0 = h.applyTo(anglesC[0][0]).arg();
         for (int i = 0; i < angles.length; i++) {
             newAngles[i] = new double[angles[i].length];
             newAngles[i + angles.length] = new double[angles[i].length];
             for (int j = 0; j < angles[i].length; j++) {
-                newAngles[i][j] = doubleMod(h.applyTo(anglesC[i][j]).arg(), 2 * Math.PI) / 2;
-                newAngles[i + angles.length][j] = newAngles[i][j] + Math.PI;
+                newAngles[i][j] = doubleMod(h.applyTo(anglesC[i][j]).arg() / 2, 2 * Math.PI);
+                newAngles[i + angles.length][j] = doubleMod(newAngles[i][j] + Math.PI, 2 * Math.PI);
             }
         }
         SchottkyData data = new SchottkyData(numGenerators * 2);
         for (int i = 0; i < numGenerators; i++) {
-            double theta = doubleMod(h.applyTo(getA(i)).arg(), Math.PI * 2) / 2;
-            Complex newA = h.applyTo(getA(i)).divide(new Complex(Math.cos(theta), Math.sin(theta)));
+            // double theta = doubleMod(h.applyTo(getA(i)).arg(), Math.PI * 2) / 2;
+            // h.times(getGenerator(i)).getA();
+            Complex newA = h.applyTo(getA(i)).sqrt();
             data.setA(i, newA);
             data.setB(i, newA.invert().conjugate());
+            // What should mu be?
             data.setMu(i, getMu(i));
             data.setA(i + numGenerators, newA.neg());
             data.setB(i + numGenerators, newA.invert().conjugate().neg());
@@ -153,8 +157,14 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
     @Override
     public Complex chooseP0() {
         Complex[][] anglesC = getAngles();
-        Complex sum = anglesC[0][anglesC[0].length - 1].plus(anglesC[1][0]);
-        return sum.divide(sum.abs());
+        Complex lastAlpha = anglesC[0][anglesC[0].length - 1];
+        Complex firstBeta = anglesC[1][0];
+        Complex sum = lastAlpha.plus(firstBeta);
+        double factor = -1;
+        if(firstBeta.divide(lastAlpha).arg() > 0) {
+            factor = 1;
+        }
+        return sum.times(factor).divide(sum.abs());
     }
 
     protected double doubleMod(double x, double y) {

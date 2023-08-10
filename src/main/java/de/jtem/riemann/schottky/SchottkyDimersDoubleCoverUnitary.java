@@ -1,5 +1,6 @@
 package de.jtem.riemann.schottky;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -42,17 +43,20 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
 
     public void checkSlopeAtWinding() {
         Complex[][] anglesC = getAngles();
-        Complex slope0 = amoebaMap.getSlope(new Complex(), acc);
         Complex slopeP0 = amoebaMap.getSlope(chooseP0(), acc);
-        Complex pointBetweenGammaAlpha = anglesC[0][0].plus(anglesC[anglesC.length - 1][anglesC[anglesC.length - 1].length - 1]);
-        pointBetweenGammaAlpha.assignDivide(pointBetweenGammaAlpha.abs());
+        Complex pointBetweenGammaAlpha = anglesC[2][anglesC[2].length - 1].plus(anglesC[3][0]);
+        pointBetweenGammaAlpha.assignDivide(pointBetweenGammaAlpha.abs() / 0.99999);
         Complex pointBetweenBetaGamma = anglesC[1][anglesC[1].length - 1].plus(anglesC[2][0]);
-        pointBetweenBetaGamma.assignDivide(pointBetweenBetaGamma.abs());
+        pointBetweenBetaGamma.assignDivide(pointBetweenBetaGamma.abs() / 0.99999);
+        Complex slopeGammaAlpha = amoebaMap.getSlope(pointBetweenGammaAlpha, acc);
+        Complex slopeBetaGamma = amoebaMap.getSlope(pointBetweenBetaGamma, acc);
+        Complex correctSlope = slopeP0.plus(slopeGammaAlpha).plus(slopeBetaGamma).divide(3);
+        System.out.println("uniformization data is: " + Arrays.toString(uniformizationData));
         System.out.println("slope at P0 is " + slopeP0);
-        System.out.println("slope at betaGamma is " + amoebaMap.getSlope(pointBetweenBetaGamma, acc));
-        System.out.println("slope at gammaAlpha is " + amoebaMap.getSlope(pointBetweenGammaAlpha, acc));
-        System.out.println("slope at 0 should be: " + slopeP0.plus(amoebaMap.getSlope(pointBetweenGammaAlpha, acc)).plus(amoebaMap.getSlope(pointBetweenBetaGamma, acc)).divide(3));
-        System.out.println("slope at 0 is " + slope0);
+        System.out.println("slope at gammaAlpha is " + slopeGammaAlpha);
+        System.out.println("slope at betaGamma is " + slopeBetaGamma);
+        System.out.println("slope at 0 should be: " + correctSlope);
+        System.out.println("slope at 0 is " + amoebaMap.getSlope(new Complex(), acc));
     }
     
     // For now we just assume genus 2. i.e. factor has genus 1.

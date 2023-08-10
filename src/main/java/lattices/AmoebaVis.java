@@ -105,9 +105,9 @@ public class AmoebaVis extends JPanel{
     private Complex getHexagonInTiltedCoordinates(Complex point) throws Exception {
         // Apply Hexagon map and apply hexagonal coordinates to it. Then shring and rotate it to fit simulation pic.
         Complex hexMap = schottkyDimers.boundaryMap(point);
-        if (Math.abs(hexMap.re) > 1 || Math.abs(hexMap.im) > 1 ) {
-            System.out.println(hexMap);
-        }
+        // if (Math.abs(hexMap.re) > 1 || Math.abs(hexMap.im) > 1 ) {
+        //     System.out.println("boundary map larger than 1: " + hexMap);
+        // }
         hexMap = xCoord.times(hexMap.re).plus(yCoord.times(hexMap.im));
         hexMap.assignTimes(new Complex(Math.cos(Math.PI/3), Math.sin(Math.PI/3)));
         hexMap.assignTimes((imageHeight - 40) / Math.sqrt(3));

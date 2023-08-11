@@ -28,6 +28,7 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
         abelMapAtZero = new ComplexVector(1, abelMap0.getRe(0) + abelMap0.getRe(1),  abelMap0.getIm(0) + abelMap0.getIm(1));
 
         // It is assumed that the points in data and angles are doubled in z -> -z.
+        adjustAngles();
         checkMCurveProp();
         checkSlopeAtWinding();
     }
@@ -73,6 +74,10 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
         v.assign(map.getRe(0) + map.getRe(1), map.getIm(0) + map.getIm(1));
         v.assignMinus(abelMapAtZero);
         // v.assignDivide(2);
+    }
+
+    private void adjustAngles() {
+        // adjusts angles so that the slope at 0 is the center of the Newton triangle.
     }
 
     @Override

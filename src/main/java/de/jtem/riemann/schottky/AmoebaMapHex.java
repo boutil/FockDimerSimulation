@@ -143,14 +143,23 @@ public class AmoebaMapHex extends AmoebaMap{
         double[] residues2 = {0, 1, -1, 0, 1, -1};
         // 1 or -1 multiplier depending on if our integration contour is moving upwards or downwards.
         double comingFromBottom = sP0.minus(sP).im > 0 ? 1 : -1;
+        boolean isInsideCircle = (sP0.abs() <= 1) && (sP.abs() <= 1);
+        boolean leftOfCircle = !isInsideCircle && ((sP0.re < 0) || (sP.re < 0)) && ((Math.abs(sP0.im) <= 1) || (Math.abs(sP.im) <= 1));
 
         
 
         for (int i = 0; i < angles.length; i++) {
             for (Complex angle : angles[i]) {
-                boolean imBetween = ((angle.im < P0.im) && (angle.im > P.im)) || ((angle.im < P.im) && (angle.im > P0.im));
+                boolean imBetween = ((angle.im < sP0.im) && (angle.im > sP.im)) || ((angle.im < sP.im) && (angle.im > sP0.im));
                 boolean isOnRightSide = angle.re > 0;
-                if(imBetween && isOnRightSide) {
+                boolean includeAngle = false;
+                if (leftOfCircle || isInsideCircle) {
+                    includeAngle = imBetween;
+                }
+                if (isInsideCircle) {
+                    includeAngle &= isOnRightSide;
+                }
+                if(includeAngle) {
                     xi1.assignPlus(new Complex(0, 2 * Math.PI * residues1[i] * comingFromBottom));
                     xi2.assignPlus(new Complex(0, 2 * Math.PI * residues2[i] * comingFromBottom));
                 }

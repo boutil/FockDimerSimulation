@@ -13,13 +13,17 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
 
     public Complex slopeTranslation;
     
-    public SchottkyDimersUnitary(SchottkyData data, double[][] angles) {
+    public SchottkyDimersUnitary(SchottkyData data, double[][] angles, double[] boundaryResidues) {
         super(data, angles);
 
         // TODO: P0 should be chosen such that it's in the fundamental domain.
-        amoebaMap = new AmoebaMapHex(this, chooseP0());
+        amoebaMap = new AmoebaMapHex(this, chooseP0(), boundaryResidues);
 
         checkMCurveProp();
+    }
+
+    public SchottkyDimersUnitary(SchottkyData data, double[][] angles) {
+        this(data, angles, new double[]{1, -1, 1, -1, 1, -1});
     }
 
     private void checkMCurveProp() {
@@ -77,8 +81,8 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
 
     public Complex getPointWithSlope(Complex slope) {
         // build a lattice of points and compute their slopes. Find the point that has the needed slope.
-        int angleNum = 100;
-        int rNum = 40;
+        int angleNum = 500;
+        int rNum = 100;
         Complex[][] slopes = new Complex[angleNum][rNum];
         Complex closestPoint = new Complex();
         double minimalSlopeDiff = Double.MAX_VALUE;
@@ -151,7 +155,7 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
             data.setB(i + numGenerators, newA.invert().conjugate().neg());
             data.setMu(i + numGenerators, getMu(i));
         }
-        return new SchottkyDimersDoubleCoverUnitary(data, newAngles);
+        return new SchottkyDimersDoubleCoverUnitary(data, newAngles, amoebaMap.boundaryResidues);
     }
 
     @Override

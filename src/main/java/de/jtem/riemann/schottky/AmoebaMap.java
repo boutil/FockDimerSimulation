@@ -23,13 +23,20 @@ public class AmoebaMap implements Serializable{
     // measures errors for the elements in some way?
     final double[][] rho;
 
+    public double[] boundaryResidues;
 
-    AmoebaMap(SchottkyDimers schottky, Complex P0) {
+
+    AmoebaMap(SchottkyDimers schottky, Complex P0, double[] boundaryResidues) {
         this.schottky = schottky;
         numGenerators = schottky.numGenerators;
         updateID = schottky.updateID;
         rho = new double[2][numGenerators];
         this.P0.assign(P0);
+        this.boundaryResidues = boundaryResidues;
+    }
+
+    AmoebaMap(SchottkyDimers schottky, Complex P0) {
+        this(schottky, P0, new double[] {1,-1,1,-1,1,-1});
     }
     
     final Complex zOfRho = new Complex(Double.NaN);
@@ -369,7 +376,7 @@ public class AmoebaMap implements Serializable{
         Complex[] diffs = getDifferentials(P, accuracy);
         Complex slope = new Complex(diffs[3].im, diffs[4].im);
         // slope.assignPlus(Math.PI, Math.PI);
-        return slope;
+        return slope.divide(Math.PI);
       }
       
       

@@ -6,10 +6,19 @@ public class AmoebaMapHex extends AmoebaMap{
     
     boolean isDoubleCover;
 
+    private boolean calculateBoundaryDerivatives = false;
+    Complex[][] angleBoundaryDerivatives;
+
     AmoebaMapHex(SchottkyDimers schottky, Complex P0) {
         super(schottky, P0);
 
         isDoubleCover = (schottky.getAngles().length == 6);
+        angleBoundaryDerivatives = new Complex[3][schottky.getAngles()[0].length];
+    }
+
+    AmoebaMapHex(SchottkyDimers schottky, Complex P0, double[] boundaryResidues) {
+        this(schottky, P0);
+        this.boundaryResidues = boundaryResidues;
     }
 
 
@@ -17,10 +26,38 @@ public class AmoebaMapHex extends AmoebaMap{
     protected void calculateIncrements(final SchottkyGroupElement element) {
         if (isDoubleCover) {
             doubleCoverIncrements(element);
+            if(calculateBoundaryDerivatives) {
+                addBoundaryDerivates(element);
+            }
         } else {
             simpleIncrements(element);
         }
         addResidues();
+    }
+
+    public Complex[][] calculateBoundaryDerivativesByAngles() {
+        // calculates the derivatives with respect to all angle parameters of dXiBoundary at 0.
+        for (int i = 0; i < angleBoundaryDerivatives.length; i++) {
+            for (int j = 0; j < angleBoundaryDerivatives[i].length; j++) {
+                angleBoundaryDerivatives[i][j] = new Complex();
+            }
+        }
+        calculateBoundaryDerivatives = true;
+        getDifferentials(new Complex(), schottky.acc);
+        calculateBoundaryDerivatives = false;
+        return angleBoundaryDerivatives.clone();
+    }
+
+    private void addBoundaryDerivates(final SchottkyGroupElement element) {
+        Complex[][] angles = schottky.getAngles();
+        double[] multiplier = {1, -1, 1};
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < angles[i].length; j++) {
+                Complex summand = element.applyDifferentialTo(angles[i][j]).divide(element.applyTo(angles[i][j]).pow(2));
+                summand.times(angles[i][j]).times(new Complex(0, multiplier[i] * 2));
+                angleBoundaryDerivatives[i][j].assignPlus(summand);
+            }
+        }
     }
 
     private void simpleIncrements(final SchottkyGroupElement element) {
@@ -69,7 +106,7 @@ public class AmoebaMapHex extends AmoebaMap{
             // H_corr.assignTimes(sP0.minus(angle));
             H.assignPlus(diff.log());
             H_corr.assignPlus(sP0.minus(angle).log());
-            dK.assignPlus(diff.invert().times(dsP));
+            dK.assignPlus(diff.invert().times(dsP).times(boundaryResidues[0]));
         }
           for (Complex angle : schottky.getAngles()[1]) {
             Complex diff = sP.minus(angle);
@@ -79,7 +116,7 @@ public class AmoebaMapHex extends AmoebaMap{
             // G_corr.assignTimes(sP0.minus(angle));
             G.assignPlus(diff.log());
             G_corr.assignPlus(sP0.minus(angle).log());
-            dK.assignMinus(diff.invert().times(dsP));
+            dK.assignPlus(diff.invert().times(dsP).times(boundaryResidues[1]));
         }
         for (Complex angle : schottky.getAngles()[2]) {
             Complex diff = sP.minus(angle);
@@ -95,7 +132,7 @@ public class AmoebaMapHex extends AmoebaMap{
             H_corr.assignMinus(sP0.minus(angle).log());
             G.assignMinus(diff.log());
             G_corr.assignMinus(sP0.minus(angle).log());
-            dK.assignPlus(diff.invert().times(dsP));
+            dK.assignPlus(diff.invert().times(dsP).times(boundaryResidues[2]));
         }
         for (Complex angle : schottky.getAngles()[3]) {
             Complex diff = sP.minus(angle);
@@ -105,7 +142,7 @@ public class AmoebaMapHex extends AmoebaMap{
             // H_corr.assignTimes(sP0.minus(angle));
             H.assignPlus(diff.log());
             H_corr.assignPlus(sP0.minus(angle).log());
-            dK.assignMinus(diff.invert().times(dsP));
+            dK.assignPlus(diff.invert().times(dsP).times(boundaryResidues[3]));
         }
         for (Complex angle : schottky.getAngles()[4]) {
             Complex diff = sP.minus(angle);
@@ -115,7 +152,7 @@ public class AmoebaMapHex extends AmoebaMap{
             // G_corr.assignTimes(sP0.minus(angle));
             G.assignPlus(diff.log());
             G_corr.assignPlus(sP0.minus(angle).log());
-            dK.assignPlus(diff.invert().times(dsP));
+            dK.assignPlus(diff.invert().times(dsP).times(boundaryResidues[4]));
         }
         for (Complex angle : schottky.getAngles()[5]) {
             Complex diff = sP.minus(angle);
@@ -131,7 +168,7 @@ public class AmoebaMapHex extends AmoebaMap{
             H_corr.assignMinus(sP0.minus(angle).log());
             G.assignMinus(diff.log());
             G_corr.assignMinus(sP0.minus(angle).log());
-            dK.assignMinus(diff.invert().times(dsP));
+            dK.assignPlus(diff.invert().times(dsP).times(boundaryResidues[5]));
         }
     }
 

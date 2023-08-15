@@ -11,15 +11,21 @@ public class MarkovSimHex extends MarkovSim{
     private byte flippableW = 0b101010;
     private byte flippableE = 0b010101;
 
+    public double sizeQ, sizeR, sizeS = 1;
+
 
     public MarkovSimHex(HexLattice lattice) {
+        this(lattice, new double[]{1,1,1});
+    }
+    
+    public MarkovSimHex(HexLattice lattice, double[] sizes) {
         super(lattice);
-
-
+        this.sizeQ = sizes[0];
+        this.sizeR = sizes[1];
+        this.sizeS = sizes[2];
+        int max = lattice.N / 2 - 2;
+        initializeHexagon((int)(max * sizeQ), (int)(max * sizeR), (int)(max * sizeS));
         init();
-
-        initializeRegularHexagon();
-
     }
 
     public MarkovSimHex(HexLattice lattice, byte[][] faceStates, boolean[][] insideBoundary) {
@@ -34,8 +40,9 @@ public class MarkovSimHex extends MarkovSim{
         rand = new Random();
         maxParity = 3;
         // for clunky parallelization purposes:
-        int numThreads = 4;
+        int numThreads = 20;
         int chunkSize = lattice.N / numThreads;
+
         markovWorkers = new MarkovSimHexWorker[lattice.N / chunkSize + 1];
         for (int i = 0; i < markovWorkers.length; i++) {
             markovWorkers[i] = new MarkovSimHexWorker(this, IntStream.range(i * chunkSize, Math.min(lattice.N, (i+1) * chunkSize)).toArray());
@@ -103,44 +110,50 @@ public class MarkovSimHex extends MarkovSim{
         return 0;
     }
 
-    private void initializeRegularHexagon() {
+    private void initializeHexagon(int sizeQ, int sizeR, int sizeS) {
+        // Point where the initialization lines meet.
+        int[] centralCubeCoords = {sizeR - sizeS, sizeQ - sizeR, sizeS - sizeQ};
         HexLattice lat = (HexLattice) lattice;
-        int radius = lattice.N / 2 - 2;
         for (int i = 0; i < lattice.N; i++) {
             for (int j = 0; j < lattice.M; j++) {
                 int[] qrs = lat.getCubeCoords(i, j);
-                if (Math.max(Math.abs(qrs[0]), Math.max(Math.abs(qrs[1]), Math.abs(qrs[2]))) < radius) {
-                    insideBoundary[i][j] = true;
-                }
+                boolean inside = (Math.abs(qrs[0]) < sizeQ && Math.abs(qrs[1]) < sizeS && Math.abs(qrs[2]) < sizeR);
+                insideBoundary[i][j] = inside;
                 // Lots of cases to consider. This is a separation into three regions and the resulting faceStates
                 // Right quadrant first
                 // Boundaries:
+                int[] coordDiff = {qrs[0] - centralCubeCoords[0], qrs[1] - centralCubeCoords[1], qrs[2] - centralCubeCoords[2]};
                 // Eastern segment
-                if ((qrs[0] == 0 && qrs[1] >= 0) || (qrs[2] == 0 && qrs[0] >= 0)) {
+                if ((coordDiff[0] == 0 && coordDiff[1] >= 0) || (coordDiff[2] == 0 && coordDiff[0] >= 0)) {
                     faceStates[i][j] |= 0b000001;
                 }
                 // SW segment
-                if ((qrs[2] == 0 && qrs[0] >= 0) || (qrs[1] == 0 && qrs[2] >= 0)) {
+                if ((coordDiff[2] == 0 && coordDiff[0] >= 0) || (coordDiff[1] == 0 && coordDiff[2] >= 0)) {
                     faceStates[i][j] |= 0b010000;
                 }
                 // NW segment
-                if ((qrs[1] == 0 && qrs[2] >= 0) || (qrs[0] == 0 && qrs[1] >= 0)) {
+                if ((coordDiff[1] == 0 && coordDiff[2] >= 0) || (coordDiff[0] == 0 && coordDiff[1] >= 0)) {
                     faceStates[i][j] |= 0b000100;
                 }
                 // Non-boundaries:
                 // eastern segment
-                if (qrs[0] > 0 && qrs[2] < 0) {
+                if (coordDiff[0] > 0 && coordDiff[2] < 0) {
                     faceStates[i][j] |= 0b001001;
                 }
                 // NW segment
-                if (qrs[0] < 0 && qrs[1] > 0) {
+                if (coordDiff[0] < 0 && coordDiff[1] > 0) {
                     faceStates[i][j] |= 0b100100;
                 }
                 // SW segment
-                if (qrs[1] < 0 && qrs[2] > 0) {
+                if (coordDiff[1] < 0 && coordDiff[2] > 0) {
                     faceStates[i][j] |= 0b010010;
                 }
             }
         }
+    }
+
+    private void initializeRegularHexagon() {
+        int size = lattice.N / 2 - 2;
+        initializeHexagon(size, size, size);
     }
 }

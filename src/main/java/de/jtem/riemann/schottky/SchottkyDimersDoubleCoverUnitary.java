@@ -16,12 +16,12 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
 
     private ComplexVector abelMapAtZero;
     
-    public SchottkyDimersDoubleCoverUnitary(SchottkyData data, double[][] angles) {
+    public SchottkyDimersDoubleCoverUnitary(SchottkyData data, double[][] angles, double[] boundaryResidues) {
         super(data, angles);
 
         Complex P0 = chooseP0();
 
-        amoebaMap = new AmoebaMapHex(this, P0);
+        amoebaMap = new AmoebaMapHex(this, P0, boundaryResidues);
 
         ComplexVector abelMap0 = new ComplexVector(2, 0, 0);
         abelMap(abelMap0, new Complex(1,0));
@@ -31,6 +31,10 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
         adjustAngles();
         checkMCurveProp();
         checkSlopeAtWinding();
+    }
+
+    public SchottkyDimersDoubleCoverUnitary(SchottkyData data, double[][] angles) {
+        this(data, angles, new double[] {1, -1, 1, -1, 1, -1});
     }
 
     private void checkMCurveProp() {
@@ -45,6 +49,7 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
     public void checkSlopeAtWinding() {
         Complex[][] anglesC = getAngles();
         Complex slopeP0 = amoebaMap.getSlope(chooseP0(), acc);
+        Complex boundaryDiff0 = amoebaMap.getDifferentials(new Complex(), acc)[2];
         Complex pointBetweenGammaAlpha = anglesC[2][anglesC[2].length - 1].plus(anglesC[3][0]);
         pointBetweenGammaAlpha.assignDivide(pointBetweenGammaAlpha.abs() / 0.99999);
         Complex pointBetweenBetaGamma = anglesC[1][anglesC[1].length - 1].plus(anglesC[2][0]);
@@ -53,9 +58,12 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
         Complex slopeBetaGamma = amoebaMap.getSlope(pointBetweenBetaGamma, acc);
         Complex correctSlope = slopeP0.plus(slopeGammaAlpha).plus(slopeBetaGamma).divide(3);
         System.out.println("uniformization data is: " + Arrays.toString(uniformizationData));
+        System.out.println("angles are: " + Arrays.deepToString(angles));
         System.out.println("slope at P0 is " + slopeP0);
         System.out.println("slope at gammaAlpha is " + slopeGammaAlpha);
         System.out.println("slope at betaGamma is " + slopeBetaGamma);
+        System.out.println("slope at inner oval is: " + amoebaMap.getSlope(getA(0).plus(getRadius(0)), acc));
+        System.out.println("boundaryDifferential at 0 is: " + boundaryDiff0);
         System.out.println("slope at 0 should be: " + correctSlope);
         System.out.println("slope at 0 is " + amoebaMap.getSlope(new Complex(), acc));
     }
@@ -77,7 +85,26 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
     }
 
     private void adjustAngles() {
-        // adjusts angles so that the slope at 0 is the center of the Newton triangle.
+        // adjusts angles so that dXiBoundary is 0 at 0.
+        AmoebaMapHex amoebaMap = (AmoebaMapHex)this.amoebaMap;
+        double eps = 0.01;
+        double stepSize = 0.001;
+        int maxSteps = 10000;
+        int currentStep = 0;
+        Complex[][] angleBdryDers = amoebaMap.calculateBoundaryDerivativesByAngles();
+        while(amoebaMap.dXiBoundary.abs() > eps) {
+            for (int i = 0; i < angleBdryDers.length; i++) {
+                for (int j = 0; j < angleBdryDers[i].length; j++) {
+                    // project the derivative onto -dXiBoundary to see by how much to move.
+                    double projectionLength = amoebaMap.dXiBoundary.times(angleBdryDers[i][j].conjugate()).re / amoebaMap.dXiBoundary.abs();
+                    angles[i][j] -= projectionLength * stepSize;
+                    angles[i][j] = doubleMod(angles[i][j], 2 * Math.PI);
+                    angles[i + 3][j] = doubleMod(angles[i][j] + Math.PI, 2 * Math.PI);
+                }
+            }
+            angleBdryDers = amoebaMap.calculateBoundaryDerivativesByAngles();
+            System.out.println(amoebaMap.dXiBoundary.abs());
+        }
     }
 
     @Override

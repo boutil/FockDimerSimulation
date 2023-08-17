@@ -158,6 +158,34 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
         return new SchottkyDimersDoubleCoverUnitary(data, newAngles, amoebaMap.boundaryResidues);
     }
 
+    public SchottkyDimersDoubleCoverUnitary getSimpleDoubleCover() {
+        // Gets a double cover. Does not move original angles. They should already be in a single half-plane.
+        Complex[][] anglesC = getAngles();
+        double[][] newAngles = new double[angles.length * 2][];
+        for (int i = 0; i < angles.length; i++) {
+            newAngles[i] = new double[angles[i].length];
+            newAngles[i + angles.length] = new double[angles[i].length];
+            for (int j = 0; j < angles[i].length; j++) {
+                newAngles[i][j] = doubleMod(anglesC[i][j].arg(), 2 * Math.PI);
+                newAngles[i + angles.length][j] = doubleMod(newAngles[i][j] + Math.PI, 2 * Math.PI);
+            }
+        }
+        SchottkyData data = new SchottkyData(numGenerators * 2);
+        for (int i = 0; i < numGenerators; i++) {
+            // double theta = doubleMod(h.applyTo(getA(i)).arg(), Math.PI * 2) / 2;
+            // h.times(getGenerator(i)).getA();
+            Complex newA = getA(i);
+            data.setA(i, newA);
+            data.setB(i, newA.invert().conjugate());
+            // What should mu be?
+            data.setMu(i, getMu(i));
+            data.setA(i + numGenerators, newA.neg());
+            data.setB(i + numGenerators, newA.invert().conjugate().neg());
+            data.setMu(i + numGenerators, getMu(i));
+        }
+        return new SchottkyDimersDoubleCoverUnitary(data, newAngles, amoebaMap.boundaryResidues);
+    }
+
     @Override
     public Complex chooseP0() {
         Complex[][] anglesC = getAngles();

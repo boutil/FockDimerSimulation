@@ -184,6 +184,7 @@ public class HexLatticeFock extends HexLattice{
                 // numerically stable way of computing the crossratio treats exp part and sum part separately like this.
                 Complex factorsCrossSum = factors[0].plus(factors[2]).plus(factors[4]).minus(factors[1]).minus(factors[3]).minus(factors[5]);
                 Complex crossRatio = Complex.exp(factorsCrossSum).times(thetaSums[0]).times(thetaSums[2]).times(thetaSums[4]).divide(thetaSums[1]).divide(thetaSums[3]).divide(thetaSums[5]);
+                // crossRatio.assignInvert();
                 // Complex crossRatio = theta.theta(discreteAbelMap[i+1][j]).times(theta.theta(discreteAbelMap[i-1][j])).divide(
                 //     theta.theta(discreteAbelMap[i][j+1]).times(theta.theta(discreteAbelMap[i][j-1]))
                 // );
@@ -198,7 +199,7 @@ public class HexLatticeFock extends HexLattice{
                     System.out.println("Kasteleyn condition not fulfilled.");
                 }
 
-                flipFaceWeights[i-1][j-1] = crossRatio.re; // Should be like this. Check that these are indeed real first!  
+                flipFaceWeights[i-1][j-1] = 1/crossRatio.re; // Should be like this. Check that these are indeed real first!  
             }
         }
     }

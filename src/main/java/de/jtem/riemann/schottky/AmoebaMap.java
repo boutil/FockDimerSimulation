@@ -385,12 +385,12 @@ public class AmoebaMap implements Serializable{
 
         // Complex R1 = diffs[0].divide(diffs[2]);
         // Complex R2 = diffs[1].divide(diffs[2]);
-        // psi, eta are the aztec diamond coordinates.
-        // if ((Math.abs(R1.im/R2.im) > 50 || Math.abs(R2.im/R1.im) > 50) && P.im > 0.01) {
-        //   System.out.println(R1.im/R2.im);
-        // }
-        // double psi = - R2.re + R1.re * (R2.im/R1.im);
-        // double eta = R1.re - R2.re * (R1.im/R2.im);
+        // // psi, eta are the aztec diamond coordinates.
+        // // if ((Math.abs(R1.im/R2.im) > 50 || Math.abs(R2.im/R1.im) > 50) && P.im > 0.01) {
+        // //   System.out.println(R1.im/R2.im);
+        // // }
+        // // double psi = - R2.re + R1.re * (R2.im/R1.im);
+        // // double eta = R1.re - R2.re * (R1.im/R2.im);
         // double psi = -R2.invert().im / R1.divide(R2).im;
         // double eta = R1.invert().im / R2.divide(R1).im;
         // return new Complex(psi, -eta);

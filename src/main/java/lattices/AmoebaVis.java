@@ -176,7 +176,7 @@ public class AmoebaVis extends JPanel{
 
 
     private Complex[][] extractOvalPoints(ComplexFn f) {
-        int numPointsPerSegment = 500;
+        int numPointsPerSegment = 300;
         Complex[][] points = schottkyDimers.parametrizeRealOvals(numPointsPerSegment);
         int numSegments = points.length;
         Complex[][] pointsAmoebaMapped = new Complex[numSegments][];

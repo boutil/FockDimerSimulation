@@ -76,7 +76,7 @@ public class SchottkyDimers extends Schottky{
                 points[currentIndex++] = getPointArrayOnRealLineExponential(getCenterOfCircle(i, false).re + getRadius(i), getCenterOfCircle(i, true).re - getRadius(i), numPointsPerSegment, new double[]{0., 0.});
             }
             else {
-                points[currentIndex++] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i) * 1.001, numPointsPerSegment);
+                points[currentIndex++] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i) * 1.00001, numPointsPerSegment);
             }
         }
 

@@ -88,7 +88,7 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
     private void adjustAngles() {
         // adjusts angles so that dXiBoundary is 0 at 0.
         AmoebaMapHex amoebaMap = (AmoebaMapHex)this.amoebaMap;
-        double eps = 0.0001;
+        double eps = 0.001;
         double stepSize = 0.001;
         int maxSteps = 10000;
         int currentStep = 0;

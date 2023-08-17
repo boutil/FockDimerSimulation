@@ -50,12 +50,14 @@ public class AmoebaMapHex extends AmoebaMap{
 
     private void addBoundaryDerivates(final SchottkyGroupElement element) {
         Complex[][] angles = schottky.getAngles();
-        double[] multiplier = {1, -1, 1};
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < angles[i].length; j++) {
-                Complex summand = element.applyDifferentialTo(angles[i][j]).divide(element.applyTo(angles[i][j]).pow(2));
-                summand.times(angles[i][j]).times(new Complex(0, multiplier[i] * 2));
+                Complex summand = element.applyTo(new Complex()).minus(angles[i][j]).invert().pow(2).plus(element.applyTo(new Complex()).plus(angles[i][j]).invert().pow(2));
+                summand.assignTimes(angles[i][j].times(new Complex(0, boundaryResidues[i])).times(element.applyDifferentialTo(new Complex())));
                 angleBoundaryDerivatives[i][j].assignPlus(summand);
+                // Complex summand = element.applyDifferentialTo(angles[i][j]).divide(element.applyTo(angles[i][j]).pow(2));
+                // summand.assignTimes(angles[i][j].times(new Complex(0, boundaryResidues[i] * 2)));
+                // angleBoundaryDerivatives[i][j].assignPlus(summand);
             }
         }
     }

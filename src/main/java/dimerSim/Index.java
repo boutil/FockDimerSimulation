@@ -8,6 +8,8 @@ public class Index implements Serializable{
 
     public Index(int x, int y) {this.x=x;this.y=y;}
 
+    public Index() {this(0, 0);}
+
     public boolean isNeighbor (Index other) {
         return (Math.abs(x - other.x) + Math.abs(y - other.y)) == 1;
     }

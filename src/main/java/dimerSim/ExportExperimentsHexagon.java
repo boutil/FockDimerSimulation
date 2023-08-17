@@ -29,13 +29,14 @@ public class ExportExperimentsHexagon {
         // double[][][] angles = {{{-3, -2}, {0.4, 0.4}, {2, 3}}};
         
         // // Unitary case G1
-        Complex A = new Complex(0.5 * Math.cos(Math.PI * 2 / 6), 0.5 * Math.sin(Math.PI * 2 / 6));
+        Complex A = new Complex(0.5 * Math.cos(Math.PI), 0.5 * Math.sin(Math.PI));
         Complex B = A.invert().conjugate();
-        // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.01, 0}};
-        double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.0000002, 0}};
-        // double[][][] angles = {{{0}, {1}, {4}}};
-        // double[][][] angles = {{{Math.PI * 4 / 3, Math.PI * 4 / 3}, {0, Math.PI * 2 / 3 - 0.3}, {Math.PI * 2 / 3, Math.PI * 2 / 3 + 0.5}}};
-        double[][][] angles = {{{4 * Math.PI / 3}, {1.5}, {2 * Math.PI / 3}}};
+        double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.0000000001, 0}};
+        // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.05, 0}};
+        // double[][][] angles = {{{Math.PI * 4 / 3, Math.PI * 4 / 3}, {Math.PI * 2 - 0.5, Math.PI * 2 / 3 - 0.3}, {Math.PI * 2 / 3, Math.PI * 2 / 3 + 0.5}}};
+        // double[][][] angles = {{{4 * Math.PI / 3}, {0}, {2 * Math.PI / 3}}};
+        // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.00000000001, 0}};
+        double[][][] angles = {{{Math.PI + 0.3, Math.PI + 0.3}, {Math.PI + 0.5, Math.PI - 0.5}, {Math.PI - 0.3, Math.PI - 0.3}}};
         
         // Complex A = new Complex(0.3 * Math.cos(0), 0.3 * Math.sin(0));
         // Complex B = A.invert().conjugate();
@@ -68,14 +69,14 @@ public class ExportExperimentsHexagon {
         // double[][][] angles = {{{0, Math.PI * 2 / 3, Math.PI * 4 / 3}, {Math.PI * 4 / 3 + 0.3, Math.PI * 4 / 3 + 0.3, Math.PI * 4 / 3 + 0.3}, {2 * Math.PI - 0.3, 2 * Math.PI - 0.3, 2 * Math.PI - 0.3}}};
         
         
-        int defaultNumSteps = 50;
+        int defaultNumSteps = 1000000;
         int[] numSteps = new int[schottkyParamsCol.length];
         Arrays.fill(numSteps, defaultNumSteps);
         // int[] numSteps = {100000, 100000, 100000};
         
         String baseFolder = "experimentExport/Hexagon/";
-        String simToStartFrom = "experimentExport/Hexagon/hexagon300UniformConverged.ser";
-        // String simToStartFrom = "experimentExport/Hexagon/2023-08-07-00-45-35/sim0[300x300].ser";
+        // String simToStartFrom = "experimentExport/Hexagon/hexagon500UniformConverged.ser";
+        String simToStartFrom = "experimentExport/Hexagon/2023-08-17-16-13-21/sim0[400x400].ser";
         // String simToStartFrom = "experimentExport/Hexagon/DoubleHorns/2023-08-06-23-45-54/sim0[300x300].ser";
         
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
@@ -87,19 +88,24 @@ public class ExportExperimentsHexagon {
         for (int i = 0; i < schottkyParamsCol.length; i++) {
 
             // SchottkyDimersHex schottkyDimers = new SchottkyDimersHex(new SchottkyData(schottkyParamsCol[i]), angles[i]);
+            // double[] sizes = {1, 1, 1};
+            double[] sizes = {1, 0.6, 0.8};
 
-            SchottkyDimersUnitary schottkyDimers = new SchottkyDimersUnitary(new SchottkyData(schottkyParamsCol[i]), angles[i]);
+            double[] boundaryResidues = {sizes[0], -sizes[1], sizes[2], -sizes[0], sizes[1], -sizes[2]};
+            
+            SchottkyDimersUnitary schottkyDimers = new SchottkyDimersUnitary(new SchottkyData(schottkyParamsCol[i]), angles[i], boundaryResidues);
 
             SchottkyDimersDoubleCoverUnitary doubleCover = schottkyDimers.getDoubleCover();
             
-            // sim = new MarkovSimZ2(lattice, false);
-
+            // HexLatticeFock lattice = new HexLatticeFock(doubleCover, 400, 400);
+            // sim = new MarkovSimHex(lattice, sizes);
+            
             sim = loadSim(simToStartFrom);
-
             
             HexLatticeFock lattice = new HexLatticeFock(doubleCover, sim.lattice.N, sim.lattice.M);
-
             sim.setLattice(lattice);
+            
+
 
             System.out.println("lattice built");
 

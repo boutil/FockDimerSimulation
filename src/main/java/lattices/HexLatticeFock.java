@@ -139,12 +139,12 @@ public class HexLatticeFock extends HexLattice{
         Complex angle1;
         Complex angle2;
         Complex[] faceAngles = getAnglesOfFace(i, j);
-        if (direction == 1){
-            angle1 = faceAngles[0];
-            angle2 = faceAngles[1];
+        if (direction == 0){
+            angle1 = faceAngles[3];
+            angle2 = faceAngles[4];
         } else {
-            angle1 = faceAngles[1];
-            angle2 = faceAngles[2];
+            angle1 = faceAngles[5];
+            angle2 = faceAngles[4];
         }
         if (schottkyIsDoubleCover) {
             ((SchottkyDimersDoubleCoverUnitary)schottkyDimers).abelMapOfFactor(v1, angle1);

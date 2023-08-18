@@ -50,12 +50,14 @@ public class ExportExperimentsHexagon {
         // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.00000001, 0}};
         // double[][][] angles = {{{0, Math.PI * 2 / 3 - 0.08}, {Math.PI * 2 / 3, Math.PI * 2 / 3 + 0.5}, {Math.PI * 4 / 3, Math.PI * 4 / 3}}};
 
-        // This gives large holes in sim. Somehow prediction wrong though.
-        Complex A = new Complex(Math.cos(Math.PI / 6), Math.sin(Math.PI / 6)).times(0.7);
+        // This gives holes in sim.
+        Complex A = new Complex(Math.cos(Math.PI / 3 - 0.1), Math.sin(Math.PI / 3 - 0.1)).times(0.5);
+        double[][][] angles = {{{0, 0}, {Math.PI / 3, Math.PI / 3}, {2 * Math.PI / 3 - 0.7, 2 * Math.PI / 3 + 0.7}}};
+        // Complex A = new Complex(Math.cos(Math.PI / 6), Math.sin(Math.PI / 6)).times(0.6);
+        // double[][][] angles = {{{0}, {Math.PI / 3}, {2 * Math.PI / 3}}};
+
         Complex B = A.invert().conjugate();
-        double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.05, 0}};
-        double[][][] angles = {{{0}, {Math.PI / 3}, {2 * Math.PI / 3}}};
-        // double[][][] angles = {{{0, 0}, {Math.PI / 3, Math.PI / 3}, {2 * Math.PI / 3 - 0.5, 2 * Math.PI / 3 + 0.5}}};
+        double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.03, 0}};
         
         
         int defaultNumSteps = 500000;
@@ -65,8 +67,8 @@ public class ExportExperimentsHexagon {
         
         String baseFolder = "experimentExport/Hexagon/";
         String simToStartFrom = "experimentExport/Hexagon/hexagon300UniformConverged.ser";
-        // String simToStartFrom = "experimentExport/Hexagon/2023-08-17-20-49-28/sim0[300x300].ser";
-        // String simToStartFrom = "experimentExport/Hexagon/DoubleHorns/2023-08-06-23-45-54/sim0[300x300].ser";
+        // String simToStartFrom = "experimentExport/Hexagon/2023-08-18-11-54-37/sim0[500x500].ser";
+        // String simToStartFrom = "experimentExport/Hexagon/2023-08-18-13-34-22/sim0[300x300].ser";
         
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
         LocalDateTime now = LocalDateTime.now();
@@ -78,7 +80,7 @@ public class ExportExperimentsHexagon {
 
             // SchottkyDimersHex schottkyDimers = new SchottkyDimersHex(new SchottkyData(schottkyParamsCol[i]), angles[i]);
             // double[] sizes = {1, 1, 1};
-            double[] sizes = {1, 1, 1};
+            double[] sizes = {1, 0.8, 0.6};
 
             double[] boundaryResidues = {sizes[0], -sizes[1], sizes[2], -sizes[0], sizes[1], -sizes[2]};
             
@@ -92,6 +94,7 @@ public class ExportExperimentsHexagon {
             sim = loadSim(simToStartFrom);
             
             HexLatticeFock lattice = new HexLatticeFock(doubleCover, sim.lattice.N, sim.lattice.M);
+            // HexLattice lattice = new HexLattice(sim.lattice.N, sim.lattice.M);
             sim.setLattice(lattice);
             
 
@@ -106,10 +109,11 @@ public class ExportExperimentsHexagon {
                 String info = i + "[" + sim.lattice.N + "x" + sim.lattice.M + "]";
                 saveSim(sim, baseFolder + "/sim" + info + ".ser");
                 saveSchottky(doubleCover, baseFolder + "/schottky" + info + ".ser");
-                vis.saveDimerConfPic(doubleCover, baseFolder + "/dimerConf" + info + ".png");
+                vis.saveDimerConfPic(baseFolder + "/dimerConf" + info + ".png");
                 vis.saveWeightsPic(baseFolder + "/weights" + info + ".png");
+                vis.saveDimerConfPic(doubleCover, baseFolder + "/dimerConfPred" + info + ".png");
                 vis.saveAmoebaPic(doubleCover, baseFolder + "/amoebaPic" + info + ".png");
-                vis.saveAztecPic(doubleCover, baseFolder + "/aztecPic" + info + ".png");
+                // vis.saveAztecPic(doubleCover, baseFolder + "/aztecPic" + info + ".png");
             } catch (IOException e) {
                 // TODO: handle exception
             }

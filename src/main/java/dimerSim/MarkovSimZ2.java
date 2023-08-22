@@ -43,7 +43,6 @@ public class MarkovSimZ2 extends MarkovSim{
         markovWorkers = new MarkovSimZ2Worker[lattice.N / chunkSize + 1];
         for (int i = 0; i < markovWorkers.length; i++) {
             markovWorkers[i] = new MarkovSimZ2Worker(this, IntStream.range(i * chunkSize, Math.min(lattice.N, (i+1) * chunkSize)).toArray());
-            markovWorkers[i].start();
         }
     }
 

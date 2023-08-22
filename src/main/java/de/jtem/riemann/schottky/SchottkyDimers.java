@@ -41,11 +41,11 @@ public class SchottkyDimers extends Schottky{
     }
 
     public Complex boundaryMap(Complex P) throws Exception {
-        // if (!isInFundamentalDomain(P)) {
-        //     throw new Exception("P needs to be in fundamental domain");
-        // }
-        // return amoebaMap.boundaryMap(P, acc);
-        return amoebaMap.boundaryCurve(P, acc);
+        if (!isInFundamentalDomain(P)) {
+            throw new Exception("P needs to be in fundamental domain");
+        }
+        return amoebaMap.boundaryMap(P, acc);
+        // return amoebaMap.boundaryCurve(P, acc);
     }
 
     public Complex aztecArcticCurve(Complex P) throws Exception {
@@ -77,11 +77,15 @@ public class SchottkyDimers extends Schottky{
                 points[currentIndex++] = getPointArrayOnRealLineExponential(getCenterOfCircle(i, false).re + getRadius(i), getCenterOfCircle(i, true).re - getRadius(i), numPointsPerSegment, new double[]{0., 0.});
             }
             else {
-                points[currentIndex++] = getPointArrayOnCircle(getCenterOfCircle(i), getRadius(i) * 1, numPointsPerSegment);
+                points[currentIndex++] = parametrizeInnerRealOval(i, numPointsPerSegment);
             }
         }
 
         return points;
+    }
+
+    public Complex[] parametrizeInnerRealOval(int generatorI, int numPoints) {
+        return getPointArrayOnCircle(getCenterOfCircle(generatorI), getRadius(generatorI), numPoints);
     }
 
     private double[] getAnglesInOrder() {

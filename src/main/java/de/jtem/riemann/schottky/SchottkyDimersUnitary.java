@@ -1,5 +1,6 @@
 package de.jtem.riemann.schottky;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -65,6 +66,34 @@ public class SchottkyDimersUnitary extends SchottkyDimers{
         }
         return res.toArray(Complex[]::new);
     }
+
+    @Override
+    public Complex[] parametrizeInnerRealOval(int generatorI, int numPoints) {
+        // Map to complex conjugated case, get the two circles of same size. Parametrize one of them and map back to unitary case.
+        Moebius gen = getGenerator(generatorI);
+        Moebius circleToReal = new Moebius(new Complex(0, -1), new Complex(1, 0), new Complex(1, 0), new Complex(0, -1));
+        Moebius inv = circleToReal.invert();
+        Moebius realGen = circleToReal.times(gen).times(inv);
+        // Moebius realGen = inv.times(gen).times(circleToReal);
+        Complex[] ev = realGen.getEigenValues();
+        Complex[] fp = realGen.getFixPoints();
+        Schottky schottky = new Schottky(new double[] {fp[0].re, fp[0].im, fp[1].re, fp[1].im, ev[0].re, 0});
+        Complex center = schottky.getCenterOfCircle(0);
+        double radius = schottky.getRadius(0);
+        if (center.im < 0) {
+            center.assignConjugate();
+        }
+        Complex circleToRealOfA1 = circleToReal.applyTo(getA(0));
+        Complex circleToRealOfA1Inv = circleToRealOfA1.invert().neg();
+        Complex cirlceToRealOfA2 = circleToReal.applyTo(getA(1));
+        Complex originalFixPoint = inv.applyTo(fp[1]);
+        Complex[] points = getPointArrayOnCircle(center, radius, numPoints);
+        return Arrays.stream(points).map((x) -> inv.applyTo(x)).toArray(Complex[]::new);
+    }
+
+    // public Complex[] parametrizeInnerRealOval(int generatorI, int numPoints) {
+    //     return getPointArrayOnCircle(getCenterOfCircle(generatorI), getRadius(generatorI) * 0.5, numPoints);
+    // }
 
     @Override
     public Complex[][] getAngles() {

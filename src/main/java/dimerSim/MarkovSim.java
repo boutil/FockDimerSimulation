@@ -128,6 +128,9 @@ public class MarkovSim implements Serializable{
     }
 
     public void simulate(int numSteps) {
+        for (MarkovSimWorker worker : markovWorkers) {
+            worker.start();
+        }
         int reportFreq = numSteps/10;
         long time = System.currentTimeMillis();
         for (int i = 0; i < numSteps; i++) {

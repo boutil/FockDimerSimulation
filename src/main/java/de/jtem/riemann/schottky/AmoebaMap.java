@@ -23,16 +23,19 @@ public class AmoebaMap implements Serializable{
     // measures errors for the elements in some way?
     final double[][] rho;
 
+    final double[] L1;
+
     public double[] boundaryResidues;
 
 
     AmoebaMap(SchottkyDimers schottky, Complex P0, double[] boundaryResidues) {
         this.schottky = schottky;
         numGenerators = schottky.numGenerators;
-        updateID = schottky.updateID;
         rho = new double[2][numGenerators];
         this.P0.assign(P0);
         this.boundaryResidues = boundaryResidues;
+        L1 = new double[numGenerators];
+        update();
     }
 
     AmoebaMap(SchottkyDimers schottky, Complex P0) {
@@ -99,16 +102,20 @@ public class AmoebaMap implements Serializable{
     
     void update() {
   
-      if (updateID == schottky.updateID) {
-        return;
-      }
-  
-      updateID = schottky.updateID;
-  
-      zOfRho.assign(Double.NaN);
-  
-      theta1 = schottky.theta1;
-      q1 = schottky.q1;
+        if (updateID == schottky.updateID) {
+          return;
+        }
+    
+        updateID = schottky.updateID;
+    
+        zOfRho.assign(Double.NaN);
+    
+        theta1 = schottky.theta1;
+        q1 = schottky.q1;
+
+        for (int n = 0; n < numGenerators; n++) {
+          L1[n] = L1(n);
+        }
       }
 
   /**
@@ -182,6 +189,39 @@ public class AmoebaMap implements Serializable{
     }
   }
 
+  final double L(SchottkyGroupElement sigma, int n) {
+
+    if (sigma.left == n) {
+      throw new RuntimeException("do not compute L for this n");
+    }
+
+    return L(sigma, schottky.fixpoint[n][0], schottky.fixpoint[n][1]);
+  }
+
+  final double L(SchottkyGroupElement sigma, Complex A, Complex B) {
+    return A.dist(B) / schottky.dist(sigma, A) / schottky.dist(sigma, B);
+    }
+
+  final double L1(int n) {
+
+    double max = 0;
+
+    for (int i = 0; i < numGenerators; i++) {
+
+      if (i != n) {
+
+        final double L1OfI = Math.max(L(schottky.generator[i], n),
+                                      L(schottky.generatorInv[i], n));
+
+        if (L1OfI > max) {
+          max = L1OfI;
+        }
+      }
+    }
+
+    return max;
+  }
+
   protected void cleanIncrements() {
       dH.assign(0);
       dG.assign(0);
@@ -235,26 +275,28 @@ public class AmoebaMap implements Serializable{
       if (element.updateID != updateID) {
         schottky.updateElement(element);
       }
-    // Not sure what to do here instead...
-      element.diff(B, A, d);
+
+      // Not sure what to do here instead...
+      // element.diff(B, A, d);
       double error = maxError - 1;
       if (element != schottky.id) {
-        error = (Math.abs(d.re) + Math.abs(d.im)) * rho(element);
+        //   error = (Math.abs(d.re) + Math.abs(d.im)) * rho(element);
+          error = L1[n] * element.norm * rho(element);
       }
 
-      if (error > maxError || Double.isNaN(error)) {
-        return;
-      }
-  
-      // This way we get genus 0.
-      // if (element.wordLength > 0) {
+      // if (error > maxError || Double.isNaN(error)) {
       //   return;
       // }
-
-      if (error * noe[element.wordLength] < acc || error < eps ) {
-        acc += acc / noe[element.wordLength] - error;
+  
+      // This way we get genus 0.
+      if (element.wordLength > 5) {
         return;
       }
+
+      // if (error * noe[element.wordLength] < acc || error < eps ) {
+      //   acc += acc / noe[element.wordLength] - error;
+      //   return;
+      // }
 
       cleanIncrements();
 
@@ -334,7 +376,7 @@ public class AmoebaMap implements Serializable{
     
         // calculates and returns xi1, xi2 and xiTilde.
         // (xi1.re, xi2.re) is then Amoeba Map.
-        this.noe = schottky.numOfElementsWithWordLength;
+        this.noe = schottky.numOfElementsOfCosetWithWordLength;
         
         this.A.assign(schottky.fixpoint[n][0]);
         this.B.assign(schottky.fixpoint[n][1]);
@@ -349,6 +391,8 @@ public class AmoebaMap implements Serializable{
         prepareRho(P);
 
         processSchottkyElement(schottky.id);
+
+        int nE = schottky.getNumElements();
 
         // xi1.assignLog();
         // xi2.assignLog();
@@ -383,17 +427,17 @@ public class AmoebaMap implements Serializable{
       public Complex boundaryMap(final Complex P, final double accuracy) {
         Complex[] diffs = getDifferentials(P, accuracy);
 
-        // Complex R1 = diffs[0].divide(diffs[2]);
-        // Complex R2 = diffs[1].divide(diffs[2]);
-        // // psi, eta are the aztec diamond coordinates.
-        // // if ((Math.abs(R1.im/R2.im) > 50 || Math.abs(R2.im/R1.im) > 50) && P.im > 0.01) {
-        // //   System.out.println(R1.im/R2.im);
-        // // }
-        // // double psi = - R2.re + R1.re * (R2.im/R1.im);
-        // // double eta = R1.re - R2.re * (R1.im/R2.im);
-        // double psi = -R2.invert().im / R1.divide(R2).im;
-        // double eta = R1.invert().im / R2.divide(R1).im;
-        // return new Complex(psi, -eta);
+        Complex R1 = diffs[0].divide(diffs[2]);
+        Complex R2 = diffs[1].divide(diffs[2]);
+        // psi, eta are the Boundary coordinates.
+        if ((Math.abs(R1.im) > 0.1 || Math.abs(R2.im) > 0.1)) {
+          System.out.println("P: " + P + ", R1.im " + R1.im + ", R2.im: " + R2.im);
+        }
+        // double psi = - R2.re + R1.re * (R2.im/R1.im);
+        // double eta = R1.re - R2.re * (R1.im/R2.im);
+        double psi = -R2.invert().im / R1.divide(R2).im;
+        double eta = R1.invert().im / R2.divide(R1).im;
+        return new Complex(psi, -eta);
 
         // probably should switch to a more numerically stable version here. Consider using BigDecimal.
 
@@ -407,14 +451,28 @@ public class AmoebaMap implements Serializable{
         // BigDecimal eta = y.divide(factor, MathContext.DECIMAL128);
         // return new Complex(psi.doubleValue(), -eta.doubleValue());
 
-        double factor = diffs[0].times(diffs[1].conjugate()).im;
-        double psi = diffs[0].times(diffs[2].conjugate()).im;
-        double eta = diffs[1].times(diffs[2].conjugate()).im;
+        // double factor = diffs[0].times(diffs[1].conjugate()).im;
+        // double psi = diffs[0].times(diffs[2].conjugate()).im;
+        // double eta = diffs[1].times(diffs[2].conjugate()).im;
 
         // // if (Math.abs(psi/factor - eta/factor) > 1) {
         // //   System.out.println(psi/factor + ", " + eta/factor);
         // // }
-        return new Complex(psi/factor, -eta/factor);
+        // return new Complex(psi/factor, -eta/factor);
+      }
+
+      public Complex boundaryCurve(final Complex P, final double accuracy) {
+        // non-singular parametrization of boundary curves using derivatives.
+        Complex[] diffsP = getDifferentials(P, accuracy);
+        Complex[] diffsPDer = {dXi1Der, dXi2Der, dXiBoundaryDer};
+        Complex eta = diffsPDer[2].times(diffsP[1]).minus(diffsPDer[1].times(diffsP[2]));
+        eta.assignDivide(diffsPDer[0].times(diffsP[1]).minus(diffsPDer[1].times(diffsP[0])));
+        Complex psi = diffsPDer[2].times(diffsP[0]).minus(diffsPDer[0].times(diffsP[2]));
+        psi.assignDivide(diffsPDer[1].times(diffsP[0]).minus(diffsPDer[0].times(diffsP[1])));
+        // if (Math.abs(psi.im) > 0.1 | Math.abs(eta.im) > 0.1) {
+        //   System.out.println("non-real");
+        // }
+        return new Complex(psi.re, eta.re);
       }
 
 }

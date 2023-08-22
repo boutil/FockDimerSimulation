@@ -72,11 +72,11 @@ public class AmoebaVis extends JPanel{
 
         // For now disable until I deal with both Hexagonal and Aztec case. Probably separate classes.
 
-        ComplexFn aztecMap = x -> schottkyDimers.boundaryMap(x);
-        Complex[][] aztecPoints = extractOvalPoints(aztecMap);
+        ComplexFn boundaryMap = x -> schottkyDimers.boundaryMap(x);
+        Complex[][] boundaryPoints = extractOvalPoints(boundaryMap);
 
         drawPoints(amoebaPoints, gAmoeba);
-        drawPoints(aztecPoints, gAztec);
+        drawPoints(boundaryPoints, gAztec);
 
 
         gAmoeba.dispose();
@@ -127,7 +127,7 @@ public class AmoebaVis extends JPanel{
         Complex[][] boundaryPoints = extractOvalPoints(boundaryMap);
         Color[] whiteColors = new Color[schottkyDimers.numAngles + 1 + schottkyDimers.getNumGenerators()];
         Arrays.fill(whiteColors, Color.WHITE);
-        g.setStroke(new BasicStroke(6));
+        g.setStroke(new BasicStroke(5));
         drawPoints(boundaryPoints, g, whiteColors, false);
     }
 

@@ -64,29 +64,29 @@ public class AmoebaMapHex extends AmoebaMap{
 
     private void simpleIncrements(final SchottkyGroupElement element) {
         for (Complex angle : schottky.getAngles()[0]) {
-            Complex diff = sP.minus(angle);
-            dH.assignPlus(diff.invert().times(dsP));
-            dH_Der.assignPlus(P.minus(element.applyTo(angle)).pow(2).invert());
+            Complex diff = P.minus(element.applyTo(angle));
+            dH.assignPlus(diff.invert());
+            dH_Der.assignPlus(diff.pow(2).invert());
             // H.assignTimes(diff);
             // H_corr.assignTimes(sP0.minus(angle));
             H.assignPlus(diff.log());
             H_corr.assignPlus(sP0.minus(angle).log());
         }
           for (Complex angle : schottky.getAngles()[1]) {
-            Complex diff = sP.minus(angle);
-            dG.assignPlus(diff.invert().times(dsP));
-            dG_Der.assignPlus(P.minus(element.applyTo(angle)).pow(2).invert());
+            Complex diff = P.minus(element.applyTo(angle));
+            dG.assignPlus(diff.invert());
+            dG_Der.assignPlus(diff.pow(2).invert());
             // G.assignTimes(diff);
             // G_corr.assignTimes(sP0.minus(angle));
             G.assignPlus(diff.log());
             G_corr.assignPlus(sP0.minus(angle).log());
         }
           for (Complex angle : schottky.getAngles()[2]) {
-            Complex diff = sP.minus(angle);
-            dH.assignMinus(diff.invert().times(dsP));
-            dG.assignMinus(diff.invert().times(dsP));
-            dH_Der.assignMinus(P.minus(element.applyTo(angle)).pow(2).invert());
-            dG_Der.assignMinus(P.minus(element.applyTo(angle)).pow(2).invert());
+            Complex diff = P.minus(element.applyTo(angle));
+            dH.assignMinus(diff.invert());
+            dG.assignMinus(diff.invert());
+            dH_Der.assignMinus(diff.pow(2).invert());
+            dG_Der.assignMinus(diff.pow(2).invert());
             // H.assignDivide(diff);
             // G.assignDivide(diff);
             // H_corr.assignDivide(sP0.minus(angle));
@@ -101,76 +101,82 @@ public class AmoebaMapHex extends AmoebaMap{
     private void doubleCoverIncrements(final SchottkyGroupElement element) {
         // sP0.assign(element.applyTo(P.invert().conjugate()));
         for (Complex angle : schottky.getAngles()[0]) {
-            Complex diff = sP.minus(angle);
-            dH.assignPlus(diff.invert().times(dsP));
-            dH_Der.assignMinus(P.minus(element.applyTo(angle)).pow(2).invert());
+            Complex diff = P.minus(element.applyTo(angle));
+            dH.assignPlus(diff.invert());
+            dH_Der.assignMinus(diff.pow(2).invert());
             // H.assignTimes(diff);
             // H_corr.assignTimes(sP0.minus(angle));
             H.assignPlus(diff.log());
-            H_corr.assignPlus(sP0.minus(angle).log());
-            dK.assignPlus(diff.invert().times(dsP).times(boundaryResidues[0]));
+            H_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
+            dK.assignPlus(diff.invert().times(boundaryResidues[0]));
+            dK_Der.assignMinus(diff.pow(2).invert().times(boundaryResidues[0]));
         }
-          for (Complex angle : schottky.getAngles()[1]) {
-            Complex diff = sP.minus(angle);
-            dG.assignPlus(diff.invert().times(dsP));
-            dG_Der.assignPlus(P.minus(element.applyTo(angle)).pow(2).invert());
+        for (Complex angle : schottky.getAngles()[1]) {
+            Complex diff = P.minus(element.applyTo(angle));
+            dG.assignPlus(diff.invert());
+            dG_Der.assignMinus(diff.pow(2).invert());
             // G.assignTimes(diff);
-            // G_corr.assignTimes(sP0.minus(angle));
+            // G_corr.assignTimes(P0.minus(element.applyTo(angle)));
             G.assignPlus(diff.log());
-            G_corr.assignPlus(sP0.minus(angle).log());
-            dK.assignPlus(diff.invert().times(dsP).times(boundaryResidues[1]));
+            G_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
+            dK.assignPlus(diff.invert().times(boundaryResidues[1]));
+            dK_Der.assignMinus(diff.pow(2).invert().times(boundaryResidues[1]));
         }
         for (Complex angle : schottky.getAngles()[2]) {
-            Complex diff = sP.minus(angle);
-            dH.assignMinus(diff.invert().times(dsP));
-            dG.assignMinus(diff.invert().times(dsP));
-            dH_Der.assignMinus(P.minus(element.applyTo(angle)).pow(2).invert());
-            dG_Der.assignMinus(P.minus(element.applyTo(angle)).pow(2).invert());
+            Complex diff = P.minus(element.applyTo(angle));
+            dH.assignMinus(diff.invert());
+            dG.assignMinus(diff.invert());
+            dH_Der.assignPlus(diff.pow(2).invert());
+            dG_Der.assignPlus(diff.pow(2).invert());
             // H.assignDivide(diff);
             // G.assignDivide(diff);
-            // H_corr.assignDivide(sP0.minus(angle));
-            // G_corr.assignDivide(sP0.minus(angle));
+            // H_corr.assignDivide(P0.minus(element.applyTo(angle)));
+            // G_corr.assignDivide(P0.minus(element.applyTo(angle)));
             H.assignMinus(diff.log());
-            H_corr.assignMinus(sP0.minus(angle).log());
+            H_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
             G.assignMinus(diff.log());
-            G_corr.assignMinus(sP0.minus(angle).log());
-            dK.assignPlus(diff.invert().times(dsP).times(boundaryResidues[2]));
+            G_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
+            dK.assignPlus(diff.invert().times(boundaryResidues[2]));
+            dK_Der.assignMinus(diff.pow(2).invert().times(boundaryResidues[2]));
         }
         for (Complex angle : schottky.getAngles()[3]) {
-            Complex diff = sP.minus(angle);
-            dH.assignPlus(diff.invert().times(dsP));
-            dH_Der.assignPlus(P.minus(element.applyTo(angle)).pow(2).invert());
+            Complex diff = P.minus(element.applyTo(angle));
+            dH.assignPlus(diff.invert());
+            dH_Der.assignMinus(diff.pow(2).invert());
             // H.assignTimes(diff);
-            // H_corr.assignTimes(sP0.minus(angle));
+            // H_corr.assignTimes(P0.minus(element.applyTo(angle)));
             H.assignPlus(diff.log());
-            H_corr.assignPlus(sP0.minus(angle).log());
-            dK.assignPlus(diff.invert().times(dsP).times(boundaryResidues[3]));
+            H_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
+            dK.assignPlus(diff.invert().times(boundaryResidues[3]));
+            dK_Der.assignMinus(diff.pow(2).invert().times(boundaryResidues[3]));
         }
         for (Complex angle : schottky.getAngles()[4]) {
-            Complex diff = sP.minus(angle);
-            dG.assignPlus(diff.invert().times(dsP));
-            dG_Der.assignPlus(P.minus(element.applyTo(angle)).pow(2).invert());
+            Complex diff = P.minus(element.applyTo(angle));
+            dG.assignPlus(diff.invert());
+            dG_Der.assignMinus(diff.pow(2).invert());
             // G.assignTimes(diff);
-            // G_corr.assignTimes(sP0.minus(angle));
+            // G_corr.assignTimes(P0.minus(element.applyTo(angle)));
             G.assignPlus(diff.log());
-            G_corr.assignPlus(sP0.minus(angle).log());
-            dK.assignPlus(diff.invert().times(dsP).times(boundaryResidues[4]));
+            G_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
+            dK.assignPlus(diff.invert().times(boundaryResidues[4]));
+            dK_Der.assignMinus(diff.pow(2).invert().times(boundaryResidues[4]));
         }
         for (Complex angle : schottky.getAngles()[5]) {
-            Complex diff = sP.minus(angle);
-            dH.assignMinus(diff.invert().times(dsP));
-            dG.assignMinus(diff.invert().times(dsP));
-            dH_Der.assignMinus(P.minus(element.applyTo(angle)).pow(2).invert());
-            dG_Der.assignMinus(P.minus(element.applyTo(angle)).pow(2).invert());
+            Complex diff = P.minus(element.applyTo(angle));
+            dH.assignMinus(diff.invert());
+            dG.assignMinus(diff.invert());
+            dH_Der.assignPlus(diff.pow(2).invert());
+            dG_Der.assignPlus(diff.pow(2).invert());
             // H.assignDivide(diff);
             // G.assignDivide(diff);
-            // H_corr.assignDivide(sP0.minus(angle));
-            // G_corr.assignDivide(sP0.minus(angle));
+            // H_corr.assignDivide(P0.minus(element.applyTo(angle)));
+            // G_corr.assignDivide(P0.minus(element.applyTo(angle)));
             H.assignMinus(diff.log());
-            H_corr.assignMinus(sP0.minus(angle).log());
+            H_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
             G.assignMinus(diff.log());
-            G_corr.assignMinus(sP0.minus(angle).log());
-            dK.assignPlus(diff.invert().times(dsP).times(boundaryResidues[5]));
+            G_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
+            dK.assignPlus(diff.invert().times(boundaryResidues[5]));
+            dK_Der.assignMinus(diff.pow(2).invert().times(boundaryResidues[5]));
         }
     }
 

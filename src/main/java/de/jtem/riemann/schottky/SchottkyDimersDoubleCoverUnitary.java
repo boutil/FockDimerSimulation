@@ -29,9 +29,11 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
         abelMapAtZero = new ComplexVector(1, abelMap0.getRe(0) + abelMap0.getRe(1),  abelMap0.getIm(0) + abelMap0.getIm(1));
 
         // It is assumed that the points in data and angles are doubled in z -> -z.
-        adjustAngles();
+        // adjustAngles();
         checkMCurveProp();
         checkSlopeAtWinding();
+
+        // acc = 1E-12;
     }
 
     public SchottkyDimersDoubleCoverUnitary(SchottkyData data, double[][] angles) {
@@ -101,6 +103,7 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
         botInfo.angle = -Math.PI;
         double minProj = 0.1;
         while(amoebaMap.dXiBoundary.abs() > eps && currentStep++ < maxSteps) {
+            // System.out.println(amoebaMap.dXiBoundary.abs());
             for (int i = 0; i < angleBdryDers.length; i++) {
                 for (int j = 0; j < angleBdryDers[i].length; j++) {
                     // project the derivative onto -dXiBoundary to see by how much to move.

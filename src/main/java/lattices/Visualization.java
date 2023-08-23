@@ -41,8 +41,20 @@ public class Visualization {
         setVis(new AmoebaVis(schottkyDimers));
     }
 
+    public Visualization(SchottkyDimers schottkyDimers) {
+        this.amoebaVis = new AmoebaVis(schottkyDimers);
+    }
+
     public Visualization(MarkovSim sim) {
         this(sim, null);
+    }
+
+    public void setSim(MarkovSim sim) {
+        this.sim = sim;
+        if (sim.getClass().isAssignableFrom(MarkovSimZ2.class)) {
+            gridIsZ2 = true;
+        }
+        setVis(amoebaVis);
     }
 
     private void setVis(AmoebaVis vis) {

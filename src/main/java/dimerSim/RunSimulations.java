@@ -10,20 +10,31 @@ public class RunSimulations {
 
     public static void main(String[] args) {
         // Create SchottkyDimers
-        String baseFolder = "experimentExport/";
-        String experimentName = "";
+        String baseFolder = "experimentExport/Hexagon/";
 
-        String folderName = baseFolder + experimentName;
-
+        // String experimentName = "01_starfish/";
+        // int size = 300;
+        // int numSteps = 500000;
+        // int interval = 0;
+        // int numTimes = 1;
+        
+        // String experimentName = "02_largeBubble/";
+        // int size = 300;
+        // int numSteps = 500000;
+        // int interval = 0;
+        // int numTimes = 10;
+        
+        String experimentName = "03_convergenceToUniform/";
         int size = 300;
-        int numSteps = 100;
-        int interval = 0;
+        int numSteps = 500000;
+        int interval = 5000;
         int numTimes = 1;
-
-        SchottkyDimers schottkyDimers = createSchottky();
-        SimulationManager man = new SimulationManager(schottkyDimers, folderName);
-
-
+        
+        
+        String folderName = baseFolder + experimentName;
+        
+        // SchottkyDimers schottkyDimers = createSchottky();
+        // SimulationManager man = new SimulationManager(schottkyDimers, folderName);
 
         continueSimulation(folderName, size, numSteps, interval, numTimes);
     }
@@ -44,7 +55,7 @@ public class RunSimulations {
         double[][] angles = {{0}, {Math.PI / 3}, {2 * Math.PI / 3}};
 
         Complex B = A.invert().conjugate();
-        double[] schottkyParams = {A.re, A.im, B.re, B.im, 0.0005, 0};
+        double[] schottkyParams = {A.re, A.im, B.re, B.im, 0.0000000001, 0};
 
         double[] sizes = {1, 1, 1};
         // double[] sizes = {1, 0.8, 0.6};

@@ -37,8 +37,11 @@ public class MarkovSimZ2 extends MarkovSim{
         long seed = 42; // for reproducability
         rand = new Random(seed);
         maxParity = 2;
-        // for clunky parallelization purposes:
-        int numThreads = 20;
+
+    }
+
+    @Override
+    protected void createWorkers(int numThreads) {
         int chunkSize = lattice.N / numThreads;
         markovWorkers = new MarkovSimZ2Worker[lattice.N / chunkSize + 1];
         for (int i = 0; i < markovWorkers.length; i++) {

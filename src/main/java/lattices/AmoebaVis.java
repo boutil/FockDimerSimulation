@@ -129,6 +129,7 @@ public class AmoebaVis extends JPanel{
                 boundaryMap = x -> getHexagonInTiltedCoordinates(x);
             }
             boundaryPoints = extractOvalPoints(boundaryMap);
+            boundaryPointsComputed = true;
         }
         Color[] whiteColors = new Color[schottkyDimers.numAngles + 1 + schottkyDimers.getNumGenerators()];
         Arrays.fill(whiteColors, Color.WHITE);

@@ -25,6 +25,8 @@ public class MarkovSim implements Serializable{
 
     public int maxParity;
 
+    int numThreads = 8;
+
     List<Index> upFlippableIndices;
     List<Index> downFlippableIndices;
     
@@ -55,6 +57,10 @@ public class MarkovSim implements Serializable{
             return;
         }
         lattice = newLattice;
+    }
+
+    protected void createWorkers(int numThreads) {
+
     }
 
     protected void markovStep(int parity) {
@@ -128,6 +134,7 @@ public class MarkovSim implements Serializable{
     }
 
     public void simulate(int numSteps) {
+        createWorkers(numThreads);
         for (MarkovSimWorker worker : markovWorkers) {
             worker.start();
         }

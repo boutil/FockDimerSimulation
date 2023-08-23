@@ -20,6 +20,8 @@ import de.jtem.riemann.schottky.SchottkyDimersDoubleCoverUnitary;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
 import de.jtem.riemann.schottky.SchottkyDimersUnitary;
 import lattices.HexLattice;
+import lattices.HexLatticeFock;
+import lattices.Z2LatticeFock;
 import lattices.Lattice;
 import lattices.Visualization;
 import lattices.Z2Lattice;
@@ -73,7 +75,7 @@ public class SimulationManager {
     }
 
     private void init() {
-        vis = new Visualization(sim, schottkyDimers);
+        vis = new Visualization(schottkyDimers);
         hexagonUnifPaths.put(300, Hexagon300Unif);
         hexagonUnifPaths.put(500, Hexagon500Unif);
 
@@ -87,7 +89,8 @@ public class SimulationManager {
 
     private MarkovSim createLattice(int size) {
         // Need a more versatile way of constructing lattices here.
-        return loadSim(hexagonUnifPaths.get(size));
+        // return loadSim(hexagonUnifPaths.get(size));
+        return new MarkovSimHex(new HexLattice(size, size));
     }
 
     public void simulateAndSave(int numSteps, int size) {
@@ -97,23 +100,24 @@ public class SimulationManager {
         File simFolder = new File(sizeFolder, dtf.format(now));
         File evoFolder = new File(sizeFolder, "evolutionPics");
         // create new folder for 
+        sim = loadNewestSim(sizeFolder, size);
+        vis.setSim(sim);
+        
         simFolder.mkdirs();
         evoFolder.mkdirs();
 
-        sim = loadNewestSim(sizeFolder, size);
-        if(!saveEvolutionPics) {
-            sim.simulate(numSteps);
-        } else {
-            int numFilesInEvo = evoFolder.listFiles().length;
-            for (int i = 0; i < numSteps/savePictureInterval; i++) {
-                sim.simulate(savePictureInterval);
-                String filePath = new File(evoFolder, (i + numFilesInEvo) + ".png").getPath();
-                try {
-                    vis.saveDimerConfPic(filePath, true);
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+        int numTimes = saveEvolutionPics ? numSteps/savePictureInterval : 1;
+        int simPerStep = saveEvolutionPics ? savePictureInterval : numSteps;
+        int numFilesInEvo = evoFolder.listFiles().length;
+        for (int i = 0; i < numTimes; i++) {
+            System.out.println("Starting run " + i);
+            sim.simulate(simPerStep);
+            String filePath = new File(evoFolder, (i + numFilesInEvo) + ".png").getPath();
+            try {
+                vis.saveDimerConfPic(filePath, true);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
         }
         saveSim(simFolder);
@@ -135,14 +139,16 @@ public class SimulationManager {
     
     
     private MarkovSim loadNewestSim(File sizeDir, int size) {
-        if(!sizeDir.mkdirs()) {
+        if(!sizeDir.exists()) {
+            sizeDir.mkdirs();
+            return createLattice(size);
+        } else {
             // directory exists so load newest sim.
             List<File> simDirs = Arrays.asList(sizeDir.listFiles());
             Collections.sort(simDirs);
-            File newest = simDirs.get(simDirs.size());
-            return loadSim(newest.getPath() + "sim.ser");   
+            File newest = simDirs.get(simDirs.size() - 2);
+            return loadSim(newest.getPath() + "/sim.ser");   
         }
-        return createLattice(size);
     }
 
     
@@ -206,13 +212,13 @@ public class SimulationManager {
         try {
             ObjectInputStream in;
             in = new ObjectInputStream(new FileInputStream(fileName));
-            Lattice l = (Lattice) in.readObject();
+            Object l = in.readObject();
             byte[][] faceStates = (byte[][]) in.readObject();
             boolean[][] insideBoundary = (boolean[][]) in.readObject();
-            if (l.getClass().isAssignableFrom(HexLattice.class)) {
+            if (l.getClass().isAssignableFrom(HexLatticeFock.class)) {
                 HexLattice lattice = (HexLattice) l;
                 sim = new MarkovSimHex(lattice, faceStates, insideBoundary);
-            } else if (l.getClass().isAssignableFrom(Z2Lattice.class)) {
+            } else if (l.getClass().isAssignableFrom(Z2LatticeFock.class)) {
                 Z2Lattice lattice = (Z2Lattice) l;
                 sim = new MarkovSimZ2(lattice, faceStates, insideBoundary);
             }

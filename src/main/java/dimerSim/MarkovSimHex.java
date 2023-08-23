@@ -39,10 +39,11 @@ public class MarkovSimHex extends MarkovSim{
         long seed = 42; // for reproducability
         rand = new Random();
         maxParity = 3;
-        // for clunky parallelization purposes:
-        int numThreads = 4;
+    }
+    
+    @Override
+    protected void createWorkers(int numThreads) {
         int chunkSize = lattice.N / numThreads;
-
         markovWorkers = new MarkovSimHexWorker[lattice.N / chunkSize + 1];
         for (int i = 0; i < markovWorkers.length; i++) {
             markovWorkers[i] = new MarkovSimHexWorker(this, IntStream.range(i * chunkSize, Math.min(lattice.N, (i+1) * chunkSize)).toArray());

@@ -249,7 +249,7 @@ public class Schottky
               // check that it is in the target circle
               if (center[n][i].dist(innerCenter[n][i][k]) + innerRadius[n][i][k]
                   > radius[n]) {
-                System.out.println("computeInnerCircles: fail target");
+                // System.out.println("computeInnerCircles: fail target");
               }
               k++;
             }

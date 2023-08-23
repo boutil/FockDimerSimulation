@@ -29,12 +29,13 @@ public class SchottkyDimersDoubleCoverUnitary extends SchottkyDimersUnitary{
         abelMapAtZero = new ComplexVector(1, abelMap0.getRe(0) + abelMap0.getRe(1),  abelMap0.getIm(0) + abelMap0.getIm(1));
 
         // It is assumed that the points in data and angles are doubled in z -> -z.
-        // adjustAngles();
+        adjustAngles();
         checkMCurveProp();
         checkSlopeAtWinding();
 
         // acc = 1E-12;
     }
+
 
     public SchottkyDimersDoubleCoverUnitary(SchottkyData data, double[][] angles) {
         this(data, angles, new double[] {1, -1, 1, -1, 1, -1});

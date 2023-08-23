@@ -28,6 +28,9 @@ public class AmoebaVis extends JPanel{
     Color[] innerOvalColors = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW};
     Color[] ovalColors;
 
+    boolean boundaryPointsComputed = false;
+    Complex[][] boundaryPoints;
+
     boolean isZ2Grid;
 
     private Complex xCoord = new Complex(1, 0);
@@ -118,13 +121,15 @@ public class AmoebaVis extends JPanel{
     public void drawBoundaryCurves(Graphics2D g, int imageWidth, int imageHeight) {
         this.imageWidth = imageWidth;
         this.imageHeight = imageHeight;
-        ComplexFn boundaryMap;
-        if (isZ2Grid) {
-            boundaryMap = x -> getAztecInTiltedCoords(x);
-        } else {
-            boundaryMap = x -> getHexagonInTiltedCoordinates(x);
+        if(!boundaryPointsComputed){
+            ComplexFn boundaryMap;
+            if (isZ2Grid) {
+                boundaryMap = x -> getAztecInTiltedCoords(x);
+            } else {
+                boundaryMap = x -> getHexagonInTiltedCoordinates(x);
+            }
+            boundaryPoints = extractOvalPoints(boundaryMap);
         }
-        Complex[][] boundaryPoints = extractOvalPoints(boundaryMap);
         Color[] whiteColors = new Color[schottkyDimers.numAngles + 1 + schottkyDimers.getNumGenerators()];
         Arrays.fill(whiteColors, Color.WHITE);
         g.setStroke(new BasicStroke(5));

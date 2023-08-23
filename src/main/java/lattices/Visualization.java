@@ -29,14 +29,32 @@ public class Visualization {
 
     public MarkovSim sim;
     private boolean gridIsZ2;
+    private AmoebaVis amoebaVis;
+    private GridPanel gridPanel;
 
 
-    public Visualization(MarkovSim sim) {
+    public Visualization(MarkovSim sim, SchottkyDimers schottkyDimers) {
         this.sim = sim;
         if (sim.getClass().isAssignableFrom(MarkovSimZ2.class)) {
             gridIsZ2 = true;
         }
+        setVis(new AmoebaVis(schottkyDimers));
     }
+
+    public Visualization(MarkovSim sim) {
+        this(sim, null);
+    }
+
+    private void setVis(AmoebaVis vis) {
+        amoebaVis = vis;
+        if (gridIsZ2) {
+            gridPanel = new GridPanelZ2(sim, amoebaVis);
+        } else {
+            gridPanel = new GridPanelHex(sim, amoebaVis);
+        }
+    }
+
+
 
     public void visualizeWeights() {
         // Func3D func = new Func3D((x, y) -> sim.lattice.getUnflippedFaceWeight(getIndices(x, y, 2)[0], getIndices(x, y, 2)[1]));
@@ -174,38 +192,31 @@ public class Visualization {
     }
 
     public void saveDimerConfPic(String filePath) throws IOException {
-        GridPanel p;
-        if (gridIsZ2) {
-            p = new GridPanelZ2(sim);
-        } else {
-            p = new GridPanelHex(sim);
-        }
-        p.updatePaint();
-        p.save(filePath);
+        saveDimerConfPic(filePath, false);
+    }
+
+    public void saveDimerConfPic(String filePath, boolean drawCurve) throws IOException {
+        gridPanel.drawBoundaryCurves = drawCurve;
+        gridPanel.updatePaint();
+        gridPanel.save(filePath);
     }
 
     public void saveDimerConfPic(SchottkyDimers dimers, String filePath) throws IOException {
-        AmoebaVis vis = new AmoebaVis(dimers);
-        GridPanel p;
-        if (gridIsZ2) {
-            p = new GridPanelZ2(sim, vis);
-        } else {
-            p = new GridPanelHex(sim, vis);
-        }
-        p.updatePaint();
-        p.save(filePath);
+        setVis(new AmoebaVis(dimers));
+        gridPanel.updatePaint();
+        gridPanel.save(filePath);
     }
 
     public void saveAmoebaPic(SchottkyDimers dimers, String filePath) throws IOException {
-        AmoebaVis p = new AmoebaVis(dimers);
-        p.updatePaint();
-        p.saveAmoeba(filePath);
+        setVis(new AmoebaVis(dimers));
+        amoebaVis.updatePaint();
+        amoebaVis.saveAmoeba(filePath);
     }
 
     public void saveAztecPic(SchottkyDimers dimers, String filePath) throws IOException {
-        AmoebaVis p = new AmoebaVis(dimers);
-        p.updatePaint();
-        p.saveAztec(filePath);
+        setVis(new AmoebaVis(dimers));
+        amoebaVis.updatePaint();
+        amoebaVis.saveAztec(filePath);
     }
 
     public void saveWeightsPic(String filepPath) throws IOException {

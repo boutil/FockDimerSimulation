@@ -54,10 +54,14 @@ public class SimulationManager {
 
 
     Map<Integer, String> hexagonUnifPaths = new HashMap<Integer, String>();
+    Map<Integer, String> quadUnifPaths = new HashMap<Integer, String>();
 
 
-    private final String Hexagon300Unif = "";
-    private final String Hexagon500Unif = "";
+    private final String Hexagon300Unif = "experimentExport/Hexagon/hexagon300UniformConverged.ser";
+    private final String Hexagon500Unif = "experimentExport/Hexagon/hexagon500UniformConverged.ser";
+    
+    private final String Quad501Unif = "experimentExport/Aztec/AztecDiamond501UniformConverged.ser";
+    private final String Quad301Unif = "experimentExport/Aztec/AztecDiamond301UniformConverged.ser";
 
 
     public SimulationManager(String folder) {
@@ -78,7 +82,9 @@ public class SimulationManager {
         vis = new Visualization(schottkyDimers);
         hexagonUnifPaths.put(300, Hexagon300Unif);
         hexagonUnifPaths.put(500, Hexagon500Unif);
-
+        
+        quadUnifPaths.put(501, Quad501Unif);
+        quadUnifPaths.put(301, Quad301Unif);
     }
 
     public void setSavePictureInterval(int interval) {
@@ -89,8 +95,28 @@ public class SimulationManager {
 
     private MarkovSim createLattice(int size) {
         // Need a more versatile way of constructing lattices here.
-        // return loadSim(hexagonUnifPaths.get(size));
-        return new MarkovSimHex(new HexLattice(size, size));
+        if(schottkyDimers.getClass().isAssignableFrom(SchottkyDimersDoubleCoverUnitary.class)) {
+            MarkovSim sim;
+            HexLatticeFock lattice = new HexLatticeFock(schottkyDimers, size, size);
+            if(hexagonUnifPaths.containsKey(size)) {
+                sim = loadSim(hexagonUnifPaths.get(size));
+                sim.setLattice(lattice);
+            } else {
+                sim = new MarkovSimHex(lattice);
+            }
+            return sim;
+        } else if (schottkyDimers.getClass().isAssignableFrom(SchottkyDimersQuad.class)) {
+            MarkovSim sim;
+            Z2LatticeFock lattice = new Z2LatticeFock((SchottkyDimersQuad)schottkyDimers, size, size);
+            if(quadUnifPaths.containsKey(size)) {
+                sim = loadSim(quadUnifPaths.get(size));
+                sim.setLattice(lattice);
+            } else {
+                sim = new MarkovSimZ2(lattice, false);
+            }
+            return sim;
+        }
+        return null;
     }
 
     public void simulateAndSave(int numSteps, int size) {
@@ -101,10 +127,11 @@ public class SimulationManager {
         File evoFolder = new File(sizeFolder, "evolutionPics");
         // create new folder for 
         sim = loadNewestSim(sizeFolder, size);
+        sim.numThreads = 8;
         vis.setSim(sim);
         
-        simFolder.mkdirs();
         evoFolder.mkdirs();
+        simFolder.mkdirs();
 
         int numTimes = saveEvolutionPics ? numSteps/savePictureInterval : 1;
         int simPerStep = saveEvolutionPics ? savePictureInterval : numSteps;
@@ -112,7 +139,7 @@ public class SimulationManager {
         for (int i = 0; i < numTimes; i++) {
             System.out.println("Starting run " + i);
             sim.simulate(simPerStep);
-            String filePath = new File(evoFolder, (i + numFilesInEvo) + ".png").getPath();
+            String filePath = new File(evoFolder, String.format("%06d", i + numFilesInEvo) + ".png").getPath();
             try {
                 vis.saveDimerConfPic(filePath, true);
             } catch (IOException e) {

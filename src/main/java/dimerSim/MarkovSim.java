@@ -25,7 +25,7 @@ public class MarkovSim implements Serializable{
 
     public int maxParity;
 
-    int numThreads = 8;
+    public int numThreads = 8;
 
     List<Index> upFlippableIndices;
     List<Index> downFlippableIndices;

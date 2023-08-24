@@ -8,7 +8,8 @@ import java.awt.image.BufferedImage;
 // MyPanel extends JPanel, which will eventually be placed in a JFrame
 public class GridPanelZ2 extends GridPanel {
 
-    private Color[] dimerColors = {Color.BLUE, Color.RED, Color.GREEN, Color.YELLOW};
+    // private Color[] dimerColors = {Color.BLUE, Color.RED, Color.GREEN, Color.YELLOW};
+    private Color[] dimerColors = {new Color(6, 57, 112), new Color(135,62,35), new Color(118,181,197), new Color(255,200,87)};
     public int scaling = 4;
 
     public GridPanelZ2(MarkovSim sim) {

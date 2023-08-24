@@ -13,7 +13,10 @@ public class AmoebaMapHex extends AmoebaMap{
         super(schottky, P0);
 
         isDoubleCover = (schottky.getAngles().length == 6);
-        angleBoundaryDerivatives = new Complex[3][schottky.getAngles()[0].length];
+        angleBoundaryDerivatives = new Complex[3][];
+        for (int i = 0; i < angleBoundaryDerivatives.length; i++) {
+            angleBoundaryDerivatives[i] = new Complex[schottky.getAngles()[i].length];
+        }
     }
 
     AmoebaMapHex(SchottkyDimers schottky, Complex P0, double[] boundaryResidues) {

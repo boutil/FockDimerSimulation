@@ -94,9 +94,9 @@ public class AmoebaVis extends JPanel{
     private Complex getAztecInTiltedCoords(Complex point) throws Exception{
         // Apply aztec map from paper and shrink and rotate it.
         Complex aztecMap = schottkyDimers.boundaryMap(point);
-        if (Math.abs(aztecMap.re) > 1 || Math.abs(aztecMap.im) > 1 ) {
-            System.out.println(aztecMap);
-        }
+        // if (Math.abs(aztecMap.re) > 1 || Math.abs(aztecMap.im) > 1 ) {
+        //     System.out.println(aztecMap);
+        // }
         aztecMap.assignTimes(new Complex(Math.cos(Math.PI/4), Math.sin(Math.PI/4)));
         // aztecMap.assignTimes(new Complex(Math.cos(-Math.PI/4), Math.sin(-Math.PI/4)));
         aztecMap.assignDivide(Math.sqrt(2) * 2);

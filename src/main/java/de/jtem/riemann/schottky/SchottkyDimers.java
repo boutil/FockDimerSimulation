@@ -113,9 +113,9 @@ public class SchottkyDimers extends Schottky{
     public Complex[] getPointArrayOnRealLine(double a, double b, int numPoints, double[] excludingInterval){
         List<Complex> res = new LinkedList<Complex>();
         // take values from equidistant sampling on circle C(0, 1) and mapping [1, i, -1] via Moebius to [b, infty, a].
-        double imPart = 0.00001;
-        double maxRePart = 5;
-        double minRePart = -5;
+        double imPart = 0;
+        double maxRePart = 100;
+        double minRePart = -100;
         if (b < a) {
             double rotationAngle = Math.PI / numPoints;
             double theta = 0.0;

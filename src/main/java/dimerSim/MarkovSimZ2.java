@@ -14,6 +14,7 @@ public class MarkovSimZ2 extends MarkovSim{
     private byte ns = 0b1010;
     private byte we = 0b0101;
 
+
     public MarkovSimZ2(Z2Lattice lattice, boolean flat) {
         super(lattice);
 
@@ -38,6 +39,8 @@ public class MarkovSimZ2 extends MarkovSim{
         rand = new Random(seed);
         maxParity = 2;
 
+        gpuSim = new GPUSim(lattice, faceStates, insideBoundary);
+        // gpuSim.simulate(1000);
     }
 
     @Override
@@ -207,14 +210,14 @@ public class MarkovSimZ2 extends MarkovSim{
     }
 
     public void initializeAztecDiamond() {
-        // We assume N = M both odd. Then builds an N-2 x N-2 aztec diamond on the inside.
+        // We assume N = M both even. Then builds an N-2 x N-2 aztec diamond on the inside.
         faceStates = new byte[lattice.N][lattice.M];
-        Index diamondCenter = new Index(lattice.N / 2, lattice.N / 2);
-        Index bottomIndex = new Index(lattice.N / 2, 1);
+        Index diamondCenter = new Index(lattice.N / 2 - 1, lattice.N / 2 - 1);
+        Index bottomIndex = new Index(lattice.N / 2 - 1, 1);
         for (int i = 0; i < lattice.N; i++) {
             for (int j = 0; j < lattice.M; j++) {
                 // Boundary of the lattice.
-                insideBoundary[i][j] = diamondCenter.l1Dist(i, j) <= lattice.N / 2 - 1;
+                insideBoundary[i][j] = diamondCenter.l1Dist(i, j) <= lattice.N / 2 - 2;
                 if (j < diamondCenter.y) {
                     if (bottomIndex.minus(i, j).isEven()) {
                         faceStates[i][j] = 0b0010;

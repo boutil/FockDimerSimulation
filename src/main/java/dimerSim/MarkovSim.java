@@ -33,6 +33,8 @@ public class MarkovSim implements Serializable{
     // Only makes sense to not set to 1 in case of uniform 1 face weights.
     public double acceptanceRatioConstant = 0.9999;
 
+    GPUSim gpuSim;
+
     public MarkovSim(Lattice lattice) {
         this.lattice = lattice;
         // initialize height function in a sensible way
@@ -41,7 +43,7 @@ public class MarkovSim implements Serializable{
     }
 
     public MarkovSim(Lattice lattice, byte[][] faceStates, boolean[][] insideBoundary) {
-        this.lattice = lattice;
+        this(lattice);
         this.faceStates = faceStates;
         this.insideBoundary = insideBoundary;
     }
@@ -153,6 +155,10 @@ public class MarkovSim implements Serializable{
         for (MarkovSimWorker worker : markovWorkers) {
             worker.stopRunning();
         }
+    }
+
+    public void simulateGPU(int numSteps) {
+        gpuSim.simulate(numSteps);
     }
 
     public Integer getHeight(int i, int j) {

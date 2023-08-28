@@ -40,17 +40,24 @@ public class RunSimulations {
         // int numTimes = 1;
         
         
-        // String experimentName = "Aztec/01_LargeHoleG1/";
-        // int size = 501;
-        // int numSteps = 5000000;
-        // int interval = 250000;
-        // int numTimes = 1;
-        
-        String experimentName = "Aztec/02_LargeHole2AnglesElongated/";
-        int size = 100;
-        int numSteps = 100;
+        String experimentName = "Aztec/01_LargeHoleG1/";
+        int size = 1000;
+        int numSteps = (int) 1e5;
         int interval = 0;
         int numTimes = 1;
+        
+        // String experimentName = "Aztec/02_LargeHole2AnglesElongated/";
+        // int size = 300;
+        // int numSteps = (int)1e5;
+        // int interval = 0;
+        // int numTimes = 1;
+        
+        // String experimentName = "Aztec/03_uniform/";
+        // int size = 1000;
+        // int numSteps = (int) 1e5;
+        // int interval = 0;
+        // int numTimes = 1;
+
         
         String folderName = baseFolder + experimentName;
         
@@ -98,7 +105,7 @@ public class RunSimulations {
 
     public static SchottkyDimers createSchottkyQuad(){
         // G1LargeHole
-        double[] schottkyParamsCol = {0.9, 1, 0.9, -1, 0.15, 0};
+        double[] schottkyParamsCol = {0.9, 1, 0.9, -1, 0.000000000005, 0};
         double[][] angles = {{-2.4}, {-0.4}, {0.4}, {2.4}};
 
         // G1LargeHole2Angles

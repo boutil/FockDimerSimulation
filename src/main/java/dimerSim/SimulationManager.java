@@ -138,7 +138,13 @@ public class SimulationManager {
         int numFilesInEvo = evoFolder.listFiles().length;
         for (int i = 0; i < numTimes; i++) {
             System.out.println("Starting run " + i);
-            sim.simulate(simPerStep);
+            long beforeSimTime = System.nanoTime();
+            // sim.simulate(simPerStep);
+            // System.out.println("CPU run took: " + (System.nanoTime() - beforeSimTime) / 1e6 + " ms.");
+            beforeSimTime = System.nanoTime();
+            sim.simulateGPU(simPerStep);
+            System.out.println("GPU run took: " + (System.nanoTime() - beforeSimTime) / 1e6 + " ms.");
+
             String filePath = new File(evoFolder, String.format("%06d", i + numFilesInEvo) + ".png").getPath();
             try {
                 vis.saveDimerConfPic(filePath, true);

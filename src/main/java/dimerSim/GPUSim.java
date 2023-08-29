@@ -2,6 +2,8 @@ package dimerSim;
 
 import java.util.Random;
 
+import org.jzy3d.plot3d.pipelines.NotImplementedException;
+
 import static jcuda.jcurand.JCurand.curandCreateGenerator;
 import static jcuda.jcurand.JCurand.curandDestroyGenerator;
 import static jcuda.jcurand.JCurand.curandGenerateUniform;
@@ -36,22 +38,11 @@ import jcuda.driver.CUdevice;
 import jcuda.driver.CUdeviceptr;
 import jcuda.jcurand.JCurand;
 import jcuda.runtime.JCuda;
+import lattices.Lattice;
 import jcuda.jcurand.curandGenerator;
 
-
-import lattices.Lattice;
-
 public class GPUSim {
-    // class that will run simulation steps on CUDA compatible GPU.
-
-
-
-    // For compiling shader in Windows: In developer terminal:
-    // "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64 
-    // nvcc -ptx JCudaReductionKernel.cu -o JCudaReductionKernel.ptx
-
-
-
+    
     private Lattice lattice;
 
     private byte[][] faceStates;
@@ -62,129 +53,97 @@ public class GPUSim {
 
     // Cuda
     int N;
-    int evenSize;
-    int oddSize;
+    int arrSize;
+    int maxParity;
 
-    private CUdeviceptr faceWeightsEvenPointer;
-    private CUdeviceptr faceStatesEvenPointer;
-    private CUdeviceptr insideBoundaryEvenPointer;
-    private CUdeviceptr faceWeightsOddPointer;
-    private CUdeviceptr faceStatesOddPointer;
-    private CUdeviceptr insideBoundaryOddPointer;
+    public String ptxFileName;
+
+    protected CUdeviceptr[] faceWeightPointers;
+    protected CUdeviceptr[] faceStatePointers;
+    protected CUdeviceptr[] insideBoundaryPointers;
  
     private CUcontext context;
     private CUmodule walkModule;
  
-    private CUfunction flipFacesF;
-    private CUfunction consolidateFacesF;
+    protected CUfunction flipFacesF;
+    protected CUfunction consolidateFacesF;
  
-    private Pointer kernelParametersFlipEven;
-    private Pointer kernelParametersFlipOdd;
+    protected Pointer[] kernelParametersFlip;
+    protected Pointer[] kernelParametersCons;
      
-    private Pointer kernelParametersConsEven;
-    private Pointer kernelParametersConsOdd;
- 
-    private Pointer deviceRandArr;
+    protected Pointer deviceRandArr;
     private curandGenerator generator;
-    
-    
+
+    // We assume a maxParity x maxParity grid.
+
     public GPUSim(Lattice lattice, byte[][] faceStates, boolean[][] insideBoundary) {
         this.lattice = lattice;
         this.faceStates = faceStates;
         this.insideBoundary = insideBoundary;
         rand = new Random();
+        N = lattice.N;
     }
+
+
+    // For compiling shader in Windows: In developer terminal:
+    // "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+    // nvcc -ptx JCudaQuadWalkKernel.cu -o JCudaQuadWalkKernel.ptx
 
 
     public void simulate(int steps) {
-        initCuda();
+        try {
 
-        int[] intArrToShow = new int[evenSize];
-        float[] floatArrToShow = new float[evenSize];
-        
-        cudaMemcpy(Pointer.to(intArrToShow), faceStatesEvenPointer, evenSize * Sizeof.INT, cudaMemcpyDeviceToHost);
-        intArrToShow = new int[evenSize];
-        
-        int blockSizeX = 256;
-        int gridSizeX = (int)Math.ceil((double)evenSize / blockSizeX);
-        
-
-        int reportFreq = steps/10;
-        long time = System.currentTimeMillis();
-        for (int i = 0; i < steps; i++) {
-            if ((i % reportFreq == 0)) {
-                double timeForAvg1000Steps = Math.max(((double)(System.currentTimeMillis() - time)) * 1000 / reportFreq, 1000);
-                System.out.println("Done with " + i + " steps." + " Average time per 1000 markovSteps: " + (int) timeForAvg1000Steps + ". Time left: " + (int)((steps - i) * timeForAvg1000Steps / 1000000) + " seconds.");
-                time = System.currentTimeMillis();
-            }
-
-            int parity = rand.nextInt(2);
-            curandSetGeneratorOffset(generator, ((long) i * (long) evenSize) % Long.MAX_VALUE);
-            if (parity == 0) {
-                curandGenerateUniform(generator, deviceRandArr, evenSize);
+            initCuda();
+            
+            float[] floatArrToShow = new float[arrSize];
+            
+            int blockSizeX = 256;
+            int gridSizeX = (int)Math.ceil((double)arrSize / blockSizeX);
+            
+            
+            int reportFreq = steps/10;
+            long time = System.currentTimeMillis();
+            for (int i = 0; i < steps; i++) {
+                if ((i % reportFreq == 0)) {
+                    double timeForAvg1000Steps = Math.max(((double)(System.currentTimeMillis() - time)) * 1000 / reportFreq, 1000);
+                    System.out.println("Done with " + i + " steps." + " Average time per 1000 markovSteps: " + (int) timeForAvg1000Steps + ". Time left: " + (int)((steps - i) * timeForAvg1000Steps / 1000000) + " seconds.");
+                    time = System.currentTimeMillis();
+                }
                 
-                // Call the kernel function.
-                cuLaunchKernel(flipFacesF,
-                gridSizeX,  1, 1,         // Grid dimension
-                blockSizeX, 1, 1,         // Block dimension
-                0, null,   // Shared memory size and stream
-                kernelParametersFlipEven, null // Kernel- and extra parameters
-                );
-                // cuCtxSynchronize();
+                int parity = rand.nextInt(maxParity);
+                curandSetGeneratorOffset(generator, ((long) i * (long) arrSize) % Long.MAX_VALUE);
                 
-                cuLaunchKernel(consolidateFacesF,
-                    gridSizeX,  1, 1,         // Grid dimension
-                    blockSizeX, 1, 1,         // Block dimension
-                    0, null,   // Shared memory size and stream
-                    kernelParametersConsOdd, null // Kernel- and extra parameters
-                );
-                // cuCtxSynchronize();
-
-            } else {
-                curandGenerateUniform(generator, deviceRandArr, oddSize);
-                // Call the kernel function.
-                cuLaunchKernel(flipFacesF,
-                    gridSizeX,  1, 1,         // Grid dimension
-                    blockSizeX, 1, 1,         // Block dimension
-                    0, null,   // Shared memory size and stream
-                    kernelParametersFlipOdd, null // Kernel- and extra parameters
-                );
-
-                // cuCtxSynchronize();
-                cuLaunchKernel(consolidateFacesF,
-                    gridSizeX,  1, 1,         // Grid dimension
-                    blockSizeX, 1, 1,         // Block dimension
-                    0, null,   // Shared memory size and stream
-                    kernelParametersConsEven, null // Kernel- and extra parameters
-                );
-                // cuCtxSynchronize();
+                curandGenerateUniform(generator, deviceRandArr, arrSize);
+                
+                launchKernels(parity, blockSizeX, gridSizeX);
+                
             }
+            // Copy data back to faceStates on host.
+            copyDataBack();
+        } finally {
+            cleanUpCuda();
         }
-
-        // Copy data back to faceStates on host.
-        copyDataBack();
-        
-
-        cleanUpCuda();
     }
 
-    public byte[][] getFaceStates() {
-        return faceStates;
+    protected void defineKernelParams(int parity) {
+        throw new NotImplementedException();
     }
+
+    protected void launchKernels(int parity, int blocksizeX, int gridSizeX) {
+        throw new NotImplementedException();
+    }
+
 
 
     private void copyDataBack() {
-        int[] faceStatesEven = new int[evenSize];
-        int[] faceStatesOdd = new int[oddSize];
-        cudaMemcpy(Pointer.to(faceStatesEven), faceStatesEvenPointer, evenSize * Sizeof.INT, cudaMemcpyDeviceToHost);
-        cudaMemcpy(Pointer.to(faceStatesOdd), faceStatesOddPointer, oddSize * Sizeof.INT, cudaMemcpyDeviceToHost);
+        int[][] faceStatesArr = new int[maxParity][arrSize];
+        for (int i = 0; i < maxParity; i++) {
+            cudaMemcpy(Pointer.to(faceStatesArr[i]), faceStatePointers[i], arrSize * Sizeof.INT, cudaMemcpyDeviceToHost);
+        }
         for (int i = 0; i < faceStates.length; i++) {
             for (int j = 0; j < faceStates[i].length; j++) {
-                if((i+j) % 2 ==0) {
-                    faceStates[i][j] = (byte)faceStatesEven[(i * N + j) / 2];
-                } else {
-                    faceStates[i][j] = (byte)faceStatesOdd[(i * N + j) / 2];
-                }
+                int parity = Math.floorMod(j - i, maxParity);
+                faceStates[i][j] = (byte)faceStatesArr[parity][(i * N + j) / maxParity];
             }
         }
     }
@@ -198,67 +157,52 @@ public class GPUSim {
         context = new CUcontext();
         cuCtxCreate(context, 0, device);
 
-        N = lattice.N;
-
         // separate 2d arrays into odd and even 1d arrays.
         // boolean does not exist on GPU -> transform to int. -> could also encode that into one bit of the faceState. Maybe better?
-        evenSize = (N * N) / 2 + (N % 2);
-        oddSize = (N * N) / 2;
-        float[] faceWeightsEven = new float[evenSize];
-        int[] insideBoundaryEven = new int[evenSize];
-        int[] faceStatesEven = new int[evenSize];
-        float[] faceWeightsOdd = new float[oddSize];
-        int[] insideBoundaryOdd = new int[oddSize];
-        int[] faceStatesOdd = new int[oddSize];
-        // int currentIndex = 0;
+        arrSize = (N * N) / maxParity;
+        float[][] faceWeightsArr = new float[maxParity][];
+        int[][] faceStatesArr = new int[maxParity][];
+        int[][] insideBdryArr = new int[maxParity][];
+        for (int i = 0; i < maxParity; i++) {
+            faceWeightsArr[i] = new float[arrSize];
+            faceStatesArr[i] = new int[arrSize];
+            insideBdryArr[i] = new int[arrSize];
+        }
+        // May want to pad with zeros to achieve blocksize*gridsize number of elements exactly. Then kernel doesn't need to check for i < size
         for (int i = 0; i < lattice.flipFaceWeights.length; i++) {
             for (int j = 0; j < lattice.flipFaceWeights[i].length; j++) {
-                if((i + j) % 2 == 0) {
-                    faceWeightsEven[(i * N + j) / 2] = (float)lattice.flipFaceWeights[i][j];
-                    faceStatesEven[(i * N + j) / 2] = faceStates[i][j];
-                    // insideBoundaryEven[(i * N + j) / 2] = insideBoundary[i][j];
-                    if(insideBoundary[i][j]) {
-                        insideBoundaryEven[(i * N + j) / 2] = 1;
-                    } else {
-                        insideBoundaryEven[(i * N + j) / 2] = 0;
-                    }
+                int parity = Math.floorMod(j - i, maxParity);
+                faceWeightsArr[parity][(i * N + j) / maxParity] = (float)lattice.flipFaceWeights[i][j];
+                faceStatesArr[parity][(i * N + j) / maxParity] = faceStates[i][j];
+                if(insideBoundary[i][j]) {
+                    insideBdryArr[parity][(i * N + j) / maxParity] = 1;
                 } else {
-                    faceWeightsOdd[(i * N + j) / 2] = (float)lattice.flipFaceWeights[i][j];
-                    faceStatesOdd[(i * N + j) / 2] = faceStates[i][j];
-                    // insideBoundaryOdd[(i * N + j) / 2] = insideBoundary[i][j];
-                    if(insideBoundary[i][j]) {
-                        insideBoundaryOdd[(i * N + j) / 2] = 1;
-                    } else {
-                        insideBoundaryOdd[(i * N + j) / 2] = 0;
-                    }
+                    insideBdryArr[parity][(i * N + j) / maxParity] = 0;
                 }
             }
         }
 
+        faceWeightPointers = new CUdeviceptr[maxParity];
+        faceStatePointers = new CUdeviceptr[maxParity];
+        insideBoundaryPointers = new CUdeviceptr[maxParity];
         // Create on device pointers
-        faceWeightsEvenPointer = new CUdeviceptr();
-        faceStatesEvenPointer = new CUdeviceptr();
-        insideBoundaryEvenPointer = new CUdeviceptr();
-        faceWeightsOddPointer = new CUdeviceptr();
-        faceStatesOddPointer = new CUdeviceptr();
-        insideBoundaryOddPointer = new CUdeviceptr();
+        for (int i = 0; i < maxParity; i++) {
+            faceWeightPointers[i] = new CUdeviceptr();
+            faceStatePointers[i] = new CUdeviceptr();
+            insideBoundaryPointers[i] = new CUdeviceptr();
+        }
 
         // Copy data to GPU
-        cudaMalloc(faceWeightsEvenPointer, evenSize * Sizeof.FLOAT);
-        cudaMemcpy(faceWeightsEvenPointer, Pointer.to(faceWeightsEven), evenSize * Sizeof.FLOAT, cudaMemcpyHostToDevice);
-        cudaMalloc(faceStatesEvenPointer, evenSize * Sizeof.INT);
-        cudaMemcpy(faceStatesEvenPointer, Pointer.to(faceStatesEven), evenSize * Sizeof.INT, cudaMemcpyHostToDevice);
-        cudaMalloc(insideBoundaryEvenPointer, evenSize * Sizeof.INT);
-        cudaMemcpy(insideBoundaryEvenPointer, Pointer.to(insideBoundaryEven), evenSize * Sizeof.INT, cudaMemcpyHostToDevice);
+        for (int i = 0; i < maxParity; i++) {
+            cudaMalloc(faceWeightPointers[i], arrSize * Sizeof.FLOAT);
+            cudaMemcpy(faceWeightPointers[i], Pointer.to(faceWeightsArr[i]), arrSize * Sizeof.FLOAT, cudaMemcpyHostToDevice);
+            cudaMalloc(faceStatePointers[i], arrSize * Sizeof.INT);
+            cudaMemcpy(faceStatePointers[i], Pointer.to(faceStatesArr[i]), arrSize * Sizeof.INT, cudaMemcpyHostToDevice);
+            cudaMalloc(insideBoundaryPointers[i], arrSize * Sizeof.INT);
+            cudaMemcpy(insideBoundaryPointers[i], Pointer.to(insideBdryArr[i]), arrSize * Sizeof.INT, cudaMemcpyHostToDevice);
+        }
         
-        cudaMalloc(faceWeightsOddPointer, oddSize * Sizeof.FLOAT);
-        cudaMemcpy(faceWeightsOddPointer, Pointer.to(faceWeightsOdd), oddSize * Sizeof.FLOAT, cudaMemcpyHostToDevice);
-        cudaMalloc(faceStatesOddPointer, oddSize * Sizeof.INT);
-        cudaMemcpy(faceStatesOddPointer, Pointer.to(faceStatesOdd), oddSize * Sizeof.INT, cudaMemcpyHostToDevice);
-        cudaMalloc(insideBoundaryOddPointer, oddSize * Sizeof.INT);
-        cudaMemcpy(insideBoundaryOddPointer, Pointer.to(insideBoundaryOdd), oddSize * Sizeof.INT, cudaMemcpyHostToDevice);
-        
-        String ptxFileName = "src/main/java/inUtil/JCudaQuadWalkKernel.ptx";
+
         walkModule = new CUmodule();
         cuModuleLoad(walkModule, ptxFileName);
         
@@ -274,41 +218,16 @@ public class GPUSim {
         generator = new curandGenerator();
 
         deviceRandArr = new CUdeviceptr();
-        cudaMalloc(deviceRandArr, oddSize * Sizeof.FLOAT);
+        cudaMalloc(deviceRandArr, arrSize * Sizeof.FLOAT);
         curandCreateGenerator(generator, CURAND_RNG_PSEUDO_DEFAULT);
         curandSetPseudoRandomGeneratorSeed(generator, 1234);
 
-
-        kernelParametersFlipEven = Pointer.to(
-            Pointer.to(faceStatesEvenPointer),
-            Pointer.to(faceWeightsEvenPointer),
-            Pointer.to(insideBoundaryEvenPointer),
-            Pointer.to(deviceRandArr),
-            Pointer.to(new int[]{N/2})
-            );
-            
-        kernelParametersFlipOdd = Pointer.to(
-            Pointer.to(faceStatesOddPointer),
-            Pointer.to(faceWeightsOddPointer),
-            Pointer.to(insideBoundaryOddPointer),
-            Pointer.to(deviceRandArr),
-            Pointer.to(new int[]{N/2})
-        );
-
-        kernelParametersConsEven = Pointer.to(
-            Pointer.to(faceStatesEvenPointer),
-            Pointer.to(faceStatesOddPointer),
-            Pointer.to(new int[]{N/2}),
-            Pointer.to(new int[]{0})
-        );
-
-        kernelParametersConsOdd = Pointer.to(
-            Pointer.to(faceStatesOddPointer),
-            Pointer.to(faceStatesEvenPointer),
-            Pointer.to(new int[]{N/2}),
-            Pointer.to(new int[]{1})
-        );
+        kernelParametersFlip = new Pointer[maxParity];
+        kernelParametersCons = new Pointer[maxParity];
         
+        for (int i = 0; i < maxParity; i++) {
+            defineKernelParams(i);
+        }
         // To generate random numbers:
         // curandGenerateUniform(generator, deviceRandArr, N);
     }
@@ -316,12 +235,11 @@ public class GPUSim {
     private void cleanUpCuda() {
         cuModuleUnload(walkModule);
 
-        cuMemFree(faceWeightsEvenPointer);
-        cuMemFree(faceStatesEvenPointer);
-        cuMemFree(insideBoundaryEvenPointer);
-        cuMemFree(faceWeightsOddPointer);
-        cuMemFree(faceStatesOddPointer);
-        cuMemFree(insideBoundaryOddPointer);
+        for (int i = 0; i < maxParity; i++) {
+            cuMemFree(faceWeightPointers[i]);
+            cuMemFree(faceStatePointers[i]);
+            cuMemFree(insideBoundaryPointers[i]);
+        }
 
         curandDestroyGenerator(generator);
         cudaFree(deviceRandArr);

@@ -23,7 +23,7 @@ public class MarkovSimHex extends MarkovSim{
         this.sizeQ = sizes[0];
         this.sizeR = sizes[1];
         this.sizeS = sizes[2];
-        int max = lattice.N / 2 - 2;
+        int max = lattice.N / 2 - 4;
         initializeHexagon((int)(max * sizeQ), (int)(max * sizeR), (int)(max * sizeS));
         init();
     }
@@ -39,6 +39,7 @@ public class MarkovSimHex extends MarkovSim{
         long seed = 42; // for reproducability
         rand = new Random();
         maxParity = 3;
+        gpuSim = new GPUSimHex(lattice, faceStates, insideBoundary);
     }
     
     @Override

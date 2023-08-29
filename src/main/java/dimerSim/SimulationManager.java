@@ -59,6 +59,7 @@ public class SimulationManager {
 
     private final String Hexagon300Unif = "experimentExport/Hexagon/hexagon300UniformConverged.ser";
     private final String Hexagon500Unif = "experimentExport/Hexagon/hexagon500UniformConverged.ser";
+    private final String Hexagon600Unif = "experimentExport/Hexagon/hexagon600UniformConverged.ser";
     
     private final String Quad501Unif = "experimentExport/Aztec/AztecDiamond501UniformConverged.ser";
     private final String Quad301Unif = "experimentExport/Aztec/AztecDiamond301UniformConverged.ser";
@@ -82,6 +83,7 @@ public class SimulationManager {
         vis = new Visualization(schottkyDimers);
         hexagonUnifPaths.put(300, Hexagon300Unif);
         hexagonUnifPaths.put(500, Hexagon500Unif);
+        hexagonUnifPaths.put(600, Hexagon600Unif);
         
         quadUnifPaths.put(501, Quad501Unif);
         quadUnifPaths.put(301, Quad301Unif);
@@ -143,7 +145,7 @@ public class SimulationManager {
             // System.out.println("CPU run took: " + (System.nanoTime() - beforeSimTime) / 1e6 + " ms.");
             beforeSimTime = System.nanoTime();
             sim.simulateGPU(simPerStep);
-            System.out.println("GPU run took: " + (System.nanoTime() - beforeSimTime) / 1e6 + " ms.");
+            System.out.println("GPU run took: " + (System.nanoTime() - beforeSimTime) / 1e9 + " s.");
 
             String filePath = new File(evoFolder, String.format("%06d", i + numFilesInEvo) + ".png").getPath();
             try {

@@ -15,49 +15,51 @@ public class RunSimulations {
         // Create SchottkyDimers
         String baseFolder = "experimentExport/";
 
-        // String experimentName = "Hexagon/01_starfish/";
-        // int size = 300;
-        // int numSteps = 50;
-        // int interval = 0;
-        // int numTimes = 1;
+        String experimentName = "Hexagon/01_starfish/";
+        int size = 600;
+        int numSteps = (int) 1e7;
+        int interval = 0;
+        int numTimes = 10;
         
         // String experimentName = "Hexagon/02_largeBubble/";
-        // int size = 300;
-        // int numSteps = 500000;
+        // int size = 600;
+        // int numSteps = (int) 1e7;
         // int interval = 0;
         // int numTimes = 10;
         
         // String experimentName = "Hexagon/03_convergenceToUniform/";
-        // int size = 300;
-        // int numSteps = 60000;
-        // int interval = 3000;
+        // int size = 600;
+        // int numSteps = (int)1e6;
+        // int interval = 0;
         // int numTimes = 1;
         
         // String experimentName = "Hexagon/04_starfishG0/";
         // int size = 300;
-        // int numSteps = 500000;
-        // int interval = 10000;
+        // int numSteps = 500;
+        // int interval = 0;
         // int numTimes = 1;
         
-        
-        String experimentName = "Aztec/01_LargeHoleG1/";
-        int size = 1000;
-        int numSteps = (int) 1e5;
-        int interval = 0;
-        int numTimes = 1;
+        // --------------------------------------------------
+
+        // String experimentName = "Aztec/01_LargeHoleG1/";
+        // int size = 604;
+        // int numSteps = (int) 1e7;
+        // int interval = (int) 0;
+        // int numTimes = 10;
         
         // String experimentName = "Aztec/02_LargeHole2AnglesElongated/";
-        // int size = 300;
-        // int numSteps = (int)1e5;
+        // int size = 1000;
+        // int numSteps = (int)1e6;
         // int interval = 0;
         // int numTimes = 1;
         
         // String experimentName = "Aztec/03_uniform/";
-        // int size = 1000;
-        // int numSteps = (int) 1e5;
+        // int size = 120;
+        // int numSteps = (int) 1e3;
         // int interval = 0;
         // int numTimes = 1;
 
+        System.out.println("Running experiment " + experimentName + " of size " + size);
         
         String folderName = baseFolder + experimentName;
         

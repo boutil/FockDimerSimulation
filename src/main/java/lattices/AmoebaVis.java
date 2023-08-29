@@ -97,7 +97,7 @@ public class AmoebaVis extends JPanel{
         // if (Math.abs(aztecMap.re) > 1 || Math.abs(aztecMap.im) > 1 ) {
         //     System.out.println(aztecMap);
         // }
-        aztecMap.assignTimes(new Complex(Math.cos(Math.PI/4), Math.sin(Math.PI/4)));
+        aztecMap.assignTimes(new Complex(-Math.cos(Math.PI/4), Math.sin(-Math.PI/4)));
         // aztecMap.assignTimes(new Complex(Math.cos(-Math.PI/4), Math.sin(-Math.PI/4)));
         aztecMap.assignDivide(Math.sqrt(2) * 2);
         aztecMap.assignPlus(new Complex(0.5, 0.5));
@@ -113,7 +113,7 @@ public class AmoebaVis extends JPanel{
         // }
         hexMap = xCoord.times(hexMap.re).plus(yCoord.times(hexMap.im));
         hexMap.assignTimes(new Complex(Math.cos(Math.PI/3), Math.sin(Math.PI/3)));
-        hexMap.assignTimes((imageHeight - 40) / Math.sqrt(3));
+        hexMap.assignTimes((imageHeight - 80) / Math.sqrt(3));
         hexMap.assignPlus(new Complex(imageWidth/2, imageHeight/2));
         return hexMap;
     }

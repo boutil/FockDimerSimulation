@@ -5,8 +5,6 @@ __global__ void flipFaces(int *faceStates, float *faceWeights, int *insideBounda
     int i = (blockIdx.x * blockDim.x + threadIdx.x) / size;
     int j = (blockIdx.x * blockDim.x + threadIdx.x) % size;
     int index = i*size + j;
-    // faceStates[index] = index;
-
 
     if((index < 2*size*size) && (insideBoundary[index] == 1)) {
         float prop = 0;
@@ -35,9 +33,9 @@ __global__ void consolidateFaces(int *theseFaceStates, int *otherFaceStates, int
     int index = i*size + j;
     
     if(i < 2 * size - 1 && j < size - 1) {
-        theseFaceStates[index] = (otherFaceStates[(i-1)*size+j] & 4)/4
-                                    + 4*(otherFaceStates[(i+1)*size+j] & 1) 
-                                    + (otherFaceStates[i*size+j - (parity + i + 1) % 2] & 8)/4 
-                                    + 4*(otherFaceStates[i*size+j + (parity + i) % 2] & 2);
+        theseFaceStates[index] = (otherFaceStates[(i-1)*size+j] & 4) / 4
+                                    + (otherFaceStates[(i+1)*size+j] & 1) * 4
+                                    + (otherFaceStates[i*size+j - (parity + i + 1) % 2] & 8) / 4 
+                                    + (otherFaceStates[i*size+j + (parity + i) % 2] & 2) * 4;
     }
 }

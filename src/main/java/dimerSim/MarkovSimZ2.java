@@ -39,8 +39,7 @@ public class MarkovSimZ2 extends MarkovSim{
         rand = new Random(seed);
         maxParity = 2;
 
-        gpuSim = new GPUSim(lattice, faceStates, insideBoundary);
-        // gpuSim.simulate(1000);
+        gpuSim = new GPUSimZ2(lattice, faceStates, insideBoundary);
     }
 
     @Override
@@ -235,6 +234,23 @@ public class MarkovSimZ2 extends MarkovSim{
                         faceStates[i][j] = 0b1010;
                     }
                 }
+                // if (i < diamondCenter.x) {
+                //     if (bottomIndex.minus(i, j).isEven()) {
+                //         faceStates[i][j] = 0b0001;
+                //     } else {
+                //         faceStates[i][j] = 0b0100;
+                //     }
+                // } else if (i > diamondCenter.x) {
+                //     if (bottomIndex.minus(i, j).isEven()) {
+                //         faceStates[i][j] = 0b0100;
+                //     } else {
+                //         faceStates[i][j] = 0b0001;
+                //     }
+                // } else {
+                //     if (bottomIndex.minus(i, j).isEven()) {
+                //         faceStates[i][j] = 0b0101;
+                //     }
+                // }
             }
         }
         computeHeightFunctionFromFaceStates();

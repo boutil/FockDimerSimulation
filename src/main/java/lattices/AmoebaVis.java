@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,6 +19,7 @@ import javax.swing.JPanel;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyDimers;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
+import il.ac.idc.jdt.DelaunayTriangulation;
 
 public class AmoebaVis extends JPanel{
     
@@ -30,6 +32,8 @@ public class AmoebaVis extends JPanel{
 
     boolean boundaryPointsComputed = false;
     Complex[][] boundaryPoints;
+
+    boolean colorMapComputed = false;
 
     boolean isZ2Grid;
 
@@ -75,7 +79,7 @@ public class AmoebaVis extends JPanel{
 
         // For now disable until I deal with both Hexagonal and Aztec case. Probably separate classes.
 
-        ComplexFn boundaryMap = x -> schottkyDimers.boundaryMap(x);
+        ComplexFn boundaryMap = x -> schottkyDimers.boundaryCurve(x);
         Complex[][] boundaryPoints = extractOvalPoints(boundaryMap);
 
         drawPoints(amoebaPoints, gAmoeba);
@@ -91,9 +95,8 @@ public class AmoebaVis extends JPanel{
         Complex apply(Complex point) throws Exception;
     }
 
-    private Complex getAztecInTiltedCoords(Complex point) throws Exception{
-        // Apply aztec map from paper and shrink and rotate it.
-        Complex aztecMap = schottkyDimers.boundaryMap(point);
+    private Complex getAztecInTiltedCoords(Complex aztecMap) throws Exception{
+        // shrink and rotate.
         // if (Math.abs(aztecMap.re) > 1 || Math.abs(aztecMap.im) > 1 ) {
         //     System.out.println(aztecMap);
         // }
@@ -105,9 +108,8 @@ public class AmoebaVis extends JPanel{
         return aztecMap;
     }
 
-    private Complex getHexagonInTiltedCoordinates(Complex point) throws Exception {
-        // Apply Hexagon map and apply hexagonal coordinates to it. Then shring and rotate it to fit simulation pic.
-        Complex hexMap = schottkyDimers.boundaryMap(point);
+    private Complex getHexagonInTiltedCoordinates(Complex hexMap) throws Exception {
+        // Apply hexagonal coordinates point in (x,y) coordinates. Then shring and rotate it to fit simulation pic.
         // if (Math.abs(hexMap.re) > 1 || Math.abs(hexMap.im) > 1 ) {
         //     System.out.println("boundary map larger than 1: " + hexMap);
         // }
@@ -124,9 +126,9 @@ public class AmoebaVis extends JPanel{
         if(!boundaryPointsComputed){
             ComplexFn boundaryMap;
             if (isZ2Grid) {
-                boundaryMap = x -> getAztecInTiltedCoords(x);
+                boundaryMap = x -> getAztecInTiltedCoords(schottkyDimers.boundaryCurve(x));
             } else {
-                boundaryMap = x -> getHexagonInTiltedCoordinates(x);
+                boundaryMap = x -> getHexagonInTiltedCoordinates(schottkyDimers.boundaryCurve(x));
             }
             boundaryPoints = extractOvalPoints(boundaryMap);
             boundaryPointsComputed = true;
@@ -135,6 +137,20 @@ public class AmoebaVis extends JPanel{
         Arrays.fill(whiteColors, Color.WHITE);
         g.setStroke(new BasicStroke(5));
         drawPoints(boundaryPoints, g, whiteColors, false);
+    }
+
+    public void drawBoundaryMap(Graphics2D g, int imageWidth, int imageHeight) {
+        this.imageWidth = imageWidth;
+        this.imageHeight = imageHeight;
+        if(!boundaryPointsComputed){
+            ComplexFn boundaryMap;
+            if (isZ2Grid) {
+                boundaryMap = x -> getAztecInTiltedCoords(schottkyDimers.boundaryMap(x));
+            } else {
+                boundaryMap = x -> getHexagonInTiltedCoordinates(schottkyDimers.boundaryMap(x));
+            }
+            boundaryPointsComputed = true;
+        }
     }
 
     private void drawPoints(Complex[][] points, Graphics2D g) {

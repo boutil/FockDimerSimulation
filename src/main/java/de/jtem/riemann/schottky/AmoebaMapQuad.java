@@ -16,10 +16,10 @@ public class AmoebaMapQuad extends AmoebaMap{
             dK.assignMinus(diff.invert());
             dH_Der.assignPlus(diff.pow(2).invert());
             dK_Der.assignPlus(diff.pow(2).invert());
-            H.assignDivide(diff);
-            K.assignDivide(diff);
-            H_corr.assignDivide(sP0.minus(angle));
-            K_corr.assignDivide(sP0.minus(angle));
+            H.assignMinus(diff.log());
+            K.assignMinus(diff.log());
+            H_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
+            K_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
         }
           for (Complex angle : schottky.getAngles()[1]) {
             Complex diff = P.minus(element.applyTo(angle));
@@ -27,10 +27,10 @@ public class AmoebaMapQuad extends AmoebaMap{
             dK.assignPlus(diff.invert());
             dG_Der.assignPlus(diff.pow(2).invert());
             dK_Der.assignMinus(diff.pow(2).invert());
-            G.assignDivide(diff);
-            K.assignTimes(diff);
-            G_corr.assignDivide(sP0.minus(angle));
-            K_corr.assignTimes(sP0.minus(angle));
+            G.assignMinus(diff.log());
+            K.assignPlus(diff.log());
+            G_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
+            K_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
         }
           for (Complex angle : schottky.getAngles()[2]) {
             Complex diff = P.minus(element.applyTo(angle));
@@ -38,10 +38,10 @@ public class AmoebaMapQuad extends AmoebaMap{
             dK.assignMinus(diff.invert());
             dH_Der.assignMinus(diff.pow(2).invert());
             dK_Der.assignPlus(diff.pow(2).invert());
-            H.assignTimes(diff);
-            K.assignDivide(diff);
-            H_corr.assignTimes(sP0.minus(angle));
-            K_corr.assignDivide(sP0.minus(angle));
+            H.assignPlus(diff.log());
+            K.assignMinus(diff.log());
+            H_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
+            K_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
         }
           for (Complex angle : schottky.getAngles()[3]) {
             Complex diff = P.minus(element.applyTo(angle));
@@ -49,10 +49,10 @@ public class AmoebaMapQuad extends AmoebaMap{
             dK.assignPlus(diff.invert());
             dG_Der.assignMinus(diff.pow(2).invert());
             dK_Der.assignMinus(diff.pow(2).invert());
-            G.assignTimes(diff);
-            K.assignTimes(diff);
-            G_corr.assignTimes(sP0.minus(angle));
-            K_corr.assignTimes(sP0.minus(angle));
+            G.assignPlus(diff.log());
+            K.assignPlus(diff.log());
+            G_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
+            K_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
         }
     }
 

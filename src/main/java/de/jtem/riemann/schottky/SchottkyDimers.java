@@ -33,26 +33,36 @@ public class SchottkyDimers extends Schottky{
 
     }
 
-    public Complex amoebaMap(Complex P) throws Exception {
+    public Complex amoebaMap(Complex P) {
         // if (!isInFundamentalDomain(P)) {
         //     throw new Exception("P needs to be in fundamental domain");
         // }
         return amoebaMap.amoebaMap(P, acc);
     }
 
-    public Complex boundaryMap(Complex P) throws Exception {
+    public Complex boundaryCurve(Complex P){
         // if (!isInFundamentalDomain(P)) {
         //     throw new Exception("P needs to be in fundamental domain");
         // }
-        // return amoebaMap.boundaryMap(P, acc);
         return amoebaMap.boundaryCurve(P, acc);
     }
 
-    public Complex aztecArcticCurve(Complex P) throws Exception {
-        if (!isInFundamentalDomain(P)) {
-            throw new Exception("P needs to be in fundamental domain");
-        }
-        throw new NotImplementedException();
+    public Complex boundaryMap(Complex P){
+        // if (!isInFundamentalDomain(P)) {
+        //     throw new Exception("P needs to be in fundamental domain");
+        // }
+        return amoebaMap.boundaryMap(P, acc);
+    }
+
+    // public Complex aztecArcticCurve(Complex P){
+    //     if (!isInFundamentalDomain(P)) {
+    //         throw new Exception("P needs to be in fundamental domain");
+    //     }
+    //     throw new NotImplementedException();
+    // }
+
+    public Complex[] getDifferentials(Complex P) {
+        return amoebaMap.getDifferentials(P, acc);
     }
 
     protected Complex chooseP0() {

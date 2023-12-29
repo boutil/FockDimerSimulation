@@ -24,8 +24,8 @@ public class Z2LatticeFock extends Z2Lattice{
 
     // We impose that the number of all angle types must be equal for simplicity of periodicity concerns.
     private int numAlphas;
-    private ComplexVector[][] abelIncrementsRight;
-    private ComplexVector[][] abelIncrementsTop;
+    public ComplexVector[][] abelIncrementsRight;
+    public ComplexVector[][] abelIncrementsTop;
 
 
     public Z2LatticeFock(SchottkyDimersQuad dimers, int N, int M) {
@@ -95,30 +95,30 @@ public class Z2LatticeFock extends Z2Lattice{
         return faceAngles;
      }
 
-     private ComplexVector[] getAngleAbelMapsOfFace(int i, int j) {
-        // returns list of  angle abel maps [alphaNW, betaSW, alphaSE, betaNE] that are associated to the given quad.
-        ComplexVector[] faceAngles = new ComplexVector[4];
-        faceAngles[0] = getAngleAbelMap(true, i + j);
-        faceAngles[1] = getAngleAbelMap(false, j - i);
-        faceAngles[2] = getAngleAbelMap(true, i + j + 1);
-        faceAngles[3] = getAngleAbelMap(false , j - i + 1);
-        return faceAngles;
-     }
+    private ComplexVector[] getAngleAbelMapsOfFace(int i, int j) {
+    // returns list of  angle abel maps [alphaNW, betaSW, alphaSE, betaNE] that are associated to the given quad.
+    ComplexVector[] faceAngles = new ComplexVector[4];
+    faceAngles[0] = getAngleAbelMap(true, i + j);
+    faceAngles[1] = getAngleAbelMap(false, j - i);
+    faceAngles[2] = getAngleAbelMap(true, i + j + 1);
+    faceAngles[3] = getAngleAbelMap(false , j - i + 1);
+    return faceAngles;
+    }
 
-     private void computeDiscreteAbelMap() {
-         // dynamically compute the discrete Abel maps
-         computeMapUpdateSteps();
-         for(int i = 0; i < discreteAbelMap.length; i++) {
-             if(i == 0){
-                 discreteAbelMap[0][0] = Z;
-             }
-             else{
-                 discreteAbelMap[i][0] = discreteAbelMap[i - 1][0].plus(abelIncrementsRight[i % numAlphas][0]);
-             }
-             for (int j = 1; j < discreteAbelMap.length; j++) {
-                 discreteAbelMap[i][j] = discreteAbelMap[i][j-1].plus(abelIncrementsTop[i % numAlphas][j % numAlphas]);
-             }
-         }
+    private void computeDiscreteAbelMap() {
+        // dynamically compute the discrete Abel maps
+        computeMapUpdateSteps();
+        for(int i = 0; i < discreteAbelMap.length; i++) {
+            if(i == 0){
+                discreteAbelMap[0][0] = Z;
+            }
+            else{
+                discreteAbelMap[i][0] = discreteAbelMap[i - 1][0].plus(abelIncrementsRight[i % numAlphas][0]);
+            }
+            for (int j = 1; j < discreteAbelMap.length; j++) {
+                discreteAbelMap[i][j] = discreteAbelMap[i][j-1].plus(abelIncrementsTop[i % numAlphas][j % numAlphas]);
+            }
+        }
     }
 
     private ComplexVector computeDiscreteUpdateStep(int i, int j, int direction) {

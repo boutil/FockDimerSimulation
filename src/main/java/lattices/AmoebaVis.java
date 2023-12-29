@@ -4,6 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +20,6 @@ import javax.swing.JPanel;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyDimers;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
-import il.ac.idc.jdt.DelaunayTriangulation;
 
 public class AmoebaVis extends JPanel{
     
@@ -40,18 +40,18 @@ public class AmoebaVis extends JPanel{
     private Complex xCoord = new Complex(1, 0);
     private Complex yCoord = new Complex(Math.cos(Math.PI/3), Math.sin(Math.PI/3));
 
-    private int imageWidth = 1000, imageHeight = 1000;
+    private int imageWidth = 2000, imageHeight = 2000;
 
     public AmoebaVis(SchottkyDimers dimers) {
         Random r = new Random();
         schottkyDimers = dimers;
-        amoebaImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
-        boundaryImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
+        amoebaImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_4BYTE_ABGR);
+        boundaryImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_4BYTE_ABGR);
         ovalColors = new Color[dimers.numAngles + dimers.getNumGenerators() * 2];
-        Arrays.fill(ovalColors, Color.BLACK);
-        for (int i = 0; i < ovalColors.length; i++) {
-            ovalColors[i] = new Color(r.nextInt(255), r.nextInt(255), r.nextInt(255));
-        }
+        Arrays.fill(ovalColors, Color.WHITE);
+        // for (int i = 0; i < ovalColors.length; i++) {
+        //     ovalColors[i] = new Color(r.nextInt(255), r.nextInt(255), r.nextInt(255));
+        // }
         for (int i = 0; i < dimers.getNumGenerators(); i++) {
             ovalColors[dimers.numAngles + i] = innerOvalColors[i];
         }
@@ -68,10 +68,13 @@ public class AmoebaVis extends JPanel{
 
     public void updatePaint() {
         Graphics2D gAmoeba = amoebaImage.createGraphics();
+        gAmoeba.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
         Graphics2D gAztec = boundaryImage.createGraphics();
-        gAmoeba.setColor(Color.WHITE);;
+        gAmoeba.setStroke(new BasicStroke(3));
+        gAmoeba.setColor(new Color(0, 0, 0, 0));
         gAmoeba.fillRect( 0, 0, imageWidth, imageHeight);
-        gAztec.setColor(Color.WHITE);;
+        gAztec.setColor(Color.WHITE);
         gAztec.fillRect( 0, 0, imageWidth, imageHeight);
 
         ComplexFn amoebaMap = x -> schottkyDimers.amoebaMap(x);

@@ -132,6 +132,7 @@ public class MarkovSim implements Serializable{
                 vol += heightFunction[i][j];
             }
         }
+        currentVolume = vol;
         return vol;
     }
 

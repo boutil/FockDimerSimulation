@@ -2,6 +2,7 @@ package lattices;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 
 import org.jzy3d.chart.Chart;
@@ -16,7 +17,7 @@ import org.jzy3d.plot3d.builder.SurfaceBuilder;
 import org.jzy3d.plot3d.builder.concrete.OrthonormalGrid;
 import org.jzy3d.plot3d.primitives.Shape;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
-
+import org.jzy3d.plot3d.rendering.view.AWTRenderer3d;
 
 import de.jtem.blas.ComplexVector;
 import de.jtem.mfc.field.Complex;
@@ -101,14 +102,14 @@ public class Visualization {
         visualizeSurface(surface);
     }
 
-    public void visualizeThetaCrossRatio(double rightStep, double topStep) {
+    public void visualizeThetaCrossRatio(ComplexVector rightStep, ComplexVector topStep) {
         int res = 200;
         Z2LatticeFock fockLattice = (Z2LatticeFock) sim.lattice;
 
-        ComplexVector topStepV = new ComplexVector(new Complex[] {new Complex(0, topStep)});
-        ComplexVector rightStepV = new ComplexVector(new Complex[] {new Complex(0, rightStep)});
-        Func3D func = new Func3D((x,y) -> fockLattice.getThetaCrossRatio(new ComplexVector(new Complex[] {new Complex(0, x)}), topStepV, rightStepV).re);
-        Range range = new Range(0, 20);
+        // ComplexVector topStepV = new ComplexVector(new Complex[] {new Complex(0, topStep)});
+        // ComplexVector rightStepV = new ComplexVector(new Complex[] {new Complex(0, rightStep)});
+        Func3D func = new Func3D((x,y) -> fockLattice.getThetaCrossRatio(topStep.times(y).plus(rightStep.times(x)), topStep, rightStep).re);
+        Range range = new Range(0, 6);
         // Func3D func = new Func3D((x,y) -> fockLattice.getThetaCrossRatio(new ComplexVector(new Complex[] {new Complex(0, x * rightStep / 2)}), topStepV, rightStepV).re);
         // Range range = new Range(0, 100);
         int steps = res;
@@ -137,7 +138,7 @@ public class Visualization {
     }
 
 
-    public void visualizeSim(int smoothingFilterSize) {
+    public void visualizeSim(int smoothingFilterSize, File file) throws IOException {
         // We can do some subsampling here for better graphics performance (and maybe some smoothing too)
         int maxRes = 200;
 
@@ -153,16 +154,21 @@ public class Visualization {
 
         surface.setColorMapper(new ColorMapNormal(smoothedHeightFunction));
         surface.setFaceDisplayed(true);
-        surface.setWireframeDisplayed(true);
-        surface.setWireframeColor(Color.BLACK);
+        surface.setWireframeDisplayed(false);
+        // surface.setWireframeColor(Color.GRAY);
     
         // Create a chart
         IChartFactory f = new AWTChartFactory();
-        Chart chart = f.newChart(Quality.Advanced().setHiDPIEnabled(true));
+        // Chart chart = f.newChart(Quality.Advanced().setHiDPIEnabled(true));
+        Chart chart = f.newChart(Quality.Nicest().setHiDPIEnabled(false));
+        chart.getView().setAxisDisplayed(false);
         chart.getScene().getGraph().add(surface);
-        chart.open();
-        chart.addMouse();
+        // chart.view2d();
+        // AWTRenderer3d renderer = new AWTRenderer3d(chart.getView());
+        // chart.screenshot();
 
+        chart.open("Height Function", 2000, 2000);
+        chart.addMouse();
     }
 
 
@@ -170,12 +176,14 @@ public class Visualization {
         surface.setColorMapper(new ColorMapper(new ColorMapRainbow(), surface, new Color(1, 1, 1, .5f)));
         // surface.setColorMapper(new ColorMapNormal());
         surface.setFaceDisplayed(true);
-        surface.setWireframeDisplayed(true);
-        surface.setWireframeColor(Color.BLACK);
+        surface.setWireframeDisplayed(false);
+        // surface.setWireframeColor(Color.BLACK);
     
         // Create a chart
         IChartFactory f = new AWTChartFactory();
         Chart chart = f.newChart(Quality.Advanced().setHiDPIEnabled(true));
+        chart.getView().setAxisDisplayed(false);
+        // chart.setAxeDisplayed(false);
         chart.getScene().getGraph().add(surface);
         chart.open();
         chart.addMouse();

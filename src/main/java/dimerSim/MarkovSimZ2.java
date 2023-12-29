@@ -175,9 +175,12 @@ public class MarkovSimZ2 extends MarkovSim{
         // Now start random updates while maintaining volume.
         int reportFreq = numSteps/10;
 
+        long time = System.currentTimeMillis();
         for (int i = 0; i < numSteps; i++) {
             if ((i % reportFreq == 0)) {
-                System.out.println("Done with " + i + " steps. Current volume: " + currentVolume);
+                double timeForAvg1000Steps = Math.max(((double)(System.currentTimeMillis() - time)) * 1000 / reportFreq, 1000);
+                System.out.println("Done with " + i + " steps." + " Average time per 1000 markovSteps: " + (int) timeForAvg1000Steps + ". Time left: " + (int)((numSteps - i) * timeForAvg1000Steps / 1000000) + " seconds.");
+                time = System.currentTimeMillis();
             }
             markovStepSameVol();
         }
@@ -205,7 +208,7 @@ public class MarkovSimZ2 extends MarkovSim{
             }
         }
         computeHeightFunctionFromFaceStates();
-        currentVolume = computeVolume();
+        computeVolume();
     }
 
     public void initializeAztecDiamond() {
@@ -254,7 +257,7 @@ public class MarkovSimZ2 extends MarkovSim{
             }
         }
         computeHeightFunctionFromFaceStates();
-        currentVolume = computeVolume();
+        computeVolume();
     }
 
 

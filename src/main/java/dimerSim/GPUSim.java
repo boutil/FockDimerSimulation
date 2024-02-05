@@ -105,8 +105,8 @@ public class GPUSim {
             long time = System.currentTimeMillis();
             for (int i = 0; i < steps; i++) {
                 if ((i % reportFreq == 0)) {
-                    double timeForAvg1000Steps = Math.max(((double)(System.currentTimeMillis() - time)) * 1000 / reportFreq, 1000);
-                    System.out.println("Done with " + i + " steps." + " Average time per 1000 markovSteps: " + (int) timeForAvg1000Steps + ". Time left: " + (int)((steps - i) * timeForAvg1000Steps / 1000000) + " seconds.");
+                    double timeForAvg1000Steps = (double)(System.currentTimeMillis() - time) * 1000 / reportFreq;
+                    System.out.println("Done with " + i + " steps." + " Average time per 1000 markovSteps: " + Math.ceil(timeForAvg1000Steps) + ". Time left: " + Math.ceil(((steps - i) * timeForAvg1000Steps / 1000000)) + " seconds.");
                     time = System.currentTimeMillis();
                 }
                 

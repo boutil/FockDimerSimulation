@@ -157,4 +157,16 @@ public class MarkovSimHex extends MarkovSim{
         int size = lattice.N / 2 - 2;
         initializeHexagon(size, size, size);
     }
+
+    public void toPlanePartition() {
+        // transforms this configuration into a plane partition
+        // We normalize our height function in the following way:
+        // planePartition[0][0] corresponds to the bottom left of the hexagon
+        // Edges of type NE, SW do not change the height.
+        // Edges of type E, W increase height by one going from left to right
+        // Edges of type NW, SE increase height by one going in NW direction.
+        int[][] planePartition;
+
+    }
+
 }

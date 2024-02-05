@@ -18,6 +18,7 @@ import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimers;
 import de.jtem.riemann.schottky.SchottkyDimersDoubleCoverUnitary;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
+import de.jtem.riemann.schottky.SchottkyDimersQuadUnitary;
 import de.jtem.riemann.schottky.SchottkyDimersUnitary;
 import lattices.HexLattice;
 import lattices.HexLatticeFock;
@@ -52,6 +53,8 @@ public class SimulationManager {
     private boolean saveEvolutionPics;
     private int savePictureInterval;
 
+    private File startFromFolder;
+
 
     Map<Integer, String> hexagonUnifPaths = new HashMap<Integer, String>();
     Map<Integer, String> quadUnifPaths = new HashMap<Integer, String>();
@@ -75,18 +78,27 @@ public class SimulationManager {
         baseFolder = folder;
         new File(baseFolder).mkdirs();
         schottkyDimers = schottky;
-        saveSchottky(schottky, new File(folder, "schottky.ser"));
         init();
+        saveSchottky(schottky, new File(folder, "schottky.ser"));
+    }
+
+    public SimulationManager(SchottkyDimers schottky, String folder, File startFromFolder) {
+        this(schottky, folder);
+        this.startFromFolder = startFromFolder;
     }
 
     private void init() {
         vis = new Visualization(schottkyDimers);
-        hexagonUnifPaths.put(300, Hexagon300Unif);
+        hexagonUnifPaths.put(300, "experimentExport/Hexagon/04_growingStarfishHoles/mu06/300x300/2023-09-01-06-07-22/sim.ser");
+        // hexagonUnifPaths.put(300, Hexagon300Unif);
         hexagonUnifPaths.put(500, Hexagon500Unif);
-        hexagonUnifPaths.put(600, Hexagon600Unif);
+        hexagonUnifPaths.put(600, "experimentExport/Hexagon/02_growingLargeBubble/mu001/600x600/2023-09-01-10-34-05/sim.ser");
         
+        quadUnifPaths.put(500, "experimentExport/Aztec/05_growing1LargeHole/mu004/500x500/2023-08-30-19-47-28/sim.ser");
         quadUnifPaths.put(501, Quad501Unif);
         quadUnifPaths.put(301, Quad301Unif);
+        quadUnifPaths.put(600, "experimentExport/Aztec/08_growing2LargeHolesFromUnitarySymmetric1Angle/mu01/600x600/2024-02-04-19-27-03/sim.ser");
+        // quadUnifPaths.put(600, "experimentExport/Aztec/AztecDiamond600UniformConverged.ser");
     }
 
     public void setSavePictureInterval(int interval) {
@@ -107,9 +119,14 @@ public class SimulationManager {
                 sim = new MarkovSimHex(lattice);
             }
             return sim;
-        } else if (schottkyDimers.getClass().isAssignableFrom(SchottkyDimersQuad.class)) {
+        } else if (schottkyDimers.getClass().isAssignableFrom(SchottkyDimersQuad.class) || schottkyDimers.getClass().isAssignableFrom(SchottkyDimersQuadUnitary.class)) {
             MarkovSim sim;
-            Z2LatticeFock lattice = new Z2LatticeFock((SchottkyDimersQuad)schottkyDimers, size, size);
+            Z2LatticeFock lattice = null;
+            if (schottkyDimers.getClass().isAssignableFrom(SchottkyDimersQuadUnitary.class)) {
+                lattice = new Z2LatticeFock(schottkyDimers, size, size);
+            } else if (schottkyDimers.getClass().isAssignableFrom(SchottkyDimersQuad.class)) {
+                lattice = new Z2LatticeFock(schottkyDimers, size, size);
+            }
             if(quadUnifPaths.containsKey(size)) {
                 sim = loadSim(quadUnifPaths.get(size));
                 sim.setLattice(lattice);
@@ -174,6 +191,9 @@ public class SimulationManager {
     
     
     private MarkovSim loadNewestSim(File sizeDir, int size) {
+        if(!(startFromFolder == null)) {
+
+        }
         if(!sizeDir.exists()) {
             sizeDir.mkdirs();
             return createLattice(size);
@@ -198,7 +218,7 @@ public class SimulationManager {
             if(angles.length == 3) {
                 schottkyDimers = new SchottkyDimersUnitary(new SchottkyData(uniformizationData), angles);
             } else if (angles.length == 4) {
-                schottkyDimers = new SchottkyDimersQuad(new SchottkyData(uniformizationData), angles);
+                schottkyDimers = new SchottkyDimersQuadUnitary(new SchottkyData(uniformizationData), angles);
             } else if (angles.length == 6) {
                 schottkyDimers = new SchottkyDimersDoubleCoverUnitary(new SchottkyData(uniformizationData), angles);
             }
@@ -215,6 +235,9 @@ public class SimulationManager {
 
     private void saveSchottky(SchottkyDimers schottkyDimers, File file) {
         try {
+            vis.saveSchottkyPic(schottkyDimers, file.getParent().concat("/schottkyPic.png"));
+            vis.saveAztecPic(schottkyDimers, file.getParent().concat("/boundaryPic.png"));
+            vis.saveAmoebaPic(schottkyDimers, file.getParent().concat("/amoebaPic.png"));
             ObjectOutputStream out;
             out = new ObjectOutputStream(new FileOutputStream(file));
             out.writeObject(schottkyDimers.getUniformizationData());

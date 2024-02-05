@@ -10,8 +10,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
+import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyData;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
+import de.jtem.riemann.schottky.SchottkyDimersQuadUnitary;
 import lattices.Visualization;
 import lattices.Z2Lattice;
 import lattices.Z2LatticeFock;
@@ -25,8 +27,8 @@ public class ExportExperimentsAztec {
         // double[][] angles = {new double[]{-2.4, -0.6, 0.6, 1.4}};
 
         // G1LargeHole
-        double[][] schottkyParamsCol = {{0.9, 1, 0.9, -1, 0.15, 0}};
-        double[][][] angles = {{{-2.4}, {-0.4}, {0.4}, {2.4}}};
+        // double[][] schottkyParamsCol = {{0.9, 1, 0.9, -1, 0.15, 0}};
+        // double[][][] angles = {{{-2.4}, {-0.4}, {0.4}, {2.4}}};
 
         // G1LargeHole2Angles
         // double[][] schottkyParamsCol = {{0.9, 1, 0.9, -1, 0.15, 0}};
@@ -50,14 +52,21 @@ public class ExportExperimentsAztec {
         // G2LargeHole
         // double[][] schottkyParamsCol = {{-1, 1, -1, -1, 0.03, 0, 1, 1, 1, -1, 0.03, 0}};
         // double[][][] angles = {{{-2.4}, {-0.4}, {0.4}, {2.4}}};
+
+                // G2Unitary
+        double theta = Math.PI / 4;
+        Complex A = new Complex(Math.cos(theta), Math.sin(theta)).times(0.3);
+        Complex ARefl = A.invert().conjugate();
+        double[][] schottkyParamsCol = {{A.re, A.im, ARefl.re, ARefl.im, 0.00000004, 0}};
+        double[][][] angles = {{{0}, {Math.PI / 2}, {Math.PI}, {3 * Math.PI / 2}}};
         
-        int defaultNumSteps = 2000000;
+        int defaultNumSteps = (int)1E7;
         int[] numSteps = new int[schottkyParamsCol.length];
         Arrays.fill(numSteps, defaultNumSteps);
         // int[] numSteps = {100000, 100000, 100000};
         
         String baseFolder = "experimentExport/Aztec/";
-        String simToStartFrom = "experimentExport/Aztec/2023-08-24-10-28-27/sim0[501x501].ser";
+        String simToStartFrom = "experimentExport/Aztec/2024-02-02-15-07-45/sim0[600x600].ser";
         // String simToStartFrom = "experimentExport/Aztec/AztecDiamond501UniformConverged.ser";
         
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
@@ -68,8 +77,9 @@ public class ExportExperimentsAztec {
 
         for (int i = 0; i < schottkyParamsCol.length; i++) {
             
-            SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(new SchottkyData(schottkyParamsCol[i]), angles[i]);
+            // SchottkyDimersQuad schottkyDimers = new SchottkyDimersQuad(new SchottkyData(schottkyParamsCol[i]), angles[i]);
             
+            SchottkyDimersQuadUnitary schottkyDimers = new SchottkyDimersQuadUnitary(new SchottkyData(schottkyParamsCol[i]), angles[i]);
             
             // Continue from previously simulated step.
             // if (i > 0) {
@@ -77,17 +87,18 @@ public class ExportExperimentsAztec {
                 // }
             sim = loadSim(simToStartFrom);
             
-            Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, sim.lattice.N, sim.lattice.M);
+            // Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, sim.lattice.N, sim.lattice.M);
             
-            // Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 301, 301);
-            // Z2Lattice lattice = new Z2Lattice(501, 501);
+            Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 600, 600);
+            // Z2Lattice lattice = new Z2Lattice(500, 500);
             
             // sim = new MarkovSimZ2(lattice, false);
             
-            sim.numThreads = 8;
+            // sim.numThreads = 8;
             
-            sim.setLattice(lattice);
-            sim.simulate(numSteps[i]);
+            // sim.setLattice(lattice);
+            // sim.simulate(numSteps[i]);
+            sim.simulateGPU(numSteps[i]);
     
             Visualization vis = new Visualization(sim, schottkyDimers);
             

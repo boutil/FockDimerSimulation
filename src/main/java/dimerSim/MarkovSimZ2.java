@@ -219,7 +219,7 @@ public class MarkovSimZ2 extends MarkovSim{
         for (int i = 0; i < lattice.N; i++) {
             for (int j = 0; j < lattice.M; j++) {
                 // Boundary of the lattice.
-                insideBoundary[i][j] = diamondCenter.l1Dist(i, j) <= lattice.N / 2 - 2;
+                insideBoundary[i][j] = diamondCenter.l1Dist(i, j) <= lattice.N / 2 - 4;
                 if (j < diamondCenter.y) {
                     if (bottomIndex.minus(i, j).isEven()) {
                         faceStates[i][j] = 0b0010;

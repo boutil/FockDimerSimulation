@@ -8,6 +8,11 @@ public class AmoebaMapQuad extends AmoebaMap{
         super(schottky, P0);
     }
 
+    AmoebaMapQuad(SchottkyDimers schottky, Complex P0, double[] boundaryResidues) {
+      this(schottky, P0);
+      this.boundaryResidues = boundaryResidues;
+  }
+
     @Override
     protected void calculateIncrements(final SchottkyGroupElement element) {
         for (Complex angle : schottky.getAngles()[0]) {

@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 import de.jtem.mfc.field.Complex;
 import de.jtem.riemann.schottky.SchottkyDimers;
 import de.jtem.riemann.schottky.SchottkyDimersQuad;
+import de.jtem.riemann.schottky.SchottkyDimersQuadUnitary;
 
 public class AmoebaVis extends JPanel{
     
@@ -27,6 +28,7 @@ public class AmoebaVis extends JPanel{
 
     private BufferedImage amoebaImage;
     private BufferedImage boundaryImage;
+    private BufferedImage schottkyImage;
     Color[] innerOvalColors = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW};
     Color[] ovalColors;
 
@@ -47,6 +49,8 @@ public class AmoebaVis extends JPanel{
         schottkyDimers = dimers;
         amoebaImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_4BYTE_ABGR);
         boundaryImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_4BYTE_ABGR);
+        schottkyImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_4BYTE_ABGR);
+
         ovalColors = new Color[dimers.numAngles + dimers.getNumGenerators() * 2];
         Arrays.fill(ovalColors, Color.WHITE);
         // for (int i = 0; i < ovalColors.length; i++) {
@@ -55,7 +59,7 @@ public class AmoebaVis extends JPanel{
         for (int i = 0; i < dimers.getNumGenerators(); i++) {
             ovalColors[dimers.numAngles + i] = innerOvalColors[i];
         }
-        isZ2Grid = dimers.getClass().isAssignableFrom(SchottkyDimersQuad.class);
+        isZ2Grid = dimers.getClass().isAssignableFrom(SchottkyDimersQuad.class) || dimers.getClass().isAssignableFrom(SchottkyDimersQuadUnitary.class);
     }
 
     @Override
@@ -71,11 +75,16 @@ public class AmoebaVis extends JPanel{
         gAmoeba.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                         RenderingHints.VALUE_ANTIALIAS_ON);
         Graphics2D gAztec = boundaryImage.createGraphics();
+        Graphics2D gSchottky = schottkyImage.createGraphics();
         gAmoeba.setStroke(new BasicStroke(3));
         gAmoeba.setColor(new Color(0, 0, 0, 0));
         gAmoeba.fillRect( 0, 0, imageWidth, imageHeight);
-        gAztec.setColor(Color.WHITE);
+        gAztec.setStroke(new BasicStroke(3));
+        gAztec.setColor(new Color(0, 0, 0, 0));
         gAztec.fillRect( 0, 0, imageWidth, imageHeight);
+        gSchottky.setStroke(new BasicStroke(3));
+        gSchottky.setColor(new Color(0, 0, 0, 0));
+        gSchottky.fillRect( 0, 0, imageWidth, imageHeight);
 
         ComplexFn amoebaMap = x -> schottkyDimers.amoebaMap(x);
         Complex[][] amoebaPoints = extractOvalPoints(amoebaMap);
@@ -85,9 +94,12 @@ public class AmoebaVis extends JPanel{
         ComplexFn boundaryMap = x -> schottkyDimers.boundaryCurve(x);
         Complex[][] boundaryPoints = extractOvalPoints(boundaryMap);
 
+        ComplexFn identity = x -> x;
+        Complex[][] schottkyPoints = extractOvalPoints(identity);
+
         drawPoints(amoebaPoints, gAmoeba);
         drawPoints(boundaryPoints, gAztec);
-
+        drawPoints(schottkyPoints, gSchottky);
 
         gAmoeba.dispose();
         gAztec.dispose();
@@ -103,10 +115,13 @@ public class AmoebaVis extends JPanel{
         // if (Math.abs(aztecMap.re) > 1 || Math.abs(aztecMap.im) > 1 ) {
         //     System.out.println(aztecMap);
         // }
-        aztecMap.assignTimes(new Complex(-Math.cos(Math.PI/4), Math.sin(-Math.PI/4)));
+        // Conjugate if orientation needs to be changed.
+        aztecMap.assignConjugate();
+        aztecMap.assignTimes(new Complex(Math.cos(-Math.PI/4), Math.sin(-Math.PI/4)));
         // aztecMap.assignTimes(new Complex(Math.cos(-Math.PI/4), Math.sin(-Math.PI/4)));
-        aztecMap.assignDivide(Math.sqrt(2) * 2);
-        aztecMap.assignPlus(new Complex(0.5, 0.5));
+        double shrinkage = 0.99;
+        aztecMap.assignDivide(Math.sqrt(2) * 2 / shrinkage);
+        aztecMap.assignPlus(new Complex(0.499, 0.5));
         aztecMap.assignTimes(imageWidth);
         return aztecMap;
     }
@@ -199,6 +214,9 @@ public class AmoebaVis extends JPanel{
         ImageIO.write(boundaryImage, "PNG", new File(filePath));
     }
 
+    public void saveSchottky(String filePath) throws IOException{
+        ImageIO.write(schottkyImage, "PNG", new File(filePath));
+    }
 
     private Complex[][] extractOvalPoints(ComplexFn f) {
         int numPointsPerSegment = 300;

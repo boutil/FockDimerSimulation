@@ -228,13 +228,13 @@ public class Visualization {
     }
 
     public void saveAmoebaPic(SchottkyDimers dimers, String filePath) throws IOException {
-        setVis(new AmoebaVis(dimers));
+        amoebaVis = new AmoebaVis(dimers);
         amoebaVis.updatePaint();
         amoebaVis.saveAmoeba(filePath);
     }
 
     public void saveAztecPic(SchottkyDimers dimers, String filePath) throws IOException {
-        setVis(new AmoebaVis(dimers));
+        amoebaVis = new AmoebaVis(dimers);
         amoebaVis.updatePaint();
         amoebaVis.saveAztec(filePath);
     }
@@ -243,6 +243,12 @@ public class Visualization {
         GridPanelZ2 p = new GridPanelZ2(sim);
         p.updatePaint();
         p.saveWeightsPic(filepPath);
+    }
+
+    public void saveSchottkyPic(SchottkyDimers dimers, String filePath) throws IOException {
+        amoebaVis = new AmoebaVis(dimers);
+        amoebaVis.updatePaint();
+        amoebaVis.saveSchottky(filePath);
     }
 
     public void visualizeAmoeba(SchottkyDimers dimers) {

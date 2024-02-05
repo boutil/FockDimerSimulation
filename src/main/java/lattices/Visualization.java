@@ -159,8 +159,8 @@ public class Visualization {
     
         // Create a chart
         IChartFactory f = new AWTChartFactory();
-        // Chart chart = f.newChart(Quality.Advanced().setHiDPIEnabled(true));
-        Chart chart = f.newChart(Quality.Nicest().setHiDPIEnabled(false));
+        Chart chart = f.newChart(Quality.Advanced().setHiDPIEnabled(true));
+        // Chart chart = f.newChart(Quality.Nicest().setHiDPIEnabled(false));
         chart.getView().setAxisDisplayed(false);
         chart.getScene().getGraph().add(surface);
         // chart.view2d();
@@ -185,7 +185,8 @@ public class Visualization {
         chart.getView().setAxisDisplayed(false);
         // chart.setAxeDisplayed(false);
         chart.getScene().getGraph().add(surface);
-        chart.open();
+        chart.view2d();
+        chart.open(2000,2000);
         chart.addMouse();
     }
 
@@ -243,6 +244,12 @@ public class Visualization {
         GridPanelZ2 p = new GridPanelZ2(sim);
         p.updatePaint();
         p.saveWeightsPic(filepPath);
+    }
+    
+    public void saveHeightPic(String filepPath) throws IOException {
+        GridPanelZ2 p = new GridPanelZ2(sim);
+        p.updatePaint();
+        p.saveHeightPic(filepPath);
     }
 
     public void visualizeAmoeba(SchottkyDimers dimers) {

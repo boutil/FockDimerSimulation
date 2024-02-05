@@ -42,7 +42,7 @@ public class AmoebaVis extends JPanel{
     private Complex xCoord = new Complex(1, 0);
     private Complex yCoord = new Complex(Math.cos(Math.PI/3), Math.sin(Math.PI/3));
 
-    private int imageWidth = 2000, imageHeight = 2000;
+    private int imageWidth = 5100, imageHeight = 5100;
 
     public AmoebaVis(SchottkyDimers dimers) {
         Random r = new Random();
@@ -52,7 +52,7 @@ public class AmoebaVis extends JPanel{
         schottkyImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_4BYTE_ABGR);
 
         ovalColors = new Color[dimers.numAngles + dimers.getNumGenerators() * 2];
-        Arrays.fill(ovalColors, Color.WHITE);
+        Arrays.fill(ovalColors, Color.BLACK);
         // for (int i = 0; i < ovalColors.length; i++) {
         //     ovalColors[i] = new Color(r.nextInt(255), r.nextInt(255), r.nextInt(255));
         // }
@@ -176,7 +176,7 @@ public class AmoebaVis extends JPanel{
     }
 
     private void drawPoints(Complex[][] points, Graphics2D g, Color[] ovalColors, boolean normalize) {
-        double minRe = Double.MAX_VALUE, maxRe = Double.MIN_VALUE, minIm = Double.MAX_VALUE, maxIm = Double.MIN_VALUE;
+        double minRe = Double.MAX_VALUE, maxRe = -Double.MAX_VALUE, minIm = Double.MAX_VALUE, maxIm = -Double.MAX_VALUE;
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
                 if(Double.isNaN(points[i][j].re) || Double.isNaN(points[i][j].im) || Double.isInfinite(points[i][j].re) || Double.isInfinite(points[i][j].im)) {

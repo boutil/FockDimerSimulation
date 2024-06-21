@@ -6,6 +6,34 @@
     "configurations": [
         {
             "type": "java",
+            "name": "JCudaReduction",
+            "request": "launch",
+            "mainClass": "inUtil.JCudaReduction",
+            "projectName": "schottky-dimers"
+        },
+        {
+            "type": "java",
+            "name": "GPUCompute",
+            "request": "launch",
+            "mainClass": "inUtil.GPUCompute",
+            "projectName": "schottky-dimers"
+        },
+        {
+            "type": "java",
+            "name": "GifConvert",
+            "request": "launch",
+            "mainClass": "inUtil.GifConvert",
+            "projectName": "schottky-dimers"
+        },
+        {
+            "type": "java",
+            "name": "RunSimulations",
+            "request": "launch",
+            "mainClass": "dimerSim.RunSimulations",
+            "projectName": "schottky-dimers"
+        },
+        {
+            "type": "java",
             "name": "ExportExperimentsAztec",
             "request": "launch",
             "mainClass": "dimerSim.ExportExperimentsAztec",

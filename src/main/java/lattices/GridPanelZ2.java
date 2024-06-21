@@ -30,9 +30,9 @@ public class GridPanelZ2 extends GridPanel {
         super(sim);
         imageWidth = sim.lattice.N * scaling;
         imageHeight = sim.lattice.M * scaling;
-        paintImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
-        weightsImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
-        heightImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
+        paintImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_4BYTE_ABGR);
+        weightsImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_4BYTE_ABGR);
+        heightImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_4BYTE_ABGR);
     }
 
     public GridPanelZ2(MarkovSim sim, AmoebaVis amoebaVis) {
@@ -50,6 +50,15 @@ public class GridPanelZ2 extends GridPanel {
         Graphics2D g2 = paintImage.createGraphics();
         Graphics2D gWeights = weightsImage.createGraphics();
         Graphics2D gHeight = heightImage.createGraphics();
+
+        g2.setColor(new Color(0, 0, 0, 0));
+        g2.fillRect( 0, 0, imageWidth, imageHeight);
+        gHeight.setStroke(new BasicStroke(3));
+        gHeight.setColor(new Color(0, 0, 0, 0));
+        gHeight.fillRect( 0, 0, imageWidth, imageHeight);
+        gWeights.setStroke(new BasicStroke(3));
+        gWeights.setColor(new Color(0, 0, 0, 0));
+        gWeights.fillRect( 0, 0, imageWidth, imageHeight);
 
         double maxWeight = 0;
         for (int i = 0; i < sim.lattice.N; i++) {
@@ -86,6 +95,7 @@ public class GridPanelZ2 extends GridPanel {
         }
         if (drawBoundaryCurves) {
             amoebaVis.drawBoundaryCurves(g2, imageWidth, imageHeight);
+            amoebaVis.drawBoundaryCurves(gHeight, imageWidth, imageHeight);
         }
 
         g2.dispose();
@@ -118,6 +128,7 @@ public class GridPanelZ2 extends GridPanel {
         // Specific for square construction. In general would want to use Newton polygon map.
         Coord3d n = normal.getNormalizedTo(1).mul(1, 1, 0);
         n.rotate(45, new Coord3d(0, 0, 1));
+        n.mulSelf((float)Math.sqrt(2));
         n.addSelf(0.5f, 0.5f, 0);
         float[] factors = new float[4];
         Coord3d[] sqVerts = new Coord3d[]{new Coord3d(0, 0, 0), new Coord3d(1, 0, 0), new Coord3d(0, 1, 0), new Coord3d(1, 1, 0)};

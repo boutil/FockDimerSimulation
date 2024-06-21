@@ -187,6 +187,13 @@ public class MarkovSimZ2 extends MarkovSim{
         computeHeightFunctionFromFaceStates();
     }
 
+    @Override
+    public void simulateGPU(int numSteps) {
+        gpuSim.simulate(numSteps);
+        computeHeightFunctionFromFaceStates();
+    }
+
+
     // Can initialize in many different ways. Should have different versions of this function for different boundary conditions.
     public void initializeFlatSquare() {
         // This corresponds to a matching of only horizontal 

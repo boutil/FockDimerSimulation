@@ -29,7 +29,7 @@ public class AmoebaVis extends JPanel{
     private BufferedImage amoebaImage;
     private BufferedImage boundaryImage;
     private BufferedImage schottkyImage;
-    Color[] innerOvalColors = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW};
+    Color[] innerOvalColors = {Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK};
     Color[] ovalColors;
 
     boolean boundaryPointsComputed = false;
@@ -76,13 +76,13 @@ public class AmoebaVis extends JPanel{
                         RenderingHints.VALUE_ANTIALIAS_ON);
         Graphics2D gAztec = boundaryImage.createGraphics();
         Graphics2D gSchottky = schottkyImage.createGraphics();
-        gAmoeba.setStroke(new BasicStroke(3));
+        gAmoeba.setStroke(new BasicStroke(10));
         gAmoeba.setColor(new Color(0, 0, 0, 0));
         gAmoeba.fillRect( 0, 0, imageWidth, imageHeight);
-        gAztec.setStroke(new BasicStroke(3));
+        gAztec.setStroke(new BasicStroke(10));
         gAztec.setColor(new Color(0, 0, 0, 0));
         gAztec.fillRect( 0, 0, imageWidth, imageHeight);
-        gSchottky.setStroke(new BasicStroke(3));
+        gSchottky.setStroke(new BasicStroke(10));
         gSchottky.setColor(new Color(0, 0, 0, 0));
         gSchottky.fillRect( 0, 0, imageWidth, imageHeight);
 
@@ -98,7 +98,8 @@ public class AmoebaVis extends JPanel{
         Complex[][] schottkyPoints = extractOvalPoints(identity);
 
         drawPoints(amoebaPoints, gAmoeba);
-        drawPoints(boundaryPoints, gAztec);
+        drawBoundaryCurves(gAztec, imageWidth, imageHeight);
+        // drawPoints(boundaryPoints, gAztec);
         drawPoints(schottkyPoints, gSchottky);
 
         gAmoeba.dispose();
@@ -116,9 +117,11 @@ public class AmoebaVis extends JPanel{
         //     System.out.println(aztecMap);
         // }
         // Conjugate if orientation needs to be changed.
-        aztecMap.assignConjugate();
-        aztecMap.assignTimes(new Complex(Math.cos(-Math.PI/4), Math.sin(-Math.PI/4)));
+        // aztecMap.assignConjugate();
+        aztecMap.assignTimes(new Complex(Math.cos(3*Math.PI/4), Math.sin(3 * Math.PI/4)));
+        // aztecMap.assignTimes(new Complex(Math.cos(Math.PI/4), Math.sin(Math.PI/4)));
         // aztecMap.assignTimes(new Complex(Math.cos(-Math.PI/4), Math.sin(-Math.PI/4)));
+        // aztecMap.assignTimes(new Complex(Math.cos(-3*Math.PI/4), Math.sin(-3*Math.PI/4)));
         double shrinkage = 0.99;
         aztecMap.assignDivide(Math.sqrt(2) * 2 / shrinkage);
         aztecMap.assignPlus(new Complex(0.499, 0.5));
@@ -134,6 +137,7 @@ public class AmoebaVis extends JPanel{
         hexMap = xCoord.times(hexMap.re).plus(yCoord.times(hexMap.im));
         hexMap.assignTimes(new Complex(Math.cos(Math.PI/3), Math.sin(Math.PI/3)));
         hexMap.assignTimes((imageHeight - 80) / Math.sqrt(3));
+        hexMap.assignTimes(0.999); //shrinkage
         hexMap.assignPlus(new Complex(imageWidth/2, imageHeight/2));
         return hexMap;
     }
@@ -153,7 +157,7 @@ public class AmoebaVis extends JPanel{
         }
         Color[] whiteColors = new Color[schottkyDimers.numAngles + 1 + schottkyDimers.getNumGenerators()];
         Arrays.fill(whiteColors, Color.WHITE);
-        g.setStroke(new BasicStroke(5));
+        g.setStroke(new BasicStroke(10));
         drawPoints(boundaryPoints, g, whiteColors, false);
     }
 

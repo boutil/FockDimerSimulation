@@ -74,16 +74,15 @@ public class Z2LatticeFock extends Z2Lattice{
         // Beta sequence:  [b_0^+, b_1^-, b_1^+, ...]
         int index = isAlpha ? 2 * Math.floorMod(k, 2) : 3 - 2 * Math.floorMod(k, 2);
         int length = angles[index].length;
-        return angles[index][Math.floorMod((k/2), length)];
+        return angles[index][Math.floorMod(k, 2 * length) / 2];
     }
 
     private ComplexVector getAngleAbelMap(boolean isAlpha, int k) {
-        // returns the kth alpha or beta angle. Assumes total of 4 angles for now
         // Alpha sequence: [a_0^-, a_0^+, a_1^-, ...]
         // Beta sequence:  [b_0^+, b_1^-, b_1^+, ...]
         int index = isAlpha ? 2 * Math.floorMod(k, 2) : 3 - 2 * Math.floorMod(k, 2);
         int length = angles[index].length;
-        return faceAngleAbelMaps[index][Math.floorMod((k/2), length)];
+        return faceAngleAbelMaps[index][Math.floorMod(k, 2 * length) / 2];
     }
 
     private Complex[] getAnglesOfFace(int i, int j) {
@@ -178,7 +177,10 @@ public class Z2LatticeFock extends Z2Lattice{
 
                 double maxImagPart = 0.001;
                 if(Math.abs(crossRatio.im) > maxImagPart ) {
-                    System.out.println("crossRatio imaginary part too big.");
+                    System.out.println("crossRatio imaginary part too big: " + crossRatio);
+                }
+                if(crossRatio.re > 0 ) {
+                    System.out.println("weight has wrong sign.");
                 }
 
                 flipFaceWeights[i-1][j-1] = -crossRatio.re; // Should be like this. Check that these are indeed real first!  
@@ -201,12 +203,12 @@ public class Z2LatticeFock extends Z2Lattice{
     }
 
     private Complex getECrossratio(int i, int j) {
-        Complex[] faceAngles = getAnglesOfFace(i, j);
+        // Complex[] faceAngles = getAnglesOfFace(i, j);
 
-        // Method 1 of computing this:
-        Complex quotiontOfEs1 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[1], faceAngles[0], faceAngles[2]).exp();
-        Complex quotiontOfEs2 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[3], faceAngles[2], faceAngles[0]).exp();
-        Complex eCrossRatio = quotiontOfEs1.times(quotiontOfEs2);
+        // // Method 1 of computing this:
+        // Complex quotiontOfEs1 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[1], faceAngles[0], faceAngles[2]).exp();
+        // Complex quotiontOfEs2 = schottkyDimers.abelianIntegralOf3rdKind(faceAngles[3], faceAngles[2], faceAngles[0]).exp();
+        // Complex eCrossRatio = quotiontOfEs1.times(quotiontOfEs2);
         // Method 2: through odd theta functions:
         // TODO: switch to numerically stable version here too!
         ComplexVector[] faceAngleAbelMaps = getAngleAbelMapsOfFace(i, j);
@@ -215,12 +217,12 @@ public class Z2LatticeFock extends Z2Lattice{
         thetaCrossRatio.assignDivide(thetaWithChar.theta(faceAngleAbelMaps[1].minus(faceAngleAbelMaps[0])));
         thetaCrossRatio.assignDivide(thetaWithChar.theta(faceAngleAbelMaps[3].minus(faceAngleAbelMaps[2])));
 
-        // Compare the two results for sanity:
-        if (! thetaCrossRatio.equals(eCrossRatio, 1e-5)) {
-            System.out.println("E CrossRatio computation methods do not agree!");
-        }
+        // // Compare the two results for sanity:
+        // if (! thetaCrossRatio.equals(eCrossRatio, 1e-5)) {
+        //     System.out.println("E CrossRatio computation methods do not agree!");
+        // }
 
-        return thetaCrossRatio;
+        return thetaCrossRatio.invert();
     }
 
 }

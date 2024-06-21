@@ -92,12 +92,15 @@ public class SimulationManager {
         hexagonUnifPaths.put(300, "experimentExport/Hexagon/04_growingStarfishHoles/mu06/300x300/2023-09-01-06-07-22/sim.ser");
         // hexagonUnifPaths.put(300, Hexagon300Unif);
         hexagonUnifPaths.put(500, Hexagon500Unif);
-        hexagonUnifPaths.put(600, "experimentExport/Hexagon/02_growingLargeBubble/mu001/600x600/2023-09-01-10-34-05/sim.ser");
+        // hexagonUnifPaths.put(600, "experimentExport/Hexagon/02_growingLargeBubble/mu005/600x600/2023-09-02-18-36-48/sim.ser");
+        hexagonUnifPaths.put(600, "experimentExport/Hexagon/04_growingStarfishHoles/mu03/600x600/2024-02-14-17-01-28/sim.ser");
         
         quadUnifPaths.put(500, "experimentExport/Aztec/05_growing1LargeHole/mu004/500x500/2023-08-30-19-47-28/sim.ser");
         quadUnifPaths.put(501, Quad501Unif);
         quadUnifPaths.put(301, Quad301Unif);
-        quadUnifPaths.put(600, "experimentExport/Aztec/08_growing2LargeHolesFromUnitarySymmetric1Angle/mu01/600x600/2024-02-04-19-27-03/sim.ser");
+        // quadUnifPaths.put(600, "experimentExport/Aztec/18_genus1_central/mu1/600x600/2024-06-21-16-53-24/sim.ser");
+        // quadUnifPaths.put(600, "experimentExport/Aztec/19_genus1_3Angles/mu01/600x600/2024-06-21-17-33-17/sim.ser");
+        quadUnifPaths.put(600, "experimentExport/Aztec/20_genus1_3Angles/mu0000001/600x600/2024-06-21-21-23-13/sim.ser");
         // quadUnifPaths.put(600, "experimentExport/Aztec/AztecDiamond600UniformConverged.ser");
     }
 
@@ -182,6 +185,7 @@ public class SimulationManager {
             vis.saveDimerConfPic(simFolder + "/dimerConf.png", false);
             vis.saveWeightsPic(simFolder + "/weights.png");
             vis.saveDimerConfPic(simFolder + "/dimerConfPred.png", true);
+            vis.saveHeightPic(simFolder + "/heightVis.png");
             // vis.saveAmoebaPic(simFolder + "/amoebaPic" + info + ".png");
             // vis.saveAztecPic(schottkyDimers, simFolder + "/aztecPic" + info + ".png");
         } catch (IOException e) {

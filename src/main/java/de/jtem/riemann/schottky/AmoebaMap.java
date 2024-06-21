@@ -470,7 +470,7 @@ public class AmoebaMap implements Serializable{
         Complex psi = diffsPDer[2].times(diffsP[0]).minus(diffsPDer[0].times(diffsP[2]));
         psi.assignDivide(diffsPDer[1].times(diffsP[0]).minus(diffsPDer[0].times(diffsP[1])));
         if (Math.abs(psi.im) > 0.1 | Math.abs(eta.im) > 0.1) {
-          System.out.println("non-real");
+          System.out.println("boundaryCurve non-real");
         }
         return new Complex(psi.re, eta.re);
       }

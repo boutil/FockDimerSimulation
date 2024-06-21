@@ -13,7 +13,7 @@ __global__ void flipFaces(int *faceStates, float *faceWeights, int *insideBounda
         } else if (faceStates[index] == 5) {
             prop = 1/faceWeights[index];
         }
-        if ( rand[index] < prop * 0.9999 ) {
+        if ( rand[index] < prop * 0.99 ) {
             if ( faceStates[index] == 5 ) { 
                 faceStates[index] = 10;
             }

@@ -27,16 +27,16 @@ public class HexLatticeTest {
         // SchottkyDimersQuad schottkyDimers = buildSchottkyDimers();
         // Z2LatticeFock lattice = new Z2LatticeFock(schottkyDimers, 200, 200);
 
-        HexLattice lattice = new HexLattice(500, 500);
+        HexLattice lattice = new HexLattice(300, 300);
 
 
         // // System.out.println(Arrays.deepToString(lattice.faceWeights));
 
         sim = new MarkovSimHex(lattice);
 
-        sim = loadSim("experimentExport/Hexagon/hexagon500UniformConverged.ser");
+        sim = loadSim("experimentExport/Hexagon/hexagon300UniformConverged.ser");
 
-        sim.simulate(10000);
+        sim.simulate(100000);
 
 
         // saveSim(sim, "mySimG2.ser");
@@ -54,8 +54,9 @@ public class HexLatticeTest {
         // vis.visualizeThetaCrossRatio(-3.1691590245331893, 5.071383906313774);
 
         try {
-            vis.saveDimerConfPic("experimentExport/Hexagon/hexagon500UniformConverged.png");
-            saveSim(sim, "experimentExport/Hexagon/hexagon500UniformConverged.ser");
+            System.out.println("simulation done. Saving sim now.");
+            vis.saveDimerConfPic("experimentExport/Hexagon/hexagon300UniformConverged.png");
+            saveSim(sim, "experimentExport/Hexagon/hexagon300UniformConverged123.ser");
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

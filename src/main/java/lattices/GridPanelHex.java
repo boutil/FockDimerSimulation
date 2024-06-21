@@ -1,5 +1,6 @@
 package lattices;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
@@ -23,8 +24,8 @@ public class GridPanelHex extends GridPanel{
         scaling = 12;
         imageWidth = sim.lattice.N * scaling + sim.lattice.M * scaling / 2;
         imageHeight = (int) (sim.lattice.M * scaling * Math.sqrt(3) / 2);
-        paintImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
-        weightsImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_3BYTE_BGR);
+        paintImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_4BYTE_ABGR);
+        weightsImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_4BYTE_ABGR);
     }
 
     public GridPanelHex(MarkovSim sim, AmoebaVis amoebaVis) {
@@ -37,6 +38,9 @@ public class GridPanelHex extends GridPanel{
     public void updatePaint() {
         Graphics2D g2 = paintImage.createGraphics();
         Graphics2D gWeights = weightsImage.createGraphics();
+
+        g2.setColor(new Color(0, 0, 0, 0));
+        g2.fillRect( 0, 0, imageWidth, imageHeight);
 
         double maxWeight = 0;
         for (int i = 0; i < sim.lattice.N; i++) {

@@ -159,7 +159,7 @@ public class GPUSim {
 
         // separate 2d arrays into odd and even 1d arrays.
         // boolean does not exist on GPU -> transform to int. -> could also encode that into one bit of the faceState. Maybe better?
-        arrSize = (N * N) / maxParity;
+        arrSize = (N * N) / maxParity + maxParity;
         float[][] faceWeightsArr = new float[maxParity][];
         int[][] faceStatesArr = new int[maxParity][];
         int[][] insideBdryArr = new int[maxParity][];

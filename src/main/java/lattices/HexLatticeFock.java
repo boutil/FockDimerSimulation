@@ -193,7 +193,7 @@ public class HexLatticeFock extends HexLattice{
 
                 double maxImagPart = 0.001;
                 if(Math.abs(crossRatio.im) > maxImagPart ) {
-                    System.out.println("crossRatio imaginary part too big.");
+                    System.out.println("crossRatio imaginary part too big: " + crossRatio.im);
                 }
                 if (crossRatio.re < 0) {
                     System.out.println("Kasteleyn condition not fulfilled.");

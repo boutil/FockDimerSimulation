@@ -17,47 +17,47 @@ public class AmoebaMapQuad extends AmoebaMap{
     protected void calculateIncrements(final SchottkyGroupElement element) {
         for (Complex angle : schottky.getAngles()[0]) {
             Complex diff = P.minus(element.applyTo(angle));
-            dH.assignMinus(diff.invert());
-            dK.assignMinus(diff.invert());
-            dH_Der.assignPlus(diff.pow(2).invert());
-            dK_Der.assignPlus(diff.pow(2).invert());
-            H.assignMinus(diff.log());
-            K.assignMinus(diff.log());
-            H_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
-            K_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
+            dH.assignPlus(diff.invert());
+            dH_Der.assignMinus(diff.pow(2).invert());
+            dK.assignPlus(diff.invert().times(boundaryResidues[0]));
+            dK_Der.assignMinus(diff.pow(2).invert().times(boundaryResidues[0]));
+            H.assignPlus(diff.log());
+            // K.assignPlus(diff.log());
+            H_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
+            // K_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
         }
           for (Complex angle : schottky.getAngles()[1]) {
             Complex diff = P.minus(element.applyTo(angle));
-            dG.assignMinus(diff.invert());
-            dK.assignPlus(diff.invert());
-            dG_Der.assignPlus(diff.pow(2).invert());
-            dK_Der.assignMinus(diff.pow(2).invert());
-            G.assignMinus(diff.log());
-            K.assignPlus(diff.log());
+            dG.assignPlus(diff.invert());
+            dG_Der.assignMinus(diff.pow(2).invert());
+            dK.assignPlus(diff.invert().times(boundaryResidues[1]));
+            dK_Der.assignMinus(diff.pow(2).invert().times(boundaryResidues[1]));
+            G.assignPlus(diff.log());
+            // K.assignPlus(diff.log());
             G_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
-            K_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
+            // K_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
         }
           for (Complex angle : schottky.getAngles()[2]) {
             Complex diff = P.minus(element.applyTo(angle));
-            dH.assignPlus(diff.invert());
-            dK.assignMinus(diff.invert());
-            dH_Der.assignMinus(diff.pow(2).invert());
-            dK_Der.assignPlus(diff.pow(2).invert());
-            H.assignPlus(diff.log());
-            K.assignMinus(diff.log());
-            H_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
-            K_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
+            dH.assignMinus(diff.invert());
+            dH_Der.assignPlus(diff.pow(2).invert());
+            dK.assignPlus(diff.invert().times(boundaryResidues[2]));
+            dK_Der.assignMinus(diff.pow(2).invert().times(boundaryResidues[2]));
+            H.assignMinus(diff.log());
+            // K.assignMinus(diff.log());
+            H_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
+            // K_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
         }
           for (Complex angle : schottky.getAngles()[3]) {
             Complex diff = P.minus(element.applyTo(angle));
-            dG.assignPlus(diff.invert());
-            dK.assignPlus(diff.invert());
-            dG_Der.assignMinus(diff.pow(2).invert());
-            dK_Der.assignMinus(diff.pow(2).invert());
-            G.assignPlus(diff.log());
-            K.assignPlus(diff.log());
-            G_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
-            K_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
+            dG.assignMinus(diff.invert());
+            dG_Der.assignPlus(diff.pow(2).invert());
+            dK.assignPlus(diff.invert().times(boundaryResidues[3]));
+            dK_Der.assignMinus(diff.pow(2).invert().times(boundaryResidues[3]));
+            G.assignMinus(diff.log());
+            // K.assignPlus(diff.log());
+            G_corr.assignPlus(P0.minus(element.applyTo(angle)).log());
+            // K_corr.assignMinus(P0.minus(element.applyTo(angle)).log());
         }
     }
 

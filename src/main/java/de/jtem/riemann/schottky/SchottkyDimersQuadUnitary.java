@@ -13,10 +13,11 @@ public class SchottkyDimersQuadUnitary extends SchottkyDimersQuad {
 
         // TODO: P0 should be chosen such that it's in the fundamental domain.
         amoebaMap = new AmoebaMapQuad(this, chooseP0(), boundaryResidues);
+        // updateCircles();
     }
 
     public SchottkyDimersQuadUnitary(SchottkyData data, double[][] angles) {
-        this(data, angles, new double[]{1, -1, 1, -1, 1, -1});
+        this(data, angles, new double[]{1, -1, 1, -1});
     }
 
     @Override

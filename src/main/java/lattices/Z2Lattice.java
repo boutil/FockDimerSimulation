@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 
 public class Z2Lattice extends Lattice {
-    // The flipFaceWeights here are defined as the crossratio of (N * S)/(E * W). 
+    // The flipFaceWeights here are defined as the crossratio of (N * S)/(E * W).
     // !!CAREFUL!! Note that this is is not the same thing as the usual faceWeight definition. It is the same for white faces but the inverse for black faces!
     //  However it allows to do the flip easily in the simulation without considering many cases.
     public Z2Lattice(int N, int M, double faceWeightMultiplier) {
@@ -21,7 +21,7 @@ public class Z2Lattice extends Lattice {
     }
 
     public Z2Lattice(int N, int M) {
-        this(N, M, 1);
+        this(N, M, 0.9);
     }
 
     public double getUnflippedFaceWeight(int i, int j) {

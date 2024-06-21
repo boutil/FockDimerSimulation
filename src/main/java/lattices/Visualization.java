@@ -247,7 +247,8 @@ public class Visualization {
     }
     
     public void saveHeightPic(String filepPath) throws IOException {
-        GridPanelZ2 p = new GridPanelZ2(sim);
+        GridPanelZ2 p = new GridPanelZ2(sim, amoebaVis);
+        p.drawBoundaryCurves = true;
         p.updatePaint();
         p.saveHeightPic(filepPath);
     }

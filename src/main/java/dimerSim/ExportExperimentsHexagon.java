@@ -32,26 +32,48 @@ public class ExportExperimentsHexagon {
         // double d = 0.07;
         // double[][][] angles = {{{d, Math.PI / 3 - d}, {Math.PI / 3 + d, 2 * Math.PI / 3 - d}, {2 * Math.PI / 3 + d, 3 * Math.PI / 3 - d}}};
 
+        // skewed:
+        // // One bubble:
+        // Complex A = new Complex(Math.cos(2 * Math.PI / 3 + 0.1), Math.sin(2 * Math.PI / 3 + 0.1)).times(0.4);
+        // double[][][] angles = {{{0, 0}, {Math.PI / 3 - 0.6, Math.PI / 3 + 0.93}, {2 * Math.PI / 3, 2 * Math.PI / 3}}};
+        // // Complex A = new Complex(Math.cos(2 * Math.PI / 3 + 0.1), Math.sin(2 * Math.PI / 3 + 0.1)).times(0.5);
+        // // double[][][] angles = {{{0}, {Math.PI / 3}, {2 * Math.PI / 3}}};
+
+        // Complex B = A.invert().conjugate();
+        // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.02, 0}};
+
+        // // skewed2:
+        // // One bubble:
+        // Complex A = new Complex(Math.cos(0 + 0.1), Math.sin(0 + 0.1)).times(0.4);
+        // double[][][] angles = {{{0, 0}, {Math.PI / 3 - 0.6, Math.PI / 3 + 0.93}, {2 * Math.PI / 3, 2 * Math.PI / 3}}};
+        // // Complex A = new Complex(Math.cos(2 * Math.PI / 3 + 0.1), Math.sin(2 * Math.PI / 3 + 0.1)).times(0.5);
+        // // double[][][] angles = {{{0}, {Math.PI / 3}, {2 * Math.PI / 3}}};
+
+        // Complex B = A.invert().conjugate();
+        // double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.05, 0}};
+
+        // skewed3:
         // One bubble:
-        Complex A = new Complex(Math.cos(2 * Math.PI / 3 + 0.1), Math.sin(2 * Math.PI / 3 + 0.1)).times(0.5);
-        double[][][] angles = {{{0, 0}, {Math.PI / 3 - 0.6, Math.PI / 3 + 0.6}, {2 * Math.PI / 3, 2 * Math.PI / 3}}};
+        Complex A = new Complex(Math.cos(0 + 0.1), Math.sin(0 + 0.1)).times(0.4);
+        double[][][] angles = {{{0, 0}, {Math.PI / 3 - 0.6, Math.PI / 3 + 0.93}, {2 * Math.PI / 3, 2 * Math.PI / 3}}};
+        // double[][][] angles = {{{0, 0}, {Math.PI / 3, Math.PI / 3}, {2 * Math.PI / 3, 2 * Math.PI / 3}}};
         // Complex A = new Complex(Math.cos(2 * Math.PI / 3 + 0.1), Math.sin(2 * Math.PI / 3 + 0.1)).times(0.5);
         // double[][][] angles = {{{0}, {Math.PI / 3}, {2 * Math.PI / 3}}};
 
         Complex B = A.invert().conjugate();
-        double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.06, 0}};
+        double[][] schottkyParamsCol = {{A.re, A.im, B.re, B.im, 0.00002, 0}};
         
         
-        int defaultNumSteps = 3000;
+        int defaultNumSteps = (int) 1e6;
         int[] numSteps = new int[schottkyParamsCol.length];
         Arrays.fill(numSteps, defaultNumSteps);
         // int[] numSteps = {100000, 100000, 100000};
         
-        String baseFolder = "experimentExport/Hexagon/";
+        String baseFolder = "experimentExport/Hexagon/skewed3/";
         // String simToStartFrom = "experimentExport/Hexagon/hexagon300UniformConverged.ser";
         // String simToStartFrom = "experimentExport/Hexagon/hexagon400UniformConverged1-08-06.ser";
         // String simToStartFrom = "experimentExport/Hexagon/2023-08-23-09-56-41/sim0[300x300].ser";
-        String simToStartFrom = "experimentExport/Hexagon/2023-08-23-11-23-40/sim0[300x300].ser";
+        String simToStartFrom = "experimentExport/Hexagon/skewed3/2024-06-22-01-03-35/sim0[600x600].ser";
         // String simToStartFrom = "experimentExport/Hexagon/2023-08-23-07-23-56/sim0[400x400].ser";
         
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
@@ -63,8 +85,8 @@ public class ExportExperimentsHexagon {
         for (int i = 0; i < schottkyParamsCol.length; i++) {
             
             // SchottkyDimersHex schottkyDimers = new SchottkyDimersHex(new SchottkyData(schottkyParamsCol[i]), angles[i]);
-            double[] sizes = {1, 1, 1};
-            // double[] sizes = {1, 0.8, 0.6};
+            // double[] sizes = {1, 1, 1};
+            double[] sizes = {0.6, 1, 0.9};
 
             double[] boundaryResidues = {sizes[0], -sizes[1], sizes[2], -sizes[0], sizes[1], -sizes[2]};
             // double[] boundaryResidues = {sizes[0], sizes[1], sizes[2], -sizes[0], -sizes[1], -sizes[2]};
@@ -74,16 +96,16 @@ public class ExportExperimentsHexagon {
             
             SchottkyDimersDoubleCoverUnitary doubleCover = schottkyDimers.getSimpleDoubleCover();
             
-            // HexLatticeFock lattice = new HexLatticeFock(doubleCover, 400, 400);
-            HexLattice lattice = new HexLattice(300, 300);
-            sim = new MarkovSimHex(lattice, sizes);
+            // HexLatticeFock lattice = new HexLatticeFock(doubleCover, 600, 600);
+            // HexLattice lattice = new HexLattice(600, 600);
+            // sim = new MarkovSimHex(lattice, sizes);
             
-            // sim = loadSim(simToStartFrom);
+            sim = loadSim(simToStartFrom);
             
-            // HexLatticeFock lattice = new HexLatticeFock(doubleCover, sim.lattice.N, sim.lattice.M);
+            HexLatticeFock lattice = new HexLatticeFock(doubleCover, sim.lattice.N, sim.lattice.M);
             // HexLattice lattice = new HexLattice(sim.lattice.N, sim.lattice.M);
 
-            // sim.setLattice(lattice);
+            sim.setLattice(lattice);
             
 
 

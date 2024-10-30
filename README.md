@@ -12,5 +12,5 @@ This is a repository accompanying the papers [1](https://arxiv.org/abs/2402.0879
 2. Install the java plugin in VSCode
 3. Install [Maven](https://maven.apache.org/). This is a dependency manager for Java that will help install necessary libraries.
 4. Run a script that you want. 
-    1. For dimer simulation scripts see the dimerSim folder E.g. [RunSimulations](dimerSim/RunSimulations.java)
-    2. For fun with theta functions see e.g. the [Fay Identity verification](inUtil/FayIdentityVerification.java)
+    1. For dimer simulation scripts see the dimerSim folder E.g. [RunSimulations](src/main/java/dimerSim/RunSimulations.java)
+    2. For fun with theta functions see e.g. the [Fay Identity verification](src/main/java/inUtil/FayIdentityVerification.java)

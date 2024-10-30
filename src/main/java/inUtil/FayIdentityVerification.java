@@ -17,7 +17,7 @@ public class FayIdentityVerification {
 
         // Create a Schottky uniformization with some chosen parameters.
 
-        // Some Examples:
+        // Some Examples: uncomment only one of them:
         // M-curves with inversion in unit sphere as anti-holomorphic involution
         // -------------------------
         // // G1:
@@ -26,7 +26,7 @@ public class FayIdentityVerification {
         // Complex A1 = new Complex(Math.cos(theta1), Math.sin(theta1)).times(0.35);
         // Complex A1Refl = A1.invert().conjugate();
         // double[] schottkyParams = {A1.re, A1.im, A1Refl.re, A1Refl.im, 0.000000003, 0};
-
+        // -------------------------
         // G2:
         int genus = 2;
         double theta1 = Math.PI;
@@ -38,11 +38,21 @@ public class FayIdentityVerification {
         double[] schottkyParams = {A1.re, A1.im, A1Refl.re, A1Refl.im, 0.0003, 0, A2.re, A2.im, A2Refl.re, A2Refl.im, 0.0003, 0};
         
         // -------------------------
+        // // G1
         // Complex conjugation is anti-holomorphic involution
         // int genus = 1;
         // Complex A1 = new Complex(0,1);
         // Complex A1Conj = A1.conjugate();
         // double[] schottkyParams = {A1.re, A1.im, A1Conj.re, A1Conj.im, 0.01, 0};
+
+        // --------------------------
+        // Choose some 4 points to verify the Fay identity at.        
+        // Complex[] points = new Complex[]{new Complex(-1, 0.5), new Complex(0, 0.3), new Complex(1, 0.5), new Complex(2, 0.5)};
+        Complex[] points = new Complex[]{new Complex(-1, 0), new Complex(0, 0), new Complex(1, 0), new Complex(2, 0)};
+        // Complex[] points = new Complex[]{new Complex(0.5, 0), new Complex(0.3, 0), new Complex(0, 0.5), new Complex(0.3, 0.3)};
+        
+        // Parameter choice over - rest is calculation
+        // ====================================================
 
 
         Schottky schottky = new Schottky(new SchottkyData(schottkyParams));
@@ -59,11 +69,6 @@ public class FayIdentityVerification {
         thetaWithChar.setBeta(e1);
 
 
-        // --------------------------
-        // Choose some 4 points to verify the Fay identity at.        
-        // Complex[] points = new Complex[]{new Complex(-1, 0.5), new Complex(0, 0.3), new Complex(1, 0.5), new Complex(2, 0.5)};
-        Complex[] points = new Complex[]{new Complex(-1, 0), new Complex(0, 0), new Complex(1, 0), new Complex(2, 0)};
-        // Complex[] points = new Complex[]{new Complex(0.5, 0), new Complex(0.3, 0), new Complex(0, 0.5), new Complex(0.3, 0.3)};
 
         // fixed divisor
         ComplexVector D = new ComplexVector(genus);
